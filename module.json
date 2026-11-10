@@ -1,0 +1,54 @@
+{
+  "id": "dxcufgbs-player-bastions",
+  "title": "Dxcufgb's Player Bastions",
+  "description": "The party's Bastion as a place on the map, built on the dnd5e system's own Bastion. The GM founds it with a map marker and a few questions about the site; the Bastion page turns its stats into numbers you can feel (how many days it holds against a given force, how long the food lasts, how often merchants come). Players plan, pay for and queue expansions from a catalog of 69, each with its own cost, build time and perks; building crews work through the queue, and every finished project shows on the Bastion's own battle map. Away from home, send orders by envoy, letter, messenger bird or spell, each with its own delay, cost and risk. Bastion events, visiting merchants, sieges and a full history are included.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Dxcufgb",
+      "url": "https://github.com/Dxcufgb"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.2.5"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "quench",
+        "type": "module",
+        "reason": "Runs the module's self-tests inside Foundry."
+      }
+    ]
+  },
+  "url": "https://github.com/dxcufgb/FoundryVTT-player-bastions",
+  "manifest": "https://github.com/dxcufgb/FoundryVTT-player-bastions/releases/latest/download/module.json",
+  "download": "https://github.com/dxcufgb/FoundryVTT-player-bastions/releases/latest/download/module.zip",
+  "bugs": "https://github.com/dxcufgb/FoundryVTT-player-bastions/issues",
+  "readme": "https://github.com/dxcufgb/FoundryVTT-player-bastions#readme",
+  "license": "LICENSE",
+  "socket": true,
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/player-bastions.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
+}

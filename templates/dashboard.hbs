@@ -1,0 +1,18 @@
+<div class="dxpb-root">
+  <div class="dxpb-row">
+    {{#if isGM}}
+      <button type="button" data-action="found"><i class="fa-solid fa-flag"></i> {{localize "DXPB.Dashboard.Found"}}</button>
+      <label>{{localize "DXPB.Dashboard.Turns"}} <input type="number" name="turns" min="1" max="52" value="1"></label>
+      <button type="button" data-action="advanceAll"><i class="fa-solid fa-forward"></i> {{localize "DXPB.Dashboard.AdvanceAll"}}</button>
+    {{/if}}
+    <label>{{localize "DXPB.Dashboard.Benchmark"}} <select name="benchmark">{{#each forces}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+  </div>
+  <table class="dxpb-table">
+    <thead><tr><th>{{localize "DXPB.Dashboard.Bastion"}}</th><th>{{localize "DXPB.Presence"}}</th><th>{{localize "DXPB.Holdout"}}</th><th>{{localize "DXPB.TreasuryLabel"}}</th><th>{{localize "DXPB.Num.Net"}}</th><th>{{localize "DXPB.Dashboard.Projects"}}</th><th>{{localize "DXPB.Dashboard.Transit"}}</th><th>{{localize "DXPB.Events"}}</th><th>{{localize "DXPB.TurnLabel"}}</th></tr></thead>
+    <tbody>{{#each rows}}<tr data-id="{{id}}">
+      <td><a data-action="open"><i class="fa-solid fa-chess-rook"></i> {{name}}</a>{{#if siege}} <i class="fa-solid fa-burst dxpb-bad"></i>{{/if}}</td>
+      <td>{{presence}}</td><td>{{holdout}}</td><td>{{treasury}}</td><td class="{{#if good}}dxpb-good{{else}}dxpb-bad{{/if}}">{{net}}</td>
+      <td>{{building}} / {{planned}}</td><td>{{transit}}</td><td>{{events}}</td><td>{{turn}}{{#if last}} · {{last}}{{/if}}</td></tr>
+    {{else}}<tr><td colspan="9" class="dxpb-muted">{{localize "DXPB.Dashboard.None"}}</td></tr>{{/each}}</tbody>
+  </table>
+</div>

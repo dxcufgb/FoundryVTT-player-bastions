@@ -1,0 +1,38 @@
+<div class="dxpb-root dxpb-rules-body">
+  <p class="dxpb-muted">{{localize "DXPB.Settings.Rules.Explain"}}</p>
+
+  <section class="dxpb-rules-box">
+    <div class="dxpb-rules-head"><strong>{{localize "DXPB.Settings.Rules.RulesJSON"}}</strong>
+      <div class="dxpb-button-row">
+        <button type="button" data-action="loadFile" data-target="rules"><i class="fa-solid fa-file-import"></i> {{localize "DXPB.Settings.Rules.LoadFile"}}</button>
+        <button type="button" data-action="download" data-file="rules-overrides"><i class="fa-solid fa-file-export"></i> {{localize "DXPB.Settings.Rules.DownloadMine"}}</button>
+      </div></div>
+    <textarea name="rules" rows="10" class="dxpb-code" spellcheck="false">{{rules}}</textarea>
+  </section>
+
+  <section class="dxpb-rules-box">
+    <div class="dxpb-rules-head"><strong>{{localize "DXPB.Settings.Rules.CatalogJSON"}}</strong>
+      <div class="dxpb-button-row">
+        <button type="button" data-action="loadFile" data-target="catalog"><i class="fa-solid fa-file-import"></i> {{localize "DXPB.Settings.Rules.LoadFile"}}</button>
+        <button type="button" data-action="download" data-file="catalog-overrides"><i class="fa-solid fa-file-export"></i> {{localize "DXPB.Settings.Rules.DownloadMine"}}</button>
+      </div></div>
+    <textarea name="catalog" rows="8" class="dxpb-code" spellcheck="false">{{catalog}}</textarea>
+    <p class="dxpb-muted">{{localize "DXPB.Settings.Rules.CatalogIds"}} {{catalogIds}}</p>
+  </section>
+
+  <section class="dxpb-rules-box">
+    <strong>{{localize "DXPB.Settings.Rules.Reference"}}</strong>
+    <div class="dxpb-button-row">
+      <button type="button" data-action="download" data-file="default-rules"><i class="fa-solid fa-download"></i> {{localize "DXPB.Settings.Rules.DownloadDefaultRules"}}</button>
+      <button type="button" data-action="download" data-file="rules-in-use"><i class="fa-solid fa-download"></i> {{localize "DXPB.Settings.Rules.DownloadRulesInUse"}}</button>
+      <button type="button" data-action="download" data-file="default-catalog"><i class="fa-solid fa-download"></i> {{localize "DXPB.Settings.Rules.DownloadDefaultCatalog"}}</button>
+      <button type="button" data-action="download" data-file="catalog-in-use"><i class="fa-solid fa-download"></i> {{localize "DXPB.Settings.Rules.DownloadCatalogInUse"}}</button>
+    </div>
+    <details><summary>{{localize "DXPB.Settings.Rules.Defaults"}}</summary><pre class="dxpb-code dxpb-rules-pre">{{defaults}}</pre></details>
+    <details><summary>{{localize "DXPB.Settings.Rules.InUse"}}</summary><pre class="dxpb-code dxpb-rules-pre">{{inUse}}</pre></details>
+    <details><summary>{{localize "DXPB.Settings.Rules.DefaultCatalog"}}</summary><pre class="dxpb-code dxpb-rules-pre">{{defaultCatalog}}</pre></details>
+  </section>
+</div>
+<footer class="dxpb-rules-foot">
+  <button type="submit"><i class="fa-solid fa-floppy-disk"></i> {{localize "DXPB.Settings.Rules.Save"}}</button>
+</footer>

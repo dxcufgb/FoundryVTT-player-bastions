@@ -1,0 +1,319 @@
+<div class="dxpb-root">
+{{#if missing}}
+  <p class="dxpb-empty">{{localize "DXPB.Missing"}}</p>
+{{else}}
+  <nav class="dxpb-tabs">
+    {{#each tabs}}<a class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}">{{label}}</a>{{/each}}
+  </nav>
+  <section class="dxpb-tab-body">
+
+  {{!-- ================= OVERVIEW ================= --}}
+  {{#if (eq tab "overview")}}
+  <div class="dxpb-overview">
+    <figure class="dxpb-hero"><img src="{{image}}" alt="{{terrain}}"></figure>
+    <div class="dxpb-overview-main">
+      <h2>{{name}}</h2>
+      <p class="dxpb-muted">{{structure}} · {{terrain}} · {{site}}</p>
+      {{#if description}}<p>{{description}}</p>{{/if}}
+      <dl class="dxpb-facts">
+        <dt>{{localize "DXPB.Owners"}}</dt><dd>{{#each owners}}<span class="dxpb-owner"><img src="{{img}}"> {{name}}</span>{{/each}}</dd>
+        <dt>{{localize "DXPB.Presence"}}</dt>
+        <dd>
+          {{#if present}}<strong>{{localize "DXPB.PresenceHome"}}</strong>{{else}}<strong>{{localize "DXPB.PresenceAway"}}</strong>{{/if}}
+          {{#if mine}}
+            {{#if present}}<button type="button" data-action="presence" data-value="away"><i class="fa-solid fa-person-walking-arrow-right"></i> {{localize "DXPB.Leave"}}</button>
+            {{else}}<button type="button" data-action="presence" data-value="present"><i class="fa-solid fa-house"></i> {{localize "DXPB.Return"}}</button>{{/if}}
+          {{/if}}
+        </dd>
+        <dt>{{localize "DXPB.TreasuryLabel"}}</dt><dd>{{treasury}}</dd>
+        <dt>{{localize "DXPB.TurnLabel"}}</dt><dd>{{#if restClock}}{{localize "DXPB.TurnInfoRests" n=lastTurn rests=restsToTurn}}<br><span class="dxpb-muted">{{localize "DXPB.RestCount" n=restCount}}</span>{{else}}{{localize "DXPB.TurnInfo" n=lastTurn next=nextTurn}}{{/if}}</dd>
+      </dl>
+      {{#if siege}}<p class="dxpb-alert"><i class="fa-solid fa-burst"></i> {{localize "DXPB.UnderSiege"}}</p>{{/if}}
+      {{#if neglectWarn}}<p class="dxpb-alert"><i class="fa-solid fa-triangle-exclamation"></i> {{localize "DXPB.NeglectWarn" n=neglect}}</p>{{/if}}
+      {{#each pendingEvents}}<p class="dxpb-alert"><i class="fa-solid fa-bell"></i> {{label}}: {{summary}}</p>{{/each}}
+      <div class="dxpb-row">
+        {{#if marker}}<button type="button" data-action="openMap"><i class="fa-solid fa-map-location-dot"></i> {{localize "DXPB.ShowOnMap"}}</button>{{/if}}
+        {{#if mine}}
+          {{#if present}}
+            {{#if maintainOrder}}<button type="button" data-action="maintain" data-value="off"><i class="fa-solid fa-broom"></i> {{localize "DXPB.MaintainOff"}}</button>
+            {{else}}<button type="button" data-action="maintain"><i class="fa-solid fa-broom"></i> {{localize "DXPB.MaintainOn"}}</button>{{/if}}
+          {{/if}}
+          {{#if dividends}}<button type="button" data-action="dividend"><i class="fa-solid fa-coins"></i> {{localize "DXPB.ClaimDividend" gold=dividendsText}}</button>{{/if}}
+        {{/if}}
+        {{#if isGM}}
+          {{#if restClock}}<button type="button" data-action="countRest" data-tooltip="{{localize 'DXPB.CountRestHint'}}"><i class="fa-solid fa-bed"></i> {{localize "DXPB.CountRest"}}</button>{{/if}}
+          <button type="button" data-action="advance" data-turns="1"><i class="fa-solid fa-forward-step"></i> {{localize "DXPB.AdvanceOne"}}</button>
+          <button type="button" data-action="editBastion"><i class="fa-solid fa-pen"></i> {{localize "DXPB.Edit"}}</button>
+          <button type="button" class="dxpb-danger" data-action="deleteBastion" data-tooltip="{{localize 'DXPB.Delete.Tooltip'}}"><i class="fa-solid fa-trash"></i> {{localize "DXPB.Delete.Button"}}</button>
+        {{/if}}
+      </div>
+      {{#if mine}}{{#if present}}
+      <div class="dxpb-inline" data-group="deposit">
+        <label>{{localize "DXPB.Deposit"}}</label>
+        <select name="actor">{{#each myActors}}<option value="{{id}}">{{name}} ({{gp}} GP)</option>{{/each}}</select>
+        <input type="number" name="amount" min="0" step="1" placeholder="GP">
+        <button type="button" data-action="deposit"><i class="fa-solid fa-sack-dollar"></i></button>
+      </div>
+      {{/if}}{{/if}}
+      {{#if vault.length}}
+      <h4>{{localize "DXPB.Vault"}}</h4>
+      <ul class="dxpb-list">{{#each vault}}<li>{{name}} {{#if gp}}({{gp}}){{/if}}</li>{{/each}}</ul>
+      {{/if}}
+    </div>
+  </div>
+  {{/if}}
+
+  {{!-- ================= STATS ================= --}}
+  {{#if (eq tab "stats")}}
+  <div class="dxpb-stat-grid">
+    {{#each statCards}}
+    <div class="dxpb-stat" data-tooltip="{{breakdown}}">
+      <div class="dxpb-stat-head"><span>{{label}}</span><strong>{{value}}</strong></div>
+      <div class="dxpb-bar"><span style="width: {{pct}}%"></span></div>
+      <p>{{tangible}}</p>
+    </div>
+    {{/each}}
+  </div>
+  <table class="dxpb-table dxpb-numbers">
+    {{#each numbers}}<tr><th>{{label}}</th><td class="{{#if good}}dxpb-good{{/if}}">{{value}}</td><td class="dxpb-muted">{{note}}</td></tr>{{/each}}
+  </table>
+  {{/if}}
+
+  {{!-- ================= DEFENSE ================= --}}
+  {{#if (eq tab "defense")}}
+  <div class="dxpb-defense">
+    <dl class="dxpb-facts">
+      <dt>{{localize "DXPB.Garrison"}}</dt><dd>{{defense.garrison}} ({{localize "DXPB.GarrisonParts" d=defense.dmgDefenders g=defense.guards m=defense.mercenaries}}){{#if defense.armory}} · {{localize "DXPB.ArmoryStocked"}}{{/if}}</dd>
+      <dt>{{localize "DXPB.WallLabel"}}</dt><dd>{{defense.wall}}{{#if defense.enclosed}} · {{localize "DXPB.Enclosed"}} · {{localize "DXPB.IntegrityN" n=defense.integrity}}{{else}} · {{localize "DXPB.NotEnclosed"}}{{/if}}</dd>
+      <dt>{{localize "DXPB.DefenseLabel"}}</dt><dd>{{localize "DXPB.DefenseValues" walled=defense.walled breached=defense.breached}}</dd>
+    </dl>
+    {{#if mine}}
+    <div class="dxpb-inline" data-group="hire">
+      <label>{{localize "DXPB.Guards"}} (≤ {{defense.guardsCap}})</label><input type="number" name="guards" min="0" max="{{defense.guardsCap}}" value="{{defense.guards}}">
+      <label>{{localize "DXPB.Servants"}} (≤ {{defense.servantsCap}})</label><input type="number" name="servants" min="0" max="{{defense.servantsCap}}" value="{{defense.servants}}">
+      <button type="button" data-action="hire"><i class="fa-solid fa-user-plus"></i> {{localize "DXPB.Hire"}}</button>
+    </div>
+    {{/if}}
+    <h3>{{localize "DXPB.SiegeTable"}}</h3>
+    <table class="dxpb-table">
+      <thead><tr><th>{{localize "DXPB.Force"}}</th><th>{{localize "DXPB.Strength"}}</th><th>{{localize "DXPB.Breach"}}</th><th>{{localize "DXPB.Holdout"}}</th><th>{{localize "DXPB.Why"}}</th>{{#if isGM}}<th></th>{{/if}}</tr></thead>
+      <tbody>{{#each siegeRows}}<tr class="{{#if bad}}dxpb-bad{{/if}}"><td>{{label}}</td><td>{{strength}}</td><td>{{breach}}</td><td><strong>{{days}}</strong></td><td>{{reason}}</td>
+        {{#if @root.isGM}}<td><button type="button" data-action="siegeStart" data-force="{{key}}" data-tooltip="{{localize 'DXPB.StartSiege'}}"><i class="fa-solid fa-burst"></i></button></td>{{/if}}</tr>{{/each}}</tbody>
+    </table>
+    <h3>{{localize "DXPB.Calculator"}}</h3>
+    <div class="dxpb-calc">
+      <label>{{localize "DXPB.Troops"}}<input type="number" data-calc="troops" value="{{calc.troops}}" min="0"></label>
+      <label>{{localize "DXPB.QualityLabel"}}<select data-calc="quality">{{#each calc.qualities}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <label>{{localize "DXPB.MonsterCR"}}<input type="number" data-calc="monsterCR" value="{{calc.monsterCR}}" min="0"></label>
+      <label>{{localize "DXPB.MonsterCount"}}<input type="number" data-calc="monsterCount" value="{{calc.monsterCount}}" min="0"></label>
+      <label>{{localize "DXPB.CasterLevel"}}<input type="number" data-calc="casterLevel" value="{{calc.casterLevel}}" min="0"></label>
+      <label>{{localize "DXPB.CasterCount"}}<input type="number" data-calc="casterCount" value="{{calc.casterCount}}" min="0"></label>
+      <label>{{localize "DXPB.EngineLabel"}}<select data-calc="engine">{{#each calc.engines}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <p class="dxpb-calc-result">{{localize "DXPB.CalcResult" strength=calc.strength breach=calc.breach days=calc.days reason=calc.reason}}
+        {{#if isGM}}<button type="button" data-action="siegeStart" data-force="custom"><i class="fa-solid fa-burst"></i> {{localize "DXPB.StartSiege"}}</button>{{/if}}</p>
+    </div>
+    {{#if siegeState}}
+    <div class="dxpb-siege">
+      <h3><i class="fa-solid fa-burst"></i> {{localize "DXPB.LiveSiege" force=siegeState.force}}</h3>
+      <p>{{localize "DXPB.SiegeState" day=siegeState.day integrity=siegeState.integrity food=siegeState.food estimate=siegeState.estimate}}</p>
+      {{#if siegeState.fallen}}<p class="dxpb-alert">{{siegeState.fallen}}</p>{{/if}}
+      {{#if isGM}}<button type="button" data-action="siegeDay"><i class="fa-solid fa-sun"></i> {{localize "DXPB.SiegeNextDay"}}</button>
+      <button type="button" data-action="siegeEnd"><i class="fa-solid fa-flag"></i> {{localize "DXPB.SiegeEnd"}}</button>{{/if}}
+    </div>
+    {{/if}}
+  </div>
+  {{/if}}
+
+  {{!-- ================= FACILITIES ================= --}}
+  {{#if (eq tab "facilities")}}
+  <p class="dxpb-muted">{{localize "DXPB.FacilitiesHint"}}</p>
+  <table class="dxpb-table">
+    <thead><tr><th>{{localize "DXPB.FacilityCol"}}</th><th>{{localize "DXPB.Owner"}}</th><th>{{localize "DXPB.Type"}}</th><th>{{localize "DXPB.Order"}}</th><th>{{localize "DXPB.Progress"}}</th><th></th></tr></thead>
+    <tbody>{{#each facilities}}<tr class="{{#if disabled}}dxpb-bad{{/if}}"><td>{{name}}</td><td>{{actorName}}</td><td>{{typeLabel}}</td><td>{{orderLabel}}</td><td>{{progressText}}{{#if disabled}} {{localize "DXPB.Disabled"}}{{/if}}</td>
+      <td><button type="button" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-up-right-from-square"></i></button></td></tr>
+    {{else}}<tr><td colspan="6" class="dxpb-muted">{{localize "DXPB.NoFacilities"}}</td></tr>{{/each}}</tbody>
+  </table>
+  {{/if}}
+
+  {{!-- ================= PROJECTS ================= --}}
+  {{#if (eq tab "projects")}}
+  <section class="dxpb-grounds {{#if grounds.full}}dxpb-full{{/if}}">
+    <div class="dxpb-grounds-head"><strong><i class="fa-solid fa-ruler-combined"></i> {{localize "DXPB.GroundsTitle"}}: {{grounds.size}}</strong>
+      <span class="dxpb-muted">{{localize "DXPB.GroundsUse" used=grounds.used reserved=grounds.reserved usable=grounds.usable free=grounds.free}}</span></div>
+    <div class="dxpb-bar dxpb-bar-grounds"><span style="width: {{grounds.usedPct}}%"></span><span class="dxpb-reserved" style="width: {{grounds.reservedPct}}%"></span></div>
+    {{#if grounds.full}}<p class="dxpb-warn"><i class="fa-solid fa-triangle-exclamation"></i> {{localize "DXPB.GroundsFull"}}</p>{{/if}}
+    {{#if grounds.growing}}<p class="dxpb-muted"><i class="fa-solid fa-person-digging"></i> {{grounds.growing}}</p>
+    {{else if grounds.extend}}<div class="dxpb-inline">{{#if mine}}<button type="button" data-action="extendGrounds"><i class="fa-solid fa-expand"></i> {{localize "DXPB.ExtendTo" to=grounds.extend.to}}</button>{{/if}}
+      <span class="dxpb-muted">{{localize "DXPB.ExtendCost" cost=grounds.extend.cost days=grounds.extend.days gain=grounds.extend.gain}}</span></div>
+    {{else if grounds.largest}}<p class="dxpb-muted">{{localize "DXPB.GroundsLargest"}}</p>{{/if}}
+    <div class="dxpb-inline dxpb-map-row">
+      {{#if isGM}}<button type="button" data-action="buildMap"><i class="fa-solid fa-map"></i> {{#if map.exists}}{{localize "DXPB.Map.Update"}}{{else}}{{localize "DXPB.Map.Build"}}{{/if}}</button>{{/if}}
+      {{#if map.exists}}<button type="button" data-action="viewMap"><i class="fa-solid fa-eye"></i> {{localize "DXPB.Map.View"}}</button>{{/if}}
+      <span class="dxpb-muted">{{#if map.waiting}}{{localize "DXPB.Map.Waiting" names=map.waiting}}{{else}}{{localize "DXPB.Map.Hint"}}{{/if}}</span>
+    </div>
+  </section>
+  <h3>{{localize "DXPB.ProjectsTitle"}}</h3>
+  <section class="dxpb-crews {{#if crew.over}}dxpb-full{{/if}}" data-group="crews">
+    <div class="dxpb-crews-head"><strong><i class="fa-solid fa-people-carry-box"></i> {{localize "DXPB.Crews.Title"}}:</strong>
+      <span class="dxpb-crew-icons">{{#each crew.icons}}<i class="fa-solid fa-helmet-safety {{#if busy}}dxpb-busy{{/if}} {{#if over}}dxpb-over{{/if}}"></i>{{/each}}</span>
+      <span class="dxpb-crew-count" data-crews-used="{{crew.used}}" data-crews-total="{{crew.total}}">{{crew.text}}</span>
+      <span class="dxpb-muted">{{crew.parts}}{{#if crew.queued}} · {{localize "DXPB.Crews.Queued" n=crew.queued}}{{/if}}</span></div>
+    {{#if crew.over}}<p class="dxpb-warn"><i class="fa-solid fa-triangle-exclamation"></i> {{localize "DXPB.Crews.Over"}}</p>{{/if}}
+    {{#if mine}}<div class="dxpb-inline">
+      <select name="crewFrom"><option value="treasury">{{localize "DXPB.FromTreasury"}}</option>{{#each myActors}}<option value="{{id}}">{{name}}</option>{{/each}}{{#if isGM}}<option value="free">{{localize "DXPB.Crews.Free"}}</option>{{/if}}</select>
+      <button type="button" data-action="hireCrew" data-delta="1" {{#unless crew.canHire}}disabled{{/unless}}><i class="fa-solid fa-user-plus"></i> {{localize "DXPB.Crews.Hire"}}</button>
+      <button type="button" data-action="hireCrew" data-delta="-1" {{#unless crew.canDismiss}}disabled{{/unless}}><i class="fa-solid fa-user-minus"></i> {{localize "DXPB.Crews.Dismiss"}}</button>
+      <span class="dxpb-muted">{{localize "DXPB.Crews.HireCost" cost=crew.hireCost upkeep=crew.upkeep}}</span></div>{{/if}}
+  </section>
+  {{#if projects.length}}
+  <table class="dxpb-table dxpb-projects">
+    <thead><tr><th>{{localize "DXPB.Project"}}</th><th>{{localize "DXPB.StateLabel"}}</th><th>{{localize "DXPB.Funding"}} <span class="dxpb-th-total">{{projectTotals.funding}}</span></th><th class="dxpb-th-build">{{localize "DXPB.Build"}} <span class="dxpb-th-total">{{projectTotals.build}}</span>{{#if isGM}} <button type="button" class="dxpb-th-button" data-action="finishAllProjects" data-tooltip="{{localize 'DXPB.FinishAll'}}"><i class="fa-solid fa-forward-fast"></i> {{localize "DXPB.FinishAllShort"}}</button>{{/if}}</th></tr></thead>
+    {{#each projects}}<tbody class="dxpb-project" data-project="{{id}}"><tr class="dxpb-project-info">
+      <td><strong>{{label}}</strong>{{#if rush}} <span class="dxpb-tag">{{localize "DXPB.Rush"}}</span>{{/if}}<br><span class="dxpb-muted">{{costText}} · {{daysText}} · <i class="fa-solid fa-helmet-safety"></i> {{teamsText}}</span></td>
+      <td>{{stateLabel}}{{#if finish}}<br><span class="dxpb-muted">{{finish}}</span>{{/if}}{{#if waiting}}<br><span class="dxpb-muted">{{waiting}}</span>{{/if}}</td>
+      <td><div class="dxpb-bar"><span style="width: {{fundPct}}%"></span></div><span class="dxpb-muted">{{fundedText}} / {{costText}}</span>
+        {{#if remaining}}{{#if @root.mine}}<div class="dxpb-inline">
+          <select name="fundFrom"><option value="treasury">{{localize "DXPB.FromTreasury"}}</option>{{#each @root.myActors}}<option value="{{id}}">{{name}}</option>{{/each}}</select>
+          <input type="number" name="fundAmount" min="1" value="{{remaining}}">
+          <button type="button" data-action="fund"><i class="fa-solid fa-coins"></i></button></div>{{/if}}{{/if}}</td>
+      <td><div class="dxpb-bar dxpb-bar-build"><span style="width: {{progressPct}}%"></span></div><span class="dxpb-muted">{{progress}} / {{days}}</span></td>
+    </tr>
+    {{#if @root.isGM}}<tr class="dxpb-project-actions"><td colspan="4"><div class="dxpb-button-row">
+      {{> dxpbQueueButtons}}
+      {{#if canStart}}{{#unless canResume}}<button type="button" data-action="construction" data-op="start" data-tooltip="{{localize 'DXPB.Start'}}"><i class="fa-solid fa-hammer"></i></button>{{/unless}}{{/if}}
+      {{#if canResume}}<button type="button" data-action="construction" data-op="resume" data-tooltip="{{localize 'DXPB.Resume'}}"><i class="fa-solid fa-play"></i></button>{{/if}}
+      {{#if canPause}}<button type="button" data-action="construction" data-op="pause" data-tooltip="{{localize 'DXPB.Pause'}}"><i class="fa-solid fa-pause"></i></button>{{/if}}
+      <select name="crews" data-tooltip="{{localize 'DXPB.ExtraCrews'}}">{{#each crews}}<option value="{{n}}" {{#if sel}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{label}}</option>{{/each}}</select>
+      <button type="button" data-action="construction" data-op="crews" data-tooltip="{{localize 'DXPB.SetCrews'}}"><i class="fa-solid fa-people-carry-box"></i></button>
+      <button type="button" data-action="finishProject" data-tooltip="{{localize 'DXPB.FinishNow'}}"><i class="fa-solid fa-forward-fast"></i></button>
+      <button type="button" data-action="construction" data-op="cancel" data-tooltip="{{localize 'DXPB.Cancel'}}"><i class="fa-solid fa-ban"></i></button>
+    </div></td></tr>
+    {{else}}{{#if @root.mine}}{{#if queueRow}}<tr class="dxpb-project-actions"><td colspan="4"><div class="dxpb-button-row">
+      {{> dxpbQueueButtons}}
+      {{#if canQueue}}{{#if mineOrGM}}<button type="button" data-action="removeProject" data-tooltip="{{localize 'DXPB.Remove'}}"><i class="fa-solid fa-trash"></i></button>{{/if}}{{/if}}
+    </div></td></tr>{{/if}}{{/if}}{{/if}}
+    </tbody>{{/each}}
+  </table>
+  {{#if crew.queued}}<p class="dxpb-muted"><i class="fa-solid fa-list-ol"></i> {{localize "DXPB.BuildQueue.Hint"}}</p>{{/if}}
+  {{else}}<p class="dxpb-muted">{{localize "DXPB.NoProjects"}}</p>{{/if}}
+  {{#unless isGM}}<p class="dxpb-muted"><i class="fa-solid fa-circle-info"></i> {{localize "DXPB.GMBuilds"}}</p>{{/unless}}
+
+  <h3>{{localize "DXPB.Built"}}</h3>
+  <table class="dxpb-table dxpb-built">
+    {{#each features}}<tr><td>{{name}}{{#if size}} ({{size}}){{/if}}{{#if count}} ×{{count}}{{/if}}{{#if tier}} · {{tier}}{{/if}}{{#if damaged}} <span class="dxpb-tag dxpb-bad">{{localize "DXPB.Damaged"}}</span>{{/if}}{{#if busy}} <span class="dxpb-tag dxpb-busy-tag">{{busy}}</span>{{/if}}</td><td class="dxpb-muted">{{group}}</td><td class="dxpb-muted">{{#if squares}}{{squares}} {{localize "DXPB.Sq"}}{{/if}}</td>
+      <td class="dxpb-actions">{{#if @root.mine}}
+        {{#if canUpgrade}}<button type="button" data-action="featureProject" data-kind="upgrade" data-fid="{{fid}}" data-tooltip="{{upgradeLabel}}"><i class="fa-solid fa-angles-up"></i></button>{{/if}}
+        {{#if canEnlarge}}<button type="button" data-action="featureProject" data-kind="enlarge" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Enlarge'}}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>{{/if}}
+        {{#if canRepair}}<button type="button" data-action="featureProject" data-kind="repair" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Repair'}}"><i class="fa-solid fa-screwdriver-wrench"></i></button>{{/if}}
+      {{/if}}</td></tr>{{/each}}
+  </table>
+
+  <h3>{{localize "DXPB.Catalog"}}</h3>
+  {{#if everything.n}}
+  <details class="dxpb-everything">
+    <summary><i class="fa-solid fa-scale-balanced"></i> {{localize "DXPB.Everything" n=everything.n gold=everything.gold work=everything.work}}</summary>
+    <p class="dxpb-muted">{{localize "DXPB.EverythingHint"}}</p>
+    <table class="dxpb-table"><thead><tr><th></th><th>{{localize "DXPB.Buildings"}}</th><th>{{localize "DXPB.Cost"}}</th><th>{{localize "DXPB.Build"}}</th></tr></thead>
+      <tbody>{{#each everything.groups}}<tr><td>{{label}}</td><td>{{n}}</td><td>{{gold}}</td><td>{{work}}</td></tr>{{/each}}
+      <tr class="dxpb-total"><td><strong>{{localize "DXPB.Total"}}</strong></td><td><strong>{{everything.n}}</strong></td><td><strong>{{everything.gold}}</strong></td><td><strong>{{everything.work}}</strong></td></tr></tbody>
+    </table>
+  </details>
+  {{/if}}
+  <input type="search" class="dxpb-search" data-catalog-filter value="{{catalogFilter}}" placeholder="{{localize 'DXPB.Search'}}">
+  {{#each catalog}}
+  <details class="dxpb-group" open>
+    <summary>{{label}}</summary>
+    <table class="dxpb-table dxpb-catalog">
+      {{#each items}}<tr class="{{#unless ok}}dxpb-locked{{/unless}}">
+        <td><strong>{{name}}</strong>{{#if dmg}} <span class="dxpb-tag">DMG</span>{{/if}}<br><span class="dxpb-muted">{{summary}}</span>{{#if tiers}}<br><span class="dxpb-muted"><i class="fa-solid fa-stairs"></i> {{tiers}}</span>{{/if}}</td>
+        <td>{{cost}}<br><span class="dxpb-muted">{{days}}</span><br><span class="dxpb-muted"><i class="fa-solid fa-ruler-combined"></i> {{space}}</span>{{#if upkeep}}<br><span class="dxpb-muted">{{localize "DXPB.UpkeepShort" v=upkeep}}</span>{{/if}}</td>
+        <td class="dxpb-perks">{{perks}}</td>
+        <td>{{#if ok}}{{#if @root.mine}}<button type="button" data-action="plan" data-id="{{id}}"><i class="fa-solid fa-plus"></i> {{localize "DXPB.PlanIt"}}</button>{{/if}}
+          {{else}}<span class="dxpb-muted" data-tooltip="{{missing}}"><i class="fa-solid fa-lock"></i> {{missing}}</span>{{/if}}</td>
+      </tr>{{/each}}
+    </table>
+  </details>
+  {{else}}<p class="dxpb-muted">{{localize "DXPB.NothingToPlan"}}</p>
+  {{/each}}
+  {{#if done.length}}<h3>{{localize "DXPB.Finished"}}</h3><ul class="dxpb-list">{{#each done}}<li>{{label}}{{#if when}} <span class="dxpb-muted">{{when}}</span>{{/if}}</li>{{/each}}</ul>{{/if}}
+  {{/if}}
+
+  {{!-- ================= DISPATCHES ================= --}}
+  {{#if (eq tab "dispatches")}}
+  {{#if mine}}
+  <div class="dxpb-dispatch">
+    <h3>{{localize "DXPB.Compose"}}</h3>
+    {{#unless dispatch.away}}<p class="dxpb-muted">{{localize "DXPB.HomeNoDispatch"}}</p>{{/unless}}
+    <div class="dxpb-inline">
+      <label>{{localize "DXPB.From"}}</label><select name="dispatchActor">{{#each myActors}}<option value="{{id}}">{{name}}</option>{{/each}}</select>
+      <label>{{localize "DXPB.Distance"}}</label><input type="number" min="0" data-draft="distance" value="{{dispatch.distance}}" placeholder="mi">
+      {{#unless dispatch.distanceKnown}}<span class="dxpb-muted">{{localize "DXPB.DistanceUnknown"}}</span>{{/unless}}
+    </div>
+    <table class="dxpb-table dxpb-methods">
+      <thead><tr><th></th><th>{{localize "DXPB.Method"}}</th><th>{{localize "DXPB.Time"}}</th><th>{{localize "DXPB.Cost"}}</th><th>{{localize "DXPB.Risk"}}</th><th>{{localize "DXPB.Capacity"}}</th></tr></thead>
+      <tbody>{{#each dispatch.methods}}<tr class="{{#unless ok}}dxpb-locked{{/unless}}">
+        <td><input type="radio" name="method" value="{{k}}" data-draft="method" {{#if sel}}checked{{/if}} {{#unless ok}}disabled{{/unless}}></td>
+        <td data-tooltip="{{note}}">{{label}}{{#unless ok}}<br><span class="dxpb-muted">{{reason}}</span>{{/unless}}</td><td>{{time}}</td><td>{{cost}}</td><td>{{risk}}</td><td>{{capacity}}</td></tr>{{/each}}</tbody>
+    </table>
+    {{#if (eq dispatch.method "animalMessenger")}}<label>{{localize "DXPB.SlotLevel"}}<input type="number" min="2" max="9" data-draft="slotLevel" value="{{dispatch.slotLevel}}"></label>{{/if}}
+    <h4>{{localize "DXPB.Orders"}} ({{dispatch.count}})</h4>
+    <label class="dxpb-check"><input type="checkbox" data-draft="maintain" {{#if dispatch.maintain}}checked{{/if}}> {{localize "DXPB.OrderMaintain"}}</label>
+    {{#each dispatch.facilityOrders}}
+    <div class="dxpb-order"><label class="dxpb-check"><input type="checkbox" data-draft="order" data-uuid="{{uuid}}" {{#if checked}}checked{{/if}}> {{name}}: {{orderLabel}}</label>
+      {{#if checked}}<input type="text" data-draft="orderDetail" data-uuid="{{uuid}}" value="{{detail}}" placeholder="{{localize 'DXPB.OrderDetail'}}">{{/if}}</div>
+    {{/each}}
+    {{#each dispatch.projects}}
+    <div class="dxpb-order"><label>{{localize "DXPB.PayInto" label=label remaining=remaining}}</label><input type="number" min="0" data-draft="payment" data-project="{{id}}" value="{{amount}}"></div>
+    {{/each}}
+    {{#if (eq dispatch.method "beacon")}}<label>{{localize "DXPB.Signal"}}<select data-draft="signal"><option value=""></option>{{#each dispatch.signals}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>{{/if}}
+    <label>{{localize "DXPB.Note"}}<textarea data-draft="note" rows="2">{{dispatch.note}}</textarea></label>
+    <label>{{localize "DXPB.CarryGold"}}<input type="number" min="0" data-draft="gold" value="{{dispatch.gold}}"></label>
+    <div class="dxpb-row">
+      <button type="button" data-action="send"><i class="fa-solid fa-paper-plane"></i> {{localize "DXPB.Send"}}</button>
+      {{#if dispatch.canStanding}}<button type="button" data-action="standing"><i class="fa-solid fa-scroll"></i> {{localize "DXPB.SetStanding"}}</button>{{/if}}
+    </div>
+    {{#if dispatch.standing}}<p class="dxpb-muted">{{localize "DXPB.StandingNow" orders=dispatch.standing}}</p>{{/if}}
+  </div>
+  {{/if}}
+  <h3>{{localize "DXPB.DispatchLog"}}</h3>
+  <table class="dxpb-table">
+    <thead><tr><th>{{localize "DXPB.From"}}</th><th>{{localize "DXPB.Method"}}</th><th>{{localize "DXPB.Sent"}}</th><th>{{localize "DXPB.Arrives"}}</th><th>{{localize "DXPB.Status"}}</th>{{#if isGM}}<th></th>{{/if}}</tr></thead>
+    <tbody>{{#each dispatch.list}}<tr><td>{{fromName}}</td><td>{{methodLabel}}</td><td>{{sent}}</td><td>{{arrives}}</td><td>{{statusLabel}}</td>
+      {{#if @root.isGM}}<td>{{#if transit}}<button type="button" data-action="dispatchStatus" data-id="{{id}}" data-status="lost" data-tooltip="{{localize 'DXPB.MarkLost'}}"><i class="fa-solid fa-ghost"></i></button>{{/if}}</td>{{/if}}</tr>
+    {{else}}<tr><td colspan="6" class="dxpb-muted">{{localize "DXPB.NoDispatches"}}</td></tr>{{/each}}</tbody>
+  </table>
+  {{/if}}
+
+  {{!-- ================= TRADE ================= --}}
+  {{#if (eq tab "trade")}}
+  {{#if merchant}}
+  <h3>{{merchant.label}}</h3>
+  <p class="dxpb-muted">{{localize "DXPB.MerchantLeaves" when=merchant.leaves}}</p>
+  {{#if mine}}<div class="dxpb-inline">
+    <label>{{localize "DXPB.Buyer"}}</label><select name="buyActor">{{#each myActors}}<option value="{{id}}">{{name}} ({{gp}} GP)</option>{{/each}}</select>
+    <label>{{localize "DXPB.PayFrom"}}</label><select name="buyFrom"><option value="actor">{{localize "DXPB.FromCharacter"}}</option><option value="treasury">{{localize "DXPB.FromTreasury"}}</option></select>
+  </div>{{/if}}
+  <table class="dxpb-table">
+    {{#each merchant.stock}}<tr data-ware="{{i}}" class="{{#if sold}}dxpb-locked{{/if}}"><td><a class="dxpb-ware" data-action="viewWare" data-uuid="{{uuid}}" data-tooltip="{{localize 'DXPB.ViewWare'}}"><img class="dxpb-icon" src="{{img}}"><span>{{name}}</span></a></td><td class="dxpb-muted">{{rarity}}</td><td>{{priceText}}</td>
+      <td>{{#if sold}}{{localize "DXPB.SoldTo" name=buyer}}{{else}}{{#if @root.mine}}<button type="button" data-action="buy"><i class="fa-solid fa-cart-shopping"></i></button>{{/if}}{{/if}}</td></tr>
+    {{else}}<tr><td class="dxpb-muted">{{localize "DXPB.NoStock"}}</td></tr>{{/each}}
+  </table>
+  {{else}}<p class="dxpb-muted">{{localize "DXPB.NoMerchant"}}</p>{{/if}}
+  {{/if}}
+
+  {{!-- ================= HISTORY ================= --}}
+  {{#if (eq tab "history")}}
+  <h3>{{localize "DXPB.Turns"}}</h3>
+  {{#each history}}
+  <details class="dxpb-group"><summary>{{localize "DXPB.TurnN" n=turn}}{{#if when}} · {{when}}{{/if}} · {{mode}} · {{treasuryText}}</summary>
+    <p class="dxpb-muted">{{localize "DXPB.HistoryMoney" income=incomeText upkeep=upkeepText}}</p>
+    <ul class="dxpb-list">{{#each lines}}<li>{{this}}</li>{{/each}}</ul></details>
+  {{else}}<p class="dxpb-muted">{{localize "DXPB.NoHistory"}}</p>{{/each}}
+  <h3>{{localize "DXPB.Events"}}</h3>
+  <ul class="dxpb-list">{{#each events}}<li><strong>{{label}}</strong> <span class="dxpb-muted">{{#if when}}{{when}} · {{/if}}{{state}}</span><br>{{summary}} {{outcome}}</li>
+  {{else}}<li class="dxpb-muted">{{localize "DXPB.NoEvents"}}</li>{{/each}}</ul>
+  {{/if}}
+
+  </section>
+{{/if}}
+</div>

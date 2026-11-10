@@ -1,0 +1,7 @@
+{{!-- The party's build queue buttons for one project row (bastion-sheet.hbs, Projects tab). --}}
+{{#if inQueue}}
+<button type="button" data-action="queueProject" data-op="up" data-tooltip="{{localize 'DXPB.BuildQueue.Up'}}" {{#if queueFirst}}disabled{{/if}}><i class="fa-solid fa-arrow-up"></i></button>
+<button type="button" data-action="queueProject" data-op="down" data-tooltip="{{localize 'DXPB.BuildQueue.Down'}}" {{#if queueLast}}disabled{{/if}}><i class="fa-solid fa-arrow-down"></i></button>
+<button type="button" data-action="queueProject" data-op="remove" data-tooltip="{{localize 'DXPB.BuildQueue.Remove'}}"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+{{/if}}
+{{#if canAddQueue}}<button type="button" data-action="queueProject" data-op="add" data-tooltip="{{localize 'DXPB.BuildQueue.AddTip'}}"><i class="fa-solid fa-list-ol"></i> {{localize "DXPB.BuildQueue.Add"}}</button>{{/if}}

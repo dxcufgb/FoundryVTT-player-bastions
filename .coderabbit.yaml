@@ -1,0 +1,41 @@
+# CodeRabbit settings for FoundryVTT-player-bastions.
+# Shared rules come from the central dxcufgb/coderabbit repository (inheritance: true), and CodeRabbit reads
+# the README as code guidelines. Only what is specific to this repository is here.
+# Paths here must not repeat a central path (scripts/**/*.js, .github/workflows/**, **/*.sh, **/*.ps1, **/*.iss,
+# module.json, **/*.md): an entry with the same path replaces the central one instead of adding to it.
+# Check the merged result on a pull request with: @coderabbitai configuration
+inheritance: true
+
+reviews:
+  path_filters:
+    - "!assets/**"
+  path_instructions:
+    - path: "scripts/core/**"
+      instructions: |
+        The pure engine: no Foundry globals (game, ui, canvas, foundry, Hooks), importable in Node and unit tested by
+        `node tests/run-node.mjs` (the same tests run in Foundry through Quench). Every function returns new objects or
+        a patch and never changes its input. Quotes, crews, the build queue, rests, layout and the map plan are
+        deterministic for the same record, catalog and rules.
+    - path: "scripts/data/**"
+      instructions: |
+        Plain data tables. Expansion ids, structure ids and rule keys are stored in worlds' Bastion records and in GM
+        house-rule and catalog overrides: never rename or remove one (mark old expansions `legacy: true` instead).
+        A new rule key needs a default in DEFAULT_RULES.
+    - path: "scripts/{actions,turn-runner,socket,store}.js"
+      instructions: |
+        Every change to a Bastion goes through an action run by the responsible GM (players' requests are relayed over
+        the socket), checks who may do it (gmOnly / ownerOnly) and writes with dot-path updates of the keys it changed
+        (patchRecord / writeRecordKeys), never a whole-record replace. Action names and their fields are a public API.
+    - path: "scripts/tests/**"
+      instructions: |
+        core-tests.js is shared by the Node runner and Quench: keep it free of Foundry globals. quench.js cleans up
+        every document it makes and restores the settings it changes. Never weaken an assertion to make a test pass.
+    - path: "templates/**"
+      instructions: |
+        Triple-stash ({{{ }}}) only for HTML the script escaped first. Players see only what their role may do: GM-only
+        buttons sit inside {{#if isGM}}.
+    - path: ".github/workflows/{ci,release}.yml"
+      instructions: |
+        Thin callers of dxcufgb/foundry-module-ci, identical in every Foundry module repository. Flag any change
+        here that is not the same change in all modules (it belongs in foundry-module-ci instead), except the
+        pinned SHA of foundry-module-ci itself.

@@ -1,0 +1,135 @@
+<div class="dxpb-wizard-wrap">
+  <ol class="dxpb-steps">
+    {{#each steps}}<li class="{{#if active}}active{{/if}} {{#if done}}done{{/if}}"><a data-action="step" data-step="{{i}}">{{label}}</a></li>{{/each}}
+  </ol>
+  <div class="dxpb-wizard-body">
+    <div class="dxpb-wizard-main">
+
+    {{#if (eq stepKey "owners")}}
+      <h3>{{localize "DXPB.Wizard.OwnersTitle"}}</h3>
+      <label>{{localize "DXPB.Wizard.Name"}}<input type="text" name="name" value="{{a.name}}" placeholder="{{localize 'DXPB.Wizard.NamePlaceholder'}}"></label>
+      <label>{{localize "DXPB.Wizard.Description"}}<textarea name="description" rows="3">{{a.description}}</textarea></label>
+      <label>{{localize "DXPB.Wizard.Party"}}
+        <select name="groupUuid"><option value="">—</option>{{#each groups}}<option value="{{uuid}}" {{#if sel}}selected{{/if}}>{{name}} ({{members}})</option>{{/each}}</select></label>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.PartyHint"}}</p>
+      <fieldset><legend>{{localize "DXPB.Wizard.ExtraOwners"}}</legend>
+        {{#each characters}}<label class="dxpb-check"><input type="checkbox" name="owners.{{key}}" {{#if sel}}checked{{/if}}> {{name}}</label>{{/each}}
+      </fieldset>
+    {{/if}}
+
+    {{#if (eq stepKey "map")}}
+      <h3>{{localize "DXPB.Wizard.MapTitle"}}</h3>
+      <label>{{localize "DXPB.Wizard.MapScene"}}
+        <select name="sceneUuid">{{#each scenes}}<option value="{{uuid}}" {{#if sel}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+      <button type="button" data-action="pick"><i class="fa-solid fa-location-crosshairs"></i> {{localize "DXPB.Wizard.Pick"}}</button>
+      {{#if markerSet}}<p><i class="fa-solid fa-chess-rook"></i> {{localize "DXPB.Wizard.MarkerAt" scene=sceneName x=markerX y=markerY}}</p>
+      {{else}}<p class="dxpb-muted">{{localize "DXPB.Wizard.NoMarker"}}</p>{{/if}}
+      {{#if settlements.length}}
+      <h4>{{localize "DXPB.Wizard.Nearby"}}</h4>
+      <ul class="dxpb-list">{{#each settlements}}<li><a data-action="settlement" data-id="{{id}}">{{name}}</a> <span class="dxpb-muted">{{distance}} {{@root.units}}</span></li>{{/each}}</ul>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq stepKey "location")}}
+      <h3>{{localize "DXPB.Wizard.LocationTitle"}}</h3>
+      <div class="dxpb-form-grid">
+        <label>{{localize "DXPB.Q.terrain"}}<select name="loc.terrain">{{#each terrains}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.site"}}<select name="loc.site">{{#each sites}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.settlement"}}<input type="text" name="loc.settlementName" value="{{a.location.settlement.name}}"></label>
+        <label>{{localize "DXPB.Q.settlementSize"}}<select name="loc.settlementSize">{{#each sizes}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.distance"}}<input type="number" min="0" name="loc.settlementDistance" value="{{a.location.settlement.distance}}"></label>
+        <label>{{localize "DXPB.Q.road"}}<select name="loc.road">{{#each roads}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.waterway"}}<select name="loc.waterway">{{#each waterways}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.water"}}<select name="loc.waterOnSite">{{#each waters}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.climate"}}<select name="loc.climate">{{#each climates}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.land"}}<select name="loc.land">{{#each lands}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.danger"}}<select name="loc.danger">{{#each dangers}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.visibility"}}<select name="loc.visibility">{{#each visibilities}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "DXPB.Q.political"}}<select name="loc.political">{{#each politicals}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      </div>
+      <fieldset><legend>{{localize "DXPB.Q.resources"}}</legend>
+        {{#each resources}}<label class="dxpb-check"><input type="checkbox" name="loc.res.{{k}}" {{#if sel}}checked{{/if}}> {{label}}</label>{{/each}}
+      </fieldset>
+    {{/if}}
+
+    {{#if (eq stepKey "structure")}}
+      <h3>{{localize "DXPB.Wizard.StructureTitle"}}</h3>
+      {{#if editing}}<p class="dxpb-muted">{{localize "DXPB.Wizard.StructureLocked"}}</p>{{/if}}
+      <div class="dxpb-structures">
+        {{#each structures}}<label class="dxpb-structure {{#if sel}}sel{{/if}}"><input type="radio" name="structureType" value="{{k}}" {{#if sel}}checked{{/if}} {{#if @root.editing}}disabled{{/if}}>
+          <strong>{{label}}</strong><span class="dxpb-muted">{{summary}}</span><span class="dxpb-muted">{{localize "DXPB.UpkeepShort" v=upkeep}}</span></label>{{/each}}
+      </div>
+      {{#unless editing}}
+      <h4>{{localize "DXPB.Wizard.FirstBuilding"}}</h4>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.FirstBuildingHint"}}</p>
+      <div class="dxpb-structures dxpb-first-buildings">
+        {{#each firstBuildings}}<label class="dxpb-structure {{#if sel}}sel{{/if}}"><input type="radio" name="first" value="{{k}}" {{#if sel}}checked{{/if}}>
+          <strong>{{label}}{{#if suggested}} <span class="dxpb-muted">({{localize "DXPB.Wizard.Suggested"}})</span>{{/if}}</strong><span class="dxpb-muted">{{summary}}</span></label>{{/each}}
+      </div>
+      {{/unless}}
+      <label>{{localize "DXPB.Wizard.Acquisition"}}<select name="acquisition" {{#if editing}}disabled{{/if}}>{{#each acquisitions}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <h4>{{localize "DXPB.Wizard.MapGround"}}</h4>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.MapGroundHint"}}</p>
+      <div class="dxpb-map-grounds">
+        {{#each mapGrounds}}<label class="dxpb-map-ground {{#if sel}}sel{{/if}}" data-tooltip="{{label}}"><input type="radio" name="mapGround" value="{{k}}" {{#if sel}}checked{{/if}}>
+          <img src="{{img}}" alt=""><span>{{label}}</span></label>{{/each}}
+      </div>
+    {{/if}}
+
+    {{#if (eq stepKey "build")}}
+      <h3>{{localize "DXPB.Wizard.BuildTitle"}}</h3>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.BuildHint"}}</p>
+      {{#unless editing}}
+      <ul class="dxpb-list">{{#each included}}<li>{{name}} {{size}} {{#if count}}×{{count}}{{/if}} <a data-action="removeIncluded" data-i="{{i}}"><i class="fa-solid fa-xmark"></i></a></li>{{/each}}</ul>
+      <div class="dxpb-inline">
+        <select name="newIncluded">{{#each catalogOptions}}<option value="{{id}}" {{#if sel}}selected{{/if}}>{{name}}</option>{{/each}}</select>
+        <select name="newIncludedSize">{{#each sizeOptions}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        <input type="number" name="newIncludedCount" min="1" value="{{pendingCount}}" title="{{localize 'DXPB.Wizard.Count'}}">
+        <button type="button" data-action="addIncluded"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div class="dxpb-form-grid">
+        <label>{{localize "DXPB.Wizard.Food"}}<input type="number" name="food" min="0" value="{{a.food}}"></label>
+        <label>{{localize "DXPB.Wizard.Treasury"}}<input type="number" name="treasury" min="0" value="{{a.treasury}}"></label>
+        <label>{{localize "DXPB.Guards"}}<input type="number" name="guards" min="0" value="{{a.guards}}"></label>
+        <label>{{localize "DXPB.Servants"}}<input type="number" name="servants" min="0" value="{{a.servants}}"></label>
+        <label>{{localize "DXPB.Wizard.Grounds"}}<select name="grounds">{{#each groundsOptions}}<option value="{{k}}" {{#if sel}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{label}}</option>{{/each}}</select></label>
+      </div>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.GroundsHint"}}</p>
+      {{/unless}}
+    {{/if}}
+
+    {{#if (eq stepKey "review")}}
+      <h3>{{localize "DXPB.Wizard.ReviewTitle"}}</h3>
+      <p><strong>{{a.name}}</strong> · {{sceneName}}</p>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.ReviewHint"}}</p>
+      <button type="button" class="dxpb-primary" data-action="finish"><i class="fa-solid fa-flag"></i> {{#if editing}}{{localize "DXPB.Wizard.Save"}}{{else}}{{localize "DXPB.Wizard.Found"}}{{/if}}</button>
+    {{/if}}
+
+    </div>
+    <aside class="dxpb-wizard-side">
+      <img class="dxpb-wizard-img" src="{{pictureImg}}" alt="">
+      <div class="dxpb-picture-pick">
+        {{#each pictures}}<button type="button" class="dxpb-thumb {{#if sel}}active{{/if}}" data-action="picture" data-src="{{src}}" data-tooltip="{{label}}"><img src="{{img}}" alt=""><span>{{label}}</span></button>{{/each}}
+        <button type="button" class="dxpb-thumb {{#if customPicture}}active{{/if}}" data-action="customPicture" data-tooltip="{{localize 'DXPB.Wizard.PictureCustom'}}"><i class="fa-solid fa-image"></i><span>{{localize "DXPB.Wizard.PictureOther"}}</span></button>
+      </div>
+      <table class="dxpb-table dxpb-preview">
+        <tr><th>{{localize "DXPB.Stat.accessibility"}}</th><td>{{preview.accessibility}}</td><th>{{localize "DXPB.Stat.concealment"}}</th><td>{{preview.concealment}}</td></tr>
+        <tr><th>{{localize "DXPB.Stat.security"}}</th><td>{{preview.security}}</td><th>{{localize "DXPB.Stat.renown"}}</th><td>{{preview.renown}}</td></tr>
+        <tr><th>{{localize "DXPB.Stat.comfort"}}</th><td>{{preview.comfort}}</td><th>{{localize "DXPB.Stat.prosperity"}}</th><td>{{preview.prosperity}}</td></tr>
+        <tr><th>{{localize "DXPB.WallLabel"}}</th><td colspan="3">{{preview.wall}} · {{localize "DXPB.IntegrityN" n=preview.integrity}}</td></tr>
+        <tr><th>{{localize "DXPB.Num.Food"}}</th><td>{{preview.food}}</td><th>{{localize "DXPB.Num.Water"}}</th><td>{{preview.water}}</td></tr>
+        <tr><th>{{localize "DXPB.Num.Income"}}</th><td>{{preview.income}}</td><th>{{localize "DXPB.Num.Upkeep"}}</th><td>{{preview.upkeep}}</td></tr>
+        <tr><th>{{localize "DXPB.Num.Merchants"}}</th><td>{{preview.merchant}}%</td><th>{{localize "DXPB.Num.Travel"}}</th><td>{{preview.travel}}</td></tr>
+        <tr><th>{{localize "DXPB.Num.Grounds"}}</th><td colspan="3">{{preview.grounds}}</td></tr>
+        <tr><th>{{localize "DXPB.Num.Housing"}}</th><td>{{preview.housing}}</td><th>{{localize "DXPB.Num.Population"}}</th><td>{{preview.population}}</td></tr>
+      </table>
+      <h4>{{localize "DXPB.SiegeTable"}}</h4>
+      <ul class="dxpb-list">{{#each preview.siege}}<li>{{label}}: <strong>{{days}}</strong> {{localize "DXPB.Days"}}</li>{{/each}}</ul>
+      <p class="dxpb-muted">{{localize "DXPB.Wizard.PreviewHint"}}</p>
+    </aside>
+  </div>
+  <footer class="dxpb-wizard-foot">
+    {{#unless first}}<button type="button" data-action="back"><i class="fa-solid fa-arrow-left"></i> {{localize "DXPB.Wizard.Back"}}</button>{{/unless}}
+    {{#unless last}}<button type="button" data-action="next">{{localize "DXPB.Wizard.Next"}} <i class="fa-solid fa-arrow-right"></i></button>{{/unless}}
+  </footer>
+</div>

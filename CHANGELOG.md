@@ -1,0 +1,57 @@
+# Changelog
+
+## 0.1.0 (unreleased)
+- Module id `dxcufgbs-player-bastions` (title "Dxcufgb's Player Bastions"), matching the repo `dxcufgb/FoundryVTT-player-bastions`. Bastions made under the earlier development id `dxcufgbs-player-bastion` aren't carried over.
+- Grounds: a Bastion has a size (Plot, Compound, Holding, Fortress, Citadel) that holds a set number of squares of buildings. Each expansion has a footprint; planned projects hold their room. When the grounds are full, nothing more is built or enlarged inside the walls until an "Extend the grounds" project finishes, which clears new land and lengthens every built wall layer. Shown on the Projects and Stats tabs and in the wizard, where the GM can also start a Bastion on bigger grounds.
+- Battle map: a "Build battle map" button (GM) on the Projects tab draws the Bastion as its own scene with Foundry walls and doors. A layout engine places each building inside the walls when it is finished and never moves it again (enlarged rooms grow in place where they can); keep rooms form one block, yards and gardens go toward the corners, the gate road stays clear. The map is redrawn after turns that finish a building and when a siege breaches the wall. API: `buildMap`, `viewMap`, `mapPlan`.
+- Battle map look, in the manner of modern sourcebook maps: soft sun shadows and ambient occlusion, thick stone walls with doors in their frames, grass baileys worn into dirt paths from every door, clutter along the walls, rugs under the furniture, trees and small details round the edge by terrain, warm firelight (also real Foundry lights at every hearth, forge, brazier and gate torch, lit only once the scene gets dark), and a warm colour grade. 53 pieces of art made with ElevenLabs. Round tower and square gatehouse-tower roofs, a thicker curtain wall, orchards of overlapping fruit trees, and cave Bastions drawn as halls cut into the rock with a tunnel out.
+- Build pace: building takes days, not months, by default (a room 2 to 8 days, a great hall 8); a "Build pace" setting picks Adventure, Campaign or DMG times. Unfinished projects are re-timed when the pace changes, keeping the share of work done.
+- Long-rest clock: without a calendar module, the party's long rests drive the Bastion: a day of work per rest, a turn every 7 rests, and the page counts in long rests. A "Bastion clock" setting can force either clock; the GM has an "A long rest passed" button.
+- Battle map: the first watchtower stands in the middle of the grounds on every map (4 × 4 squares, walls and a door facing the road); more towers go on the corners. Rooms that stood there in an older layout are placed again.
+- Projects tab: a summary of what one of every building still missing would take, in gold and long rests (days with a calendar), per group and in all.
+- Projects tab: started projects sit at the top (building, then paused), then the ones closest to done: least gold left, then least work left.
+- Projects tab: the Funding and Build headers show the totals (gold paid in of the total, work done of the total), and the list of expansions shows only what can be planned right now.
+- Battle map road: the location's road type is painted (none, a narrow dirt trail, a dirt road, a cobbled highway) and, until the Bastion has a wall, it just runs on into the grounds; the paved way to the door only comes with a wall.
+- Founding: a structure no longer brings a set of rooms. The GM picks ONE first building in the Structure step (cottage, house, large house, hall, tower or chapel; the structure suggests one); anything more goes in the First build step.
+- Battle map: with no wall, no barrels, crates or hay stand along the edge, and watchtowers after the centre one stand free near the middle instead of on empty corners.
+- Long-rest clock: the Bastion page, the dashboard and the turn card show no dates without a calendar module; merchants leave and dispatches arrive "after N long rests" on the Bastion's own clock.
+- Battle map: with no wall the ground runs on unbroken inside the grounds (no seam where the bailey starts).
+- Battle map ground: the GM picks the ground the battle map is painted on in the founding or edit wizard (grass, dirt, mud, sand, snow, cobblestone, cave floor, bright rock, or automatic by terrain), whatever the other answers.
+- Walls: Bastions start without walls (the keep, castle, manor, temple and fortified tower no longer come with one; the tower's own walls no longer count as a wall round the grounds). There is one Wall: built as a palisade and upgraded in place to stone, then reinforced, then a wall walk with crenellations, each step priced along the whole wall. Existing Bastions' separate Palisade, Stone Wall, Reinforce and Wall Walk fold into it at the highest step built.
+- Spike Barricade: a one-time ring of stakes at the foot of the wall, outside it and inside any ditch or moat (defense x1.05, light engines -10 %), drawn on the battle map and lengthened with the wall.
+- Extending the grounds takes longer (and costs more) the more the wall has been upgraded: every step of the wall per new square, the spike barricade, and digging the ditch or moat out to the new line.
+- Battle map: buttresses on a reinforced wall, crenellations with the wall walk, a timber gate in a wall without a gatehouse, a bridge over any ditch or moat.
+- Trade: every ware opens its item page from the compendium.
+- Delete Bastion (GM): a red button on the Overview tab; the dialog says it is permanent and the GM must type DELETE. It also removes the world-map marker, the battle map scene and the room facilities the Bastion added to the characters.
+- Projects tab: each project's buttons sit in a row along the bottom of its line, spaced apart.
+- "Finish now" (GM): a button on each project finishes it at once, whatever its funding and progress; "Finish all" in the Build column header finishes every unfinished project.
+- Scene controls: the Bastions have a control group of their own (after Journal Notes) instead of a button under Notes: Bastion list, Open my Bastion (players with a Bastion) and Found a Bastion (GM). The group has its own (empty) canvas layer, so clicking it opens the Bastion tools instead of falling back to the Token controls.
+- House rules window: it scrolls now (Save stays at the bottom), shows the rules in use and the default catalog besides the default rules, and downloads the default rules, rules in use, default catalog, catalog in use and your overrides as JSON files; "Load a file" fills either box from a JSON file.
+- Prices: a "Prices" setting with three models, Fair (default; about 12% off a Cramped room up to 23% off a 7,500 GP work), Thrifty (19% to 39% off) and DMG. Small jobs keep their price; crews cost 40 GP and 8 GP a turn at Fair (25 / 5 Thrifty, 50 / 10 DMG). Planned projects are re-priced when the setting changes, and on the first load (they were planned at the DMG's prices); gold paid beyond a new price goes into the treasury. The catalog's room prices follow the model too.
+- Bastion list: an open list updates at once when a Bastion is founded or deleted (on every client), and a deleted Bastion's page closes.
+- Build queue: the party (any owner, not only the GM) puts planned projects in a queue and orders it (up / down / out of the queue); the next queued project starts the moment a crew comes free, also when the GM finishes one with Finish now. Running projects sit at the top of the list, then the queue in its order ("Queued #1" ...), then the other plans. A project sent back to the queue for want of crews goes to its head.
+- Projects tab: a building with an enlarge, upgrade or repair project planned or under way shows that project instead of its Enlarge / Upgrade / Repair buttons. "Approved" projects are now called "Queued" (waiting for a crew).
+- Battle map: redrawn whenever a project finishes (a turn, a long rest, Finish now or Finish all), not only when a new building joins the layout; several finishes in a row make one redraw.
+- Building crews: a Bastion starts with one crew and builds one project at a time; the party hires more (Projects tab: hire and dismiss, 50 GP and 10 GP upkeep a turn each) and every Workers' Lodge adds one. A counter shows the crews at work of the total. Projects can't start, resume or take more crews than are free; a queued project starts by itself when a crew comes free, also part-way through a turn. More crews on one project no longer cost extra (house rule `extraCrewCostPct`), and the picker offers as many crews as the Bastion has. The Workers' Lodge now adds a crew to the Bastion instead of a crew to every project. Older Bastions with more projects running than crews send the ones started last back to the queue at the next day of work.
+- Fix: the "Set crews" button on a project said "Unknown action"; it now sets the extra crews. Crews can only change before building starts or while paused, and the page says so otherwise.
+- Fix: a finished "Extend the grounds" project now keeps the new size (the turn didn't save it).
+- First build: founding wizard with a map marker and location questions, Bastion page (overview, stats, defense, facilities, projects, dispatches, trade, history), GM dashboard.
+- Stats with tangible numbers and the siege holdout model, a live siege.
+- Expansion catalog of 71 (rooms and walls at DMG prices), tiered revenue buildings, treasury, upkeep and party dividends.
+- Projects: players plan and fund, the GM approves, starts, pauses and cancels; crews and rush.
+- Dispatches: envoy, letter, messenger bird, familiar, Animal Messenger, Sending, Sending Stones, Dream, beacons, scrying; standing orders with a Steward's Office.
+- Bastion turns around the dnd5e system's own turn, all 11 DMG Bastion events, merchants and visitors.
+- Self-tests: engine tests (Node and Quench) and in-Foundry integration tests (Quench).
+- Art: a sourcebook-style painting for each of the ten terrains and four sites; the GM picks the Bastion's picture in the wizard (terrain, site or any image).
+- Fixes from the first test run in Foundry:
+  - Tabs on the Bastion page switch when clicked (the "tab" action name clashed with Foundry's own).
+  - Choosing an expansion for the first build no longer resets before it is added.
+  - Typing in one dispatch field no longer loses the text of the next one.
+  - A Bastion turn happens at its due date, so a dispatch arriving during the week is delivered; missed turns catch up one week at a time.
+  - The "one more turn without orders" warning no longer shows on a turn that had orders.
+  - Wares under 1 GP show in SP or CP and cost their real price; the buyer gets change.
+  - Hiring never dismisses the guards or servants the Bastion was founded with.
+  - The edit wizard previews the Bastion's real stats.
+  - Party members' character sheets get a rook button that opens the Bastion.
+  - Dates read like "January 8th, 16:20"; "1 day" instead of "1 days".
+  - A notice tells the GM when the system's own Bastion rules are turned off in the world.
