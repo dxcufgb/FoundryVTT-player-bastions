@@ -8,6 +8,8 @@ CI (`.github/workflows/ci.yml`, job "Check module") calls `dxcufgb/foundry-modul
 runs `node tests/run-node.mjs` as the lint step and lists what goes into `module.zip` (`tests/`, `CLAUDE.md` and
 `.push/` stay out). Release: Actions → "Release module" with the version; `CHANGELOG.md` needs a section for it.
 The module id was `dxcufgbs-player-bastion` before the first release (development worlds only).
+The README stays short (intro, installation, links); the user guide, settings, API, hooks and the Debug Recorder
+fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
 - `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (69 expansions plus legacy wall entries,

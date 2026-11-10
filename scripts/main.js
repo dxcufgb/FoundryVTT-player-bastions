@@ -1,12 +1,12 @@
 /**
  * Dxcufgb's Player Bastions: the party's Bastion as a place on the map, built on the dnd5e system's own Bastion.
  *
- * Public API: game.modules.get("dxcufgbs-player-bastions").api
+ * Public API: game.modules.get("dxcufgbs-player-bastions").api (documented in the wiki's API page)
  *   openDashboard(), openBastion(entryId), openWizard()
  *   getBastion(entryOrIdOrActor) → { entry, record, stats, ctx }
  *   siegeHoldout(entryId, forceKeyOrForce) → { days, reason, ... }
  *   act(action, data) → runs a GM action (players are relayed over the socket): found, planProject, removeProject,
- *     fundProject, construction, deposit, claimDividend, hire, setPresence, chooseMaintain, setStanding, sendDispatch,
+ *     fundProject, queueProject, hireCrews, construction, deposit, claimDividend, hire, setPresence, chooseMaintain, setStanding, sendDispatch,
  *     setDispatchStatus, advanceTurn, longRest, countRest, finishProject, finishAllProjects, startSiege, siegeDay, endSiege, resolveEvent, buy, moveMarker, updateRecord, deleteBastion ({entryId, confirm: "DELETE"})
  *   buildMap(entryId) → draws or redraws the Bastion's battle-map scene (GM); viewMap(entryId); mapPlan(entryId) → geometry
  *   forceEvent(entryId, key) → applies one Bastion event (GM)
@@ -14,7 +14,7 @@
  *   core: the pure engine (computeStats, holdout, quote, quoteDispatch, advanceTurn, catalog data)
  * Hooks (all with the Bastion's JournalEntry first): dxcufgbs-player-bastions.founded, .projectStateChanged, .dispatchSent,
  *   .eventRolled, .eventResolved, .merchantArrived, .visitorArrived, .siegeStarted, .siegeDay, .siegeEnded,
- *   .mapBuilt (entry, scene, plan), .postTurn ({entryId, report, event}),
+ *   .mapBuilt (entry, scene, plan), .mapLookChanged ({entryId}), .postTurn ({entryId, report, event}),
  *   .restCounted ({entryId, counted, rests, completed, layoutChanged, turnDue}) with the long-rest clock,
  *   .bastionDeleted ({entryId, name}) just before a Bastion is deleted,
  *   .projectFinished ({entryId, projectId (null for Finish all), completed, layoutChanged}) when the GM finishes projects at once.
