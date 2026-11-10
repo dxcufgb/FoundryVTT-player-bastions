@@ -26,6 +26,12 @@ reviews:
         Every change to a Bastion goes through an action run by the responsible GM (players' requests are relayed over
         the socket), checks who may do it (gmOnly / ownerOnly) and writes with dot-path updates of the keys it changed
         (patchRecord / writeRecordKeys), never a whole-record replace. Action names and their fields are a public API.
+    - path: "scripts/{debug-recorder,debug-snapshot,socket}.js"
+      instructions: |
+        Debug Recorder data (snapshot and breadcrumbs) holds only counts, booleans, numbers, document ids and the
+        module's own ids passed through ownId: never Bastion, character, user or place names, notes, letters, history
+        text, image paths or URLs. Every call into the recorder is wrapped so its errors never reach the module, and
+        the recorder stays optional.
     - path: "scripts/tests/**"
       instructions: |
         core-tests.js is shared by the Node runner and Quench: keep it free of Foundry globals. quench.js cleans up

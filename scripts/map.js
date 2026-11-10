@@ -1,4 +1,5 @@
 import { MODULE_ID, rules, catalog, t } from "./util.js";
+import { noteError } from "./debug-recorder.js";
 import { getRecord, patchRecord } from "./store.js";
 import { statsFor } from "./context.js";
 import { mapPlan } from "./core/mapplan.js";
@@ -154,6 +155,7 @@ export async function refreshMap(entry) {
     return await buildMap(entry, { notify: false });
   } catch (err) {
     console.error(`${MODULE_ID} | Could not redraw the Bastion map`, err);
+    noteError("map.refresh");
     return null;
   }
 }

@@ -1001,6 +1001,50 @@ export function registerQuench(quench) {
         await dash.close();
       });
 
+      it("registers with Dxcufgb's Debug Recorder: a snapshot without names, and breadcrumbs only while recording", async () => {
+        const { debugSnapshot } = await import("../debug-snapshot.js");
+        const rec = await import("../debug-recorder.js");
+        const snap = debugSnapshot();
+        const json = JSON.stringify(snap);
+        assert.isAtLeast(snap.bastions.total, 1);
+        const mine = snap.bastions.list.find(b => b.docId === entryId);
+        assert.ok(mine, "the test Bastion is in the snapshot by its document id");
+        assert.ok(mine.statsOk);
+        assert.isObject(mine.projects);
+        assert.isObject(mine.crews);
+        // Nothing private: no Bastion, character, place or user names, no image paths or URLs.
+        const record = getRecord(getEntry(entryId));
+        for (const text of [record.name, hero.name, ally.name, game.user.name, record.location?.settlement?.name, "modules/", "http"]) {
+          if (text) assert.notInclude(json, text, `the snapshot doesn't hold "${text}"`);
+        }
+        const recorderMod = game.modules.get("dxcufgbs-debug-recorder");
+        if (recorderMod?.active && recorderMod.api) {
+          assert.isTrue(rec.recorderConnected(), "registered with the installed recorder");
+          return;
+        }
+        // No recorder here: stand one in through its ready hook and check what reaches it.
+        const got = { registered: null, crumbs: [] };
+        let recording = false;
+        const fake = {
+          register: (id, opts) => { got.registered = { id, snapshot: opts?.snapshot }; return true; },
+          isRecording: () => recording,
+          breadcrumb: (id, key, data) => got.crumbs.push({ id, key, data })
+        };
+        Hooks.callAll("dxcufgbs-debug-recorder.ready", fake);
+        assert.equal(got.registered?.id, MODULE_ID, "registered under the module id");
+        assert.equal(typeof got.registered.snapshot(), "object");
+        const { request } = await import("../socket.js");
+        await request("updateRecord", { entryId, changes: {} });
+        assert.equal(got.crumbs.length, 0, "nothing while not recording");
+        recording = true;
+        await request("updateRecord", { entryId, changes: {} });
+        const run = got.crumbs.find(c => c.key === "action.run");
+        assert.ok(run, "an action leaves a breadcrumb while recording");
+        assert.equal(run.data.action, "updateRecord");
+        assert.notInclude(JSON.stringify(got.crumbs), record.name);
+        recording = false;
+      });
+
       it("the holdout API answers for a preset force", () => {
         const api = game.modules.get(MODULE_ID)?.api ?? globalThis.DxcufgbsPlayerBastions;
         const h = api.siegeHoldout(entryId, "bandits");

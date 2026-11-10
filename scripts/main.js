@@ -21,6 +21,8 @@
  */
 import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode } from "./util.js";
 import { registerSocket, request } from "./socket.js";
+import { registerDebugRecorder, crumb } from "./debug-recorder.js";
+import { debugSnapshot } from "./debug-snapshot.js";
 import { ACTIONS } from "./actions.js";
 import { allBastions, getEntry, getRecord, bastionForActor, isBastionEntry, ownerActors, canAct } from "./store.js";
 import { statsFor } from "./context.js";
@@ -292,6 +294,9 @@ function registerTime() {
 
 function onInit() {
   registerSettings();
+  // Optional: Dxcufgb's Debug Recorder gets a snapshot of the module's state (no names or text; see debug-snapshot.js).
+  registerDebugRecorder({ snapshot: debugSnapshot });
+  registerDebugCrumbs();
   registerBastionLayer();
   foundry.applications.handlebars.loadTemplates([
     `modules/${MODULE_ID}/templates/bastion-sheet.hbs`,
@@ -342,6 +347,7 @@ function onInit() {
 }
 
 function onReady() {
+  registerDebugRecorder({ snapshot: debugSnapshot });
   registerSocket(ACTIONS);
   registerMapHooks();
   // The system's own Bastion rules can be off in a world: the module still works, but say what that hides.
@@ -351,6 +357,32 @@ function onReady() {
     if (cfg && cfg.enabled === false) ui.notifications.info(t("Notify.SystemBastionsOff"));
   }
   repaceAll();
+}
+
+/**
+ * Breadcrumbs for Dxcufgb's Debug Recorder at the module's own events (only while the GM records). Counts, booleans
+ * and own ids only: the hooks' journal entries go in as their document id, never their name.
+ */
+function registerDebugCrumbs() {
+  const id = e => e?.id ?? (typeof e === "string" ? e : null);
+  const on = (name, fn) => Hooks.on(`${MODULE_ID}.${name}`, (...args) => crumb(name, () => fn(...args)));
+  on("founded", entry => ({ docId: id(entry) }));
+  on("projectStateChanged", (entry, p, from, to) => ({ docId: id(entry), kind: p?.kind ?? null, from: from ?? null, to: to ?? null }));
+  on("postTurn", ({ entryId, report } = {}) => ({ docId: entryId, completed: report?.completed?.length ?? 0,
+    started: report?.started?.length ?? 0, requeued: report?.requeued?.length ?? 0, layoutChanged: !!report?.layoutChanged }));
+  on("restCounted", ({ entryId, counted, rests, completed, layoutChanged, turnDue } = {}) => ({ docId: entryId, counted: !!counted,
+    rests: Number(rests?.sinceTurn ?? rests) || 0, completed: completed?.length ?? 0, layoutChanged: !!layoutChanged, turnDue: !!turnDue }));
+  on("projectFinished", ({ entryId, projectId, completed, layoutChanged } = {}) => ({ docId: entryId, all: projectId === null,
+    completed: completed?.length ?? 0, layoutChanged: !!layoutChanged }));
+  on("mapBuilt", (entry, scene, plan) => ({ docId: id(entry), sceneId: scene?.id ?? null, walls: plan?.walls?.length ?? 0,
+    breaches: plan?.breaches?.length ?? 0 }));
+  on("dispatchSent", entry => ({ docId: id(entry) }));
+  on("eventRolled", entry => ({ docId: id(entry) }));
+  on("eventResolved", entry => ({ docId: id(entry) }));
+  on("siegeStarted", entry => ({ docId: id(entry) }));
+  on("siegeEnded", entry => ({ docId: id(entry) }));
+  on("bastionDeleted", ({ entryId } = {}) => ({ docId: entryId }));
+  Hooks.once("ready", () => crumb("module.ready", { responsibleGM: isResponsibleGM(), bastions: allBastions().length, clock: clockMode() }));
 }
 
 /**
