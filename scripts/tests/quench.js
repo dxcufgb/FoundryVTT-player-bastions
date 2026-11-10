@@ -1001,6 +1001,64 @@ export function registerQuench(quench) {
         await dash.close();
       });
 
+      it("registers with Dxcufgb's Debug Recorder: a snapshot without names, and breadcrumbs only while recording", async () => {
+        const { debugSnapshot } = await import("../debug-snapshot.js");
+        const rec = await import("../debug-recorder.js");
+        const snap = debugSnapshot();
+        const json = JSON.stringify(snap);
+        assert.isAtLeast(snap.bastions.total, 1);
+        const mine = snap.bastions.list.find(b => b.docId === entryId);
+        assert.ok(mine, "the test Bastion is in the snapshot by its document id");
+        assert.ok(mine.statsOk);
+        assert.isObject(mine.projects);
+        assert.isObject(mine.crews);
+        // Nothing private: no Bastion, character, place or user names, no image paths or URLs.
+        const record = getRecord(getEntry(entryId));
+        for (const text of [record.name, hero.name, ally.name, game.user.name, record.location?.settlement?.name, "modules/", "http"]) {
+          if (text) assert.notInclude(json, text, `the snapshot doesn't hold "${text}"`);
+        }
+        const recorderMod = game.modules.get("dxcufgbs-debug-recorder");
+        if (recorderMod?.active && recorderMod.api) assert.isTrue(rec.recorderConnected(), "registered with the installed recorder");
+
+        // A stand-in recorder through the module's own registration path (the real one, if any, is put back after).
+        const got = { registered: null, crumbs: [] };
+        let recording = false;
+        const fake = {
+          register: (id, opts) => { got.registered = { id, snapshot: opts?.snapshot }; return true; },
+          isRecording: () => recording,
+          breadcrumb: (id, key, data) => got.crumbs.push({ id, key, data })
+        };
+        const restore = rec.testing.swap(fake);
+        try {
+          assert.equal(got.registered?.id, MODULE_ID, "registers under the module id");
+          assert.equal(typeof got.registered.snapshot(), "object");
+          const { request } = await import("../socket.js");
+          await request("updateRecord", { entryId, changes: {} });
+          assert.equal(got.crumbs.length, 0, "nothing while not recording");
+          recording = true;
+          await request("updateRecord", { entryId, changes: {} });
+          const run = got.crumbs.find(c => c.key === "action.run");
+          assert.ok(run, "an action leaves a breadcrumb while recording");
+          assert.equal(run.id, MODULE_ID);
+          // Exactly these fields, of these types: no room for a name.
+          assert.sameMembers(Object.keys(run.data), ["action", "ok", "ms", "relayed", "byGM"]);
+          assert.equal(run.data.action, "updateRecord");
+          assert.isBoolean(run.data.ok);
+          assert.isNumber(run.data.ms);
+          assert.isBoolean(run.data.relayed);
+          assert.isBoolean(run.data.byGM);
+          const crumbs = JSON.stringify(got.crumbs);
+          for (const text of [record.name, game.user.name]) assert.notInclude(crumbs, text);
+          // Error codes stay short fixed codes.
+          rec.noteError("self test: <code>");
+          const err = got.crumbs.find(c => c.key === "error.caught");
+          assert.equal(err.data.code, "selftestcode", "only letters, digits, dots and dashes stay");
+        } finally {
+          recording = false;
+          restore();
+        }
+      });
+
       it("the holdout API answers for a preset force", () => {
         const api = game.modules.get(MODULE_ID)?.api ?? globalThis.DxcufgbsPlayerBastions;
         const h = api.siegeHoldout(entryId, "bandits");

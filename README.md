@@ -59,6 +59,10 @@ Then enable **Dxcufgb's Player Bastions** in your dnd5e world. [Quench](https://
 
 The module works with the system's own Bastion rules turned on or off (System Settings → Bastions); with them off, the sheets' Bastion tab and the system's turn button stay hidden, and the GM gets a notice.
 
+## Debug Recorder
+
+With [Dxcufgb's Debug Recorder](https://github.com/dxcufgb/FoundryVTT-debug-recorder) installed, a bug report includes this module's state and what it did while recording: settings, the clock, and for each Bastion its projects by state, crews, build queue, dispatches, map and marker, plus the actions run, turns, long rests, finished projects and map builds. Only counts and the module's own ids go in, never names, notes, letters, image paths or URLs. The recorder is optional: without it nothing changes.
+
 ## API
 
 `game.modules.get("dxcufgbs-player-bastions").api` — see the header of `scripts/main.js`.

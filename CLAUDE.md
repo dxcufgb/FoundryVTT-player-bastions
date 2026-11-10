@@ -32,9 +32,17 @@ The module id was `dxcufgbs-player-bastion` before the first release (developmen
   paint, upload to `worlds/<world>/bastions/`, create/update the scene, replace our flagged walls, redraw hooks.
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
 - `scripts/apps/` – `BastionSheet` (8 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
+- `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a
+  dependency): `registerDebugRecorder` (init and ready; also listens for `dxcufgbs-debug-recorder.ready` from import
+  time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action
+  (`socket.js` `runAction`: own action name, ok, ms, relayed), the module hooks (`registerDebugCrumbs` in main.js), socket
+  relay and timeouts, map errors.
 - `scripts/tests/` – `core-tests.js` (shared engine tests), `quench.js` (Quench batches + built-in runner); `tests/run-node.mjs`.
 
 ## Invariants
+- **Debug Recorder**: optional; snapshot and breadcrumb data never contain names, free text, image paths or URLs:
+  only counts, booleans, numbers, document ids and the module's own ids (through `ownId`). A recorder error never
+  reaches the module.
 - Facilities stay native dnd5e items; module data only in its flags and its own journals.
 - Players never write the record; the GM side checks `canAct` / GM-only on every action.
 - Room and stone-wall prices are the DMG's; everything else is this module's design. Never copy DMG text.

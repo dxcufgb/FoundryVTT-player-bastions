@@ -1,6 +1,7 @@
 import { MODULE_ID, TEMPLATE_PATH, t, gp, coins, daysText, workText, clockMode, rules, catalog, formatGameTime, now, escapeHTML, setting, SECONDS_PER_DAY, whenText, dueText } from "../util.js";
 import { restsToTurn } from "../core/rests.js";
 import { crewStatus, projectTeams, queueOrder } from "../core/crews.js";
+import { noteError } from "../debug-recorder.js";
 import { getEntry, getRecord, canAct, ownerActors } from "../store.js";
 import { statsFor } from "../context.js";
 import { request } from "../socket.js";
@@ -532,7 +533,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const icon = target.querySelector("i");
     icon?.classList.add("fa-spin");
     try { await buildMap(getEntry(this.entryId)); }
-    catch (err) { console.error(err); ui.notifications.error(t("Map.Failed", { error: err.message })); }
+    catch (err) { console.error(err); noteError("map.build"); ui.notifications.error(t("Map.Failed", { error: err.message })); }
     finally { target.disabled = false; icon?.classList.remove("fa-spin"); }
   }
 

@@ -1,4 +1,5 @@
 import { MODULE_ID, isResponsibleGM, randomId, t } from "./util.js";
+import { crumb, noteError, ownId } from "./debug-recorder.js";
 
 /**
  * Player → GM relay. Players read their Bastion but never write it: every change is an action the responsible GM runs
@@ -8,6 +9,28 @@ const EVENT = `module.${MODULE_ID}`;
 const pending = new Map();
 let handlers = {};
 
+/**
+ * Runs one action and leaves a breadcrumb for the Debug Recorder: the action's own name, whether it worked, how long
+ * it took, and whether a player's request was relayed. Never the action's data.
+ */
+async function runAction(action, data, user, relayed) {
+  const started = Date.now();
+  const fn = handlers[action];
+  if (!fn) {
+    crumb("action.unknown", { relayed });
+    return { ok: false, reason: "Unknown action" };
+  }
+  try {
+    const result = await fn(data ?? {}, user);
+    crumb("action.run", () => ({ action: ownId(action, handlers), ok: result?.ok !== false, ms: Date.now() - started, relayed,
+      byGM: !!user?.isGM }));
+    return result;
+  } catch (err) {
+    noteError(`action.${ownId(action, handlers)}`);
+    throw err;
+  }
+}
+
 export function registerSocket(actionHandlers) {
   handlers = actionHandlers;
   game.socket.on(EVENT, async (msg) => {
@@ -16,11 +39,11 @@ export function registerSocket(actionHandlers) {
       const user = game.users.get(msg.userId);
       let result;
       try {
-        const fn = handlers[msg.action];
-        if (!fn || !user) throw new Error("Unknown action");
-        result = await fn(msg.data ?? {}, user);
+        if (!user) throw new Error("Unknown user");
+        result = await runAction(msg.action, msg.data, user, true);
       } catch (err) {
         console.error(`${MODULE_ID} | relayed action ${msg.action} failed`, err);
+        noteError("socket.relay");
         result = { ok: false, reason: err.message };
       }
       game.socket.emit(EVENT, { type: "response", requestId: msg.requestId, userId: msg.userId, result });
@@ -36,15 +59,13 @@ export function registerSocket(actionHandlers) {
 
 /** Runs an action as the GM: locally for a GM, over the socket for a player. Resolves to the action's result. */
 export async function request(action, data = {}) {
-  if (game.user.isGM) {
-    const fn = handlers[action];
-    if (!fn) return { ok: false, reason: "Unknown action" };
-    return fn(data, game.user);
-  }
+  if (game.user.isGM) return runAction(action, data, game.user, false);
   if (!game.users.activeGM) {
+    crumb("socket.noGM", { action: ownId(action, handlers) });
     ui.notifications.warn(t("Notify.NoGM"));
     return { ok: false, reason: "noGM" };
   }
+  crumb("socket.relay.send", { action: ownId(action, handlers) });
   const requestId = randomId();
   return new Promise((resolve) => {
     pending.set(requestId, resolve);
@@ -52,6 +73,7 @@ export async function request(action, data = {}) {
     setTimeout(() => {
       if (pending.has(requestId)) {
         pending.delete(requestId);
+        noteError("socket.timeout");
         resolve({ ok: false, reason: "timeout" });
       }
     }, 15000);
