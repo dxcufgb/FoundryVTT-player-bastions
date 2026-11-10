@@ -99,6 +99,8 @@ export function debugSnapshot() {
   let openSheets = 0;
   for (const app of BastionSheet.instances.values()) if (app.rendered) openSheets++;
   const R = rules();
+  // Only the known numbers of the rules: house rules could add other keys (or text) to these objects.
+  const num = n => (typeof n === "number" && Number.isFinite(n) ? n : null);
   return {
     version: game.modules.get(MODULE_ID)?.version ?? null,
     isGM: game.user.isGM,
@@ -111,8 +113,12 @@ export function debugSnapshot() {
     calendarModules: calendarModules().length,
     quench: !!game.modules.get("quench")?.active,
     settings: settingsState(),
-    rules: { turnDays: R.turnDays, price: { ...R.price }, pace: { ...R.pace }, crewHireCost: R.crewHireCost, crewUpkeep: R.crewUpkeep },
-    bastions: { total: entries.length, list: entries.map(bastionState) },
+    rules: { turnDays: num(R.turnDays), price: { scale: num(R.price?.scale), power: num(R.price?.power) },
+      pace: { scale: num(R.pace?.scale), power: num(R.pace?.power) }, crewHireCost: num(R.crewHireCost), crewUpkeep: num(R.crewUpkeep) },
+    // One broken record must not cost the report the others.
+    bastions: { total: entries.length, list: entries.map((e, i) => {
+      try { return bastionState(e, i); } catch { return { index: i, docId: e?.id ?? null, snapshotError: true }; }
+    }) },
     openSheets,
     errors: errorSummary()
   };

@@ -40,6 +40,9 @@ export function crumb(key, data) {
  */
 export function noteError(code) {
   try {
+    // A fixed code: letters, digits, dots and dashes, short; at most 50 different ones (the rest count as "other").
+    code = String(code ?? "unknown").replace(/[^\w.-]/g, "").slice(0, 40) || "unknown";
+    if (!(code in errors.counts) && Object.keys(errors.counts).length >= 50) code = "other";
     errors.counts[code] = (errors.counts[code] ?? 0) + 1;
     errors.last = code;
     errors.lastAt = Date.now();
@@ -116,3 +119,18 @@ export function registerDebugRecorder({ snapshot: fn } = {}) {
 export function recorderConnected() {
   return !!recorder;
 }
+
+/**
+ * For the self-tests only: put a stand-in recorder in place (null for none) without touching the recorder's ready
+ * hook, and connect through the module's own registration path. Returns a function that puts the real one back.
+ */
+export const testing = {
+  swap(rec) {
+    const prev = recorder;
+    const prevRetries = retries;
+    recorder = null;
+    retries = RETRIES; // no retry timers for a stand-in
+    if (rec) connect(rec);
+    return () => { recorder = prev; retries = prevRetries; };
+  }
+};

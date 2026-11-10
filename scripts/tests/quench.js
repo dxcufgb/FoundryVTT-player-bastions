@@ -1018,11 +1018,9 @@ export function registerQuench(quench) {
           if (text) assert.notInclude(json, text, `the snapshot doesn't hold "${text}"`);
         }
         const recorderMod = game.modules.get("dxcufgbs-debug-recorder");
-        if (recorderMod?.active && recorderMod.api) {
-          assert.isTrue(rec.recorderConnected(), "registered with the installed recorder");
-          return;
-        }
-        // No recorder here: stand one in through its ready hook and check what reaches it.
+        if (recorderMod?.active && recorderMod.api) assert.isTrue(rec.recorderConnected(), "registered with the installed recorder");
+
+        // A stand-in recorder through the module's own registration path (the real one, if any, is put back after).
         const got = { registered: null, crumbs: [] };
         let recording = false;
         const fake = {
@@ -1030,19 +1028,35 @@ export function registerQuench(quench) {
           isRecording: () => recording,
           breadcrumb: (id, key, data) => got.crumbs.push({ id, key, data })
         };
-        Hooks.callAll("dxcufgbs-debug-recorder.ready", fake);
-        assert.equal(got.registered?.id, MODULE_ID, "registered under the module id");
-        assert.equal(typeof got.registered.snapshot(), "object");
-        const { request } = await import("../socket.js");
-        await request("updateRecord", { entryId, changes: {} });
-        assert.equal(got.crumbs.length, 0, "nothing while not recording");
-        recording = true;
-        await request("updateRecord", { entryId, changes: {} });
-        const run = got.crumbs.find(c => c.key === "action.run");
-        assert.ok(run, "an action leaves a breadcrumb while recording");
-        assert.equal(run.data.action, "updateRecord");
-        assert.notInclude(JSON.stringify(got.crumbs), record.name);
-        recording = false;
+        const restore = rec.testing.swap(fake);
+        try {
+          assert.equal(got.registered?.id, MODULE_ID, "registers under the module id");
+          assert.equal(typeof got.registered.snapshot(), "object");
+          const { request } = await import("../socket.js");
+          await request("updateRecord", { entryId, changes: {} });
+          assert.equal(got.crumbs.length, 0, "nothing while not recording");
+          recording = true;
+          await request("updateRecord", { entryId, changes: {} });
+          const run = got.crumbs.find(c => c.key === "action.run");
+          assert.ok(run, "an action leaves a breadcrumb while recording");
+          assert.equal(run.id, MODULE_ID);
+          // Exactly these fields, of these types: no room for a name.
+          assert.sameMembers(Object.keys(run.data), ["action", "ok", "ms", "relayed", "byGM"]);
+          assert.equal(run.data.action, "updateRecord");
+          assert.isBoolean(run.data.ok);
+          assert.isNumber(run.data.ms);
+          assert.isBoolean(run.data.relayed);
+          assert.isBoolean(run.data.byGM);
+          const crumbs = JSON.stringify(got.crumbs);
+          for (const text of [record.name, game.user.name]) assert.notInclude(crumbs, text);
+          // Error codes stay short fixed codes.
+          rec.noteError("self test: <code>");
+          const err = got.crumbs.find(c => c.key === "error.caught");
+          assert.equal(err.data.code, "selftestcode", "only letters, digits, dots and dashes stay");
+        } finally {
+          recording = false;
+          restore();
+        }
       });
 
       it("the holdout API answers for a preset force", () => {
