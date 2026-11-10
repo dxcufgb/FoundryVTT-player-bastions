@@ -22,13 +22,6 @@
           "minimum": "5.2.5"
         }
       }
-    ],
-    "recommends": [
-      {
-        "id": "quench",
-        "type": "module",
-        "reason": "Runs the module's self-tests inside Foundry."
-      }
     ]
   },
   "url": "https://github.com/dxcufgb/FoundryVTT-player-bastions",
