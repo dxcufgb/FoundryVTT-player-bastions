@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 - Dxcufgb's Debug Recorder: when it is installed, the module registers with it (whatever the load order) and gives it a snapshot of its state (settings, clock, and per Bastion: projects by state, crews, queue, dispatches, map and marker, errors) and breadcrumbs at every action, turn, long rest, finished project and map build while the GM records. Only counts, own ids and document ids: no names, text, image paths or URLs. Without the recorder nothing changes.
 - Module id `dxcufgbs-player-bastions` (title "Dxcufgb's Player Bastions"), matching the repo `dxcufgb/FoundryVTT-player-bastions`. Bastions made under the earlier development id `dxcufgbs-player-bastion` aren't carried over.
 - Grounds: a Bastion has a size (Plot, Compound, Holding, Fortress, Citadel) that holds a set number of squares of buildings. Each expansion has a footprint; planned projects hold their room. When the grounds are full, nothing more is built or enlarged inside the walls until an "Extend the grounds" project finishes, which clears new land and lengthens every built wall layer. Shown on the Projects and Stats tabs and in the wizard, where the GM can also start a Bastion on bigger grounds.
