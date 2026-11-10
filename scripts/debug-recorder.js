@@ -16,6 +16,8 @@ const RECORDER_ID = "dxcufgbs-debug-recorder";
 
 /** The recorder's API once this module is registered with it. */
 let recorder = null;
+/** A stand-in recorder for the self-tests (see `testing`); while set, breadcrumbs go to it instead. */
+let standIn = null;
 let snapshotFn = () => ({});
 /** Error codes this module caught since the page loaded: {code: count}, and the latest one. */
 const errors = { counts: {}, last: null, lastAt: 0 };
@@ -28,7 +30,8 @@ const errors = { counts: {}, last: null, lastAt: 0 };
  */
 export function crumb(key, data) {
   try {
-    if (recorder?.isRecording?.()) recorder.breadcrumb(MODULE_ID, key, typeof data === "function" ? data() : data);
+    const rec = standIn ?? recorder;
+    if (rec?.isRecording?.()) rec.breadcrumb(MODULE_ID, key, typeof data === "function" ? data() : data);
   } catch (err) {
     console.warn(`${MODULE_ID} | debug recorder breadcrumb failed`, err);
   }
@@ -121,16 +124,14 @@ export function recorderConnected() {
 }
 
 /**
- * For the self-tests only: put a stand-in recorder in place (null for none) without touching the recorder's ready
- * hook, and connect through the module's own registration path. Returns a function that puts the real one back.
+ * For the self-tests only: route breadcrumbs to a stand-in recorder and register with it the way the real one is
+ * registered, without touching the real recorder's state (it can still connect meanwhile). Returns a function that
+ * removes the stand-in.
  */
 export const testing = {
   swap(rec) {
-    const prev = recorder;
-    const prevRetries = retries;
-    recorder = null;
-    retries = RETRIES; // no retry timers for a stand-in
-    if (rec) connect(rec);
-    return () => { recorder = prev; retries = prevRetries; };
+    standIn = rec ?? null;
+    try { rec?.register?.(MODULE_ID, { snapshot }); } catch (err) { console.warn(`${MODULE_ID} | stand-in recorder`, err); }
+    return () => { if (standIn === rec) standIn = null; };
   }
 };
