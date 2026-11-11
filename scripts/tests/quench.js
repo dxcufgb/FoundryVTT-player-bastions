@@ -42,7 +42,9 @@ export function registerQuench(quench) {
     describe("Player Bastions inside Foundry", function () {
       this.timeout(120000);
 
+      let startedAt = 0;
       before(async () => {
+        startedAt = Date.now();
         if (!game.user.isGM) throw new Error("Run as GM");
         for (const k of ["clock", "timePrompt", "buildPrice"]) saved[k] = game.settings.get(MODULE_ID, k);
         await game.settings.set(MODULE_ID, "clock", "calendar");
@@ -82,8 +84,10 @@ export function registerQuench(quench) {
         }
         for (const id of made.actors) await game.actors.get(id)?.delete();
         for (const id of made.scenes) await game.scenes.get(id)?.delete();
+        // Turn and event cards of the test Bastions, and every other card the batch wrote about its test documents.
         const msgs = game.messages.filter(m => m.getFlag(MODULE_ID, "turn")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "turn").entryId)
-          || m.getFlag(MODULE_ID, "event")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "event").entryId));
+          || m.getFlag(MODULE_ID, "event")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "event").entryId)
+          || ((m.timestamp ?? 0) >= startedAt && String(m.content ?? "").includes(PREFIX)));
         if (msgs.length) await ChatMessage.deleteDocuments(msgs.map(m => m.id));
       });
 
