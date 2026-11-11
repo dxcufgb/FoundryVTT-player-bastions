@@ -8,8 +8,8 @@ import { assignCrews } from "./core/crews.js";
 import { siegeDay } from "./core/siege.js";
 import { rollBastionEvent, restoreDisabled } from "./events.js";
 import { fillStock } from "./merchant.js";
-import { describeOrder, giveGold } from "./actions.js";
-import { withBastionLock } from "./lock.js";
+import { describeOrder } from "./actions.js";
+import { withBastionLock, withActorLock } from "./lock.js";
 
 /** Bastions whose turn is being run right now, so the system's own turn summary message isn't processed twice. */
 export const running = new Set();
@@ -185,22 +185,34 @@ export function runFinishAll(entry) {
 }
 
 /**
- * Pays the characters what the Bastion owes them (record.refundsDue, written with the record before any payment: a
- * project a finished road cancelled). Each debt is cleared only once its character has been paid, so a failed payment
- * is tried again on the next turn, rest, finish or world load. A character that no longer exists: its share goes to
- * the treasury. Responsible GM; call it holding the Bastion's lock (or from settleAllRefunds).
+ * Pays the characters what the Bastion owes them (record.refundsDue.<actorId>.<projectId>, written with the record
+ * before any payment: a project a finished road cancelled). The gold and a receipt (the character's flag
+ * refundReceipts.<entryId>_<projectId>) go in one update, so a debt whose record entry couldn't be cleared is never
+ * paid twice; the entry is cleared once the receipt is there. A failed payment stays owed and is tried again on the
+ * next turn, rest, finish or world load. A character that no longer exists: its share goes to the treasury.
+ * Responsible GM; call it holding the Bastion's lock (or from settleAllRefunds).
  */
 async function settleRefunds(entry) {
-  const due = Object.entries(getRecord(entry)?.refundsDue ?? {}).filter(([, gold]) => Number(gold) > 0);
-  for (const [id, gold] of due) {
-    const actor = game.actors.get(id);
-    try {
-      if (actor) await giveGold(actor, gold);
-      const changes = { [`refundsDue.${id}`]: undefined };
-      if (!actor) changes.treasury = (Number(getRecord(entry).treasury) || 0) + Math.floor(Number(gold) || 0);
-      await patchRecord(entry, changes);
-    } catch (err) {
-      console.warn(`${MODULE_ID} | a refund couldn't be paid yet; it stays owed`, err);
+  for (const [actorId, debts] of Object.entries(getRecord(entry)?.refundsDue ?? {})) {
+    const actor = game.actors.get(actorId);
+    for (const [projectId, owed] of Object.entries(debts ?? {})) {
+      const gold = Math.max(0, Math.floor(Number(owed) || 0));
+      const receipt = `${entry.id}_${projectId}`;
+      try {
+        const changes = { [`refundsDue.${actorId}.${projectId}`]: undefined };
+        if (!actor) changes.treasury = (Number(getRecord(entry).treasury) || 0) + gold;
+        else await withActorLock(actor, async () => {
+          if (actor.getFlag(MODULE_ID, `refundReceipts.${receipt}`) !== undefined) return;
+          await actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + gold,
+            [`flags.${MODULE_ID}.refundReceipts.${receipt}`]: gold });
+        });
+        await patchRecord(entry, changes);
+      } catch (err) {
+        console.warn(`${MODULE_ID} | a refund couldn't be paid yet; it stays owed`, err);
+      }
+    }
+    if (!Object.keys(getRecord(entry)?.refundsDue?.[actorId] ?? {}).length && getRecord(entry)?.refundsDue?.[actorId]) {
+      await patchRecord(entry, { [`refundsDue.${actorId}`]: undefined }).catch(() => {});
     }
   }
 }

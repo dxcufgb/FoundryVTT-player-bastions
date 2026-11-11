@@ -1486,7 +1486,7 @@ export function registerCoreTests({ describe, it, assert }) {
       const refund = cancelRefund(rec.projects.ha, rules);
       assert.equal(rec.treasury + (done.refunds?.hero ?? 0), refund.total, "the payers get the cancel refund");
       assert.ok(done.refunds.hero > 0, "a character's share is returned for the GM side to pay");
-      assert.equal(rec.refundsDue.hero, done.refunds.hero, "and kept owed in the record until it is paid");
+      assert.deepEqual(rec.refundsDue.hero, { ha: done.refunds.hero }, "and kept owed in the record, by project, until it is paid");
       assert.equal(done.cancelled.length, 1);
       assert.ok(done.lines.some(l => l.startsWith("Cancelled: Hidden Approach")));
       // Finishing the road at once does the same to a Hidden Approach that wasn't in view.
@@ -1497,6 +1497,15 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.isTrue(fin.ok);
       assert.equal(r2.projects.ha.state, "cancelled");
       assert.deepEqual(cancelHiddenApproach(r2, rules).cancelled, [], "once only");
+      // A siege stops the finish: nothing changes, nothing is cancelled.
+      const r4 = workedExampleRecord();
+      r4.siege = { day: 1 };
+      r4.projects = { ha: { id: "ha", kind: "build", expansionId: "hidden-approach", label: "HA", state: "planned", cost: 1000, funded: 0, days: 10, progress: 0 },
+        rd: { id: "rd", kind: "build", expansionId: "pave-road", label: "Paving", state: "planned", cost: 100, funded: 0, days: 3, progress: 0, count: 5 } };
+      const snap = JSON.stringify(r4.projects);
+      const sieged = finishProject(r4, "rd", { rules, newId });
+      assert.isFalse(sieged.ok);
+      assert.equal(JSON.stringify(r4.projects), snap, "the projects are as they were");
       // On its own it leaves the record alone and returns the change.
       const r3 = { treasury: 5, projects: { ha: { id: "ha", expansionId: "hidden-approach", label: "HA", state: "planned", cost: 100, funded: 40, days: 10, progress: 0, contributions: { treasury: 40 } } } };
       const before = JSON.stringify(r3);

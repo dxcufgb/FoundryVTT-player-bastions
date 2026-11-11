@@ -255,6 +255,9 @@ export function registerQuench(quench) {
             const sec = () => el().querySelector('.dxpb-fac-section[data-section="arcane"]');
             const before = localStorage.getItem(`${MODULE_ID}.collapsedSections`);
             try {
+              // From an open section, whatever the GM had folded before.
+              if (sec().classList.contains("dxpb-collapsed")) sec().querySelector('[data-action="toggleSection"]').click();
+              assert.isFalse(sec().classList.contains("dxpb-collapsed"), "open to start with");
               sec().querySelector('[data-action="toggleSection"]').click();
               assert.isTrue(sec().classList.contains("dxpb-collapsed"), "folded");
               assert.equal(getComputedStyle(sec().querySelector(".dxpb-fac-summary")).display, "none", "its contents hidden");

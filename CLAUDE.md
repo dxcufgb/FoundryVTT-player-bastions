@@ -138,7 +138,7 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   points (`runTurn`, `runRest`, `runFinish`, `runSiegeDay`) take it themselves. Not reentrant. Coins: `takeGold` /
   `giveGold` take `withActorLock`.
 - A finished road cancels an open Hidden Approach (`cancelHiddenApproach`, core/projects.js): cancel refund; the
-  characters' shares are owed in `record.refundsDue` and paid by `settleRefunds` (turn-runner.js), each cleared once paid;
+  characters' shares are owed in `record.refundsDue.<actorId>.<projectId>` and paid by `settleRefunds` (turn-runner.js) with a receipt flag on the character (`refundReceipts.<entryId>_<projectId>`, never paid twice), each cleared once paid;
   `settleAllRefunds` runs on ready.
 - Map notes keep the size their first route rolled: `record.tradeSizes.<key>` (`rememberSize`, core/trade.js).
 - Hidden Approach: `ROADS_END_HIDDEN` (core/projects.js) road steps remove it in `applyCompletion` (`removed`); its

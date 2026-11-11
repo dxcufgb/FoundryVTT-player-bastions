@@ -194,6 +194,11 @@ export function finishProject(record, projectId, opts = {}) {
   // Only this project moves: give it the rest of its days on its own.
   record.projects = { [projectId]: { ...p, state: "building" } };
   const done = workDays(record, Math.max(1, (p.days ?? 0) - (p.progress ?? 0)), { ...opts, payAsYouBuild: false, crews: undefined });
+  // Not finished (a siege stops all work): everything stays as it was.
+  if (!done.completed.some(c => c.projectId === projectId)) {
+    record.projects = others;
+    return { ok: false, reason: record.siege ? "No work during a siege" : "Couldn't finish", completed: [], lines: [], layoutChanged: false };
+  }
   record.projects = { ...others, ...record.projects };
   // The others weren't in view while it finished: a finished road ends their Hidden Approach too.
   if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) endHiddenApproach(record, done, opts.rules);
