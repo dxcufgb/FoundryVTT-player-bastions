@@ -189,6 +189,19 @@
         <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each routes.totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>
       </ul>
       {{else}}<p class="dxpb-muted">{{localize "DXPB.Trade.None"}}</p>{{/if}}
+      <h4 class="dxpb-places-head"><i class="fa-solid fa-map-location-dot" inert></i> {{localize "DXPB.Trade.Settlements"}}
+        {{#if routes.canEdit}}<button type="button" class="dxpb-fac-plan" data-action="settlementEdit"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Trade.AddSettlement"}}</button>{{/if}}</h4>
+      {{#if routes.places.length}}<ul class="dxpb-places">
+        {{#each routes.places}}<li class="dxpb-place" data-key="{{key}}" data-id="{{id}}">
+          <span class="dxpb-place-name"><strong>{{name}}</strong> <span class="dxpb-muted">{{detail}}</span></span>
+          {{#if status}}<span class="dxpb-place-status">{{status}}</span>{{/if}}
+          <span class="dxpb-place-actions">
+            {{#if seek}}<button type="button" class="dxpb-ok" data-action="tradeSeek" data-tooltip="{{localize 'DXPB.Trade.Seek'}}" aria-label="{{localize 'DXPB.Trade.Seek'}}"><i class="fa-solid fa-handshake" inert></i> {{localize "DXPB.Trade.SeekShort"}}</button>{{/if}}
+            {{#if gm}}<button type="button" data-action="settlementEdit" data-tooltip="{{localize 'DXPB.Trade.EditSettlement'}}" aria-label="{{localize 'DXPB.Trade.EditSettlement'}}"><i class="fa-solid fa-pen" inert></i></button>
+            <button type="button" data-action="settlementRemove" data-tooltip="{{localize 'DXPB.Trade.RemoveSettlement'}}" aria-label="{{localize 'DXPB.Trade.RemoveSettlement'}}"><i class="fa-solid fa-trash" inert></i></button>{{/if}}
+          </span>
+        </li>{{/each}}
+      </ul>{{else}}<p class="dxpb-muted">{{localize "DXPB.Trade.NoSettlements"}}</p>{{/if}}
     </section>
     {{/with}}{{/if}}
     {{/each}}

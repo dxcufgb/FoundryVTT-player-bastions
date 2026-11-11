@@ -13,7 +13,7 @@ import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
 import { resolveEventChoice } from "./events.js";
 import { canTakeFacility } from "./core/sections.js";
-import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates } from "./core/trade.js";
+import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates, cleanSettlement } from "./core/trade.js";
 import { tradeSettlements, createRouteQuest, closeRouteQuest } from "./trade.js";
 
 /**
@@ -309,6 +309,46 @@ export const ACTIONS = {
   },
 
   /* ---------------- Trade routes ---------------- */
+
+  /** The GM adds or edits a settlement the party can trade with: { id?, name, distance (miles), size }. */
+  async saveSettlement({ entryId, settlement }, user) {
+    gmOnly(user);
+    const { entry } = load(entryId);
+    const clean = cleanSettlement(settlement, settlement?.id || randomId());
+    if (!clean) return { ok: false, reason: t("Trade.SettlementName") };
+    await patchRecord(entry, { [`settlements.${clean.id}`]: clean });
+    return { ok: true, id: clean.id };
+  },
+
+  /** The GM removes a listed settlement (a route already made with it stays). */
+  async removeSettlement({ entryId, id }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    if (!record.settlements?.[id]) return { ok: false, reason: t("Trade.NoSettlement") };
+    await patchRecord(entry, { [`settlements.${id}`]: undefined });
+    return { ok: true };
+  },
+
+  /**
+   * The owners seek a route with a settlement themselves: it starts accepted (the party travels there to negotiate,
+   * with a Quest Log quest), and the GM signs it like any other.
+   */
+  async proposeTradeRoute({ entryId, key, goods }, user) {
+    const { entry, record } = load(entryId);
+    ownerOnly(record, user);
+    const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
+    if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
+    const { stats } = statsFor(record);
+    if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
+    const turn = record.turn?.number ?? 0;
+    const id = randomId();
+    const offer = makeRequest(settlement, stats, rules(), { turn, id, goods });
+    const route = { ...transitionRoute(offer, "accept", { turn }).route, proposed: true };
+    route.questId = await createRouteQuest(record, route);
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteAccepted`, entry, route);
+    return { ok: true, routeId: id, questId: route.questId };
+  },
 
   /** Owners answer a settlement's request (accept / decline), withdraw an accepted one, or cancel an active route. */
   async tradeRoute({ entryId, routeId, op }, user) {

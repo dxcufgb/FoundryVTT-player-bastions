@@ -364,6 +364,50 @@ export function registerQuench(quench) {
         }
       });
 
+      it("trade routes: the GM lists a settlement with its distance; the owners seek a route there", async () => {
+        const { patchRecord } = await import("../store.js");
+        const entry = () => getEntry(entryId);
+        let res = await ACTIONS.saveSettlement({ entryId, settlement: { name: `${PREFIX} Port`, distance: 240, size: "city" } }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        const sid = res.id;
+        let routeId = null, questId = null;
+        try {
+          assert.deepEqual(getRecord(entry()).settlements[sid], { id: sid, name: `${PREFIX} Port`, distance: 240, size: "city" });
+          const app = BastionSheet.open(entryId, { tab: "facilities" });
+          await app.render({ force: true });
+          const place = app.element.querySelector(`[data-section="routes"] .dxpb-place[data-key="gm:${sid}"]`);
+          assert.ok(place, "the settlement in the list");
+          assert.include(place.textContent, "240");
+          assert.ok(place.querySelector('[data-action="tradeSeek"]'), "owners can seek a route there");
+          assert.ok(place.querySelector('[data-action="settlementEdit"]'), "the GM can edit it");
+          await app.close();
+          res = await ACTIONS.saveSettlement({ entryId, settlement: { id: sid, name: `${PREFIX} Port`, distance: 260, size: "city" } }, game.user);
+          assert.equal(getRecord(entry()).settlements[sid].distance, 260, "edited");
+          res = await ACTIONS.proposeTradeRoute({ entryId, key: `gm:${sid}`, goods: "spices" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          routeId = res.routeId;
+          questId = res.questId;
+          const route = getRecord(entry()).tradeRoutes[routeId];
+          assert.equal(route.state, "accepted", "sought routes start as being negotiated");
+          assert.equal(route.distance, 260);
+          assert.equal(route.size, "city");
+          assert.isTrue(route.proposed);
+          res = await ACTIONS.proposeTradeRoute({ entryId, key: `gm:${sid}`, goods: "wine" }, game.user);
+          assert.isFalse(res.ok, "one route per settlement");
+          res = await ACTIONS.removeSettlement({ entryId, id: sid }, game.user);
+          assert.isTrue(res.ok);
+          assert.notOk(getRecord(entry()).settlements?.[sid]);
+          assert.ok(getRecord(entry()).tradeRoutes[routeId], "the route goes on");
+        } finally {
+          if (getRecord(entry()).settlements?.[sid]) await patchRecord(entry(), { [`settlements.${sid}`]: undefined });
+          if (routeId) await patchRecord(entry(), { [`tradeRoutes.${routeId}`]: undefined });
+          if (questId) {
+            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${questId}`));
+            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${questId}`]: null });
+          }
+        }
+      });
+
       it("the Bastion window has the same Facilities page", async () => {
         const app = BastionSheet.open(entryId, { tab: "facilities" });
         await app.render({ force: true });

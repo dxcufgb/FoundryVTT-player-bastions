@@ -49,11 +49,50 @@ export function quoteRoute({ size = "village", distance = 0, goods = "cloth" }, 
   return { kind: "coin", income, food: 0, setup: round25(income * (rules?.tradeSetupTurns ?? 6)) };
 }
 
+/**
+ * Every settlement a route can go to: the Bastion's own ("home"), the GM's list (record.settlements, key "gm:<id>")
+ * and map notes near the marker (key = the note id) — a name the GM listed or the founding settlement is kept once.
+ * notes: [{ id, name, distance }] nearest first.
+ */
+export function settlementList(record, notes = []) {
+  const out = [];
+  const seen = new Set();
+  const norm = s => String(s ?? "").trim().toLowerCase();
+  const home = record?.location?.settlement;
+  if (home?.name) {
+    out.push({ key: "home", name: home.name, distance: Math.round(Number(home.distance) || 0), size: home.size, source: "home" });
+    seen.add(norm(home.name));
+  }
+  const listed = Object.values(record?.settlements ?? {}).filter(s => s?.name)
+    .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0) || a.name.localeCompare(b.name));
+  for (const s of listed) {
+    if (seen.has(norm(s.name))) continue;
+    seen.add(norm(s.name));
+    out.push({ key: `gm:${s.id}`, id: s.id, name: s.name, distance: Math.max(0, Math.round(Number(s.distance) || 0)),
+      size: TRADE_SIZES[s.size] ? s.size : "village", source: "gm" });
+  }
+  for (const n of notes) {
+    if (!n?.name || seen.has(norm(n.name))) continue;
+    seen.add(norm(n.name));
+    out.push({ key: n.id, name: n.name, distance: Math.round(Number(n.distance) || 0), source: "map" });
+  }
+  return out;
+}
+
+/** A settlement the GM keeps for a Bastion: { id, name, distance (miles), size }, cleaned. Null when unusable. */
+export function cleanSettlement(raw, id) {
+  const name = String(raw?.name ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+  if (!name || !id) return null;
+  return { id, name, distance: Math.min(5000, Math.max(0, Math.round(Number(raw?.distance) || 0))),
+    size: TRADE_SIZES[raw?.size] ? raw.size : "village" };
+}
+
 /** Settlements that can still ask: within reach, and without an open route or request. */
 export function tradeCandidates(record, settlements, rules) {
   const taken = new Set(routesOf(record).map(r => r.key));
   const max = rules?.tradeMaxMiles ?? 150;
-  return (settlements ?? []).filter(s => s?.key && !taken.has(s.key) && (Number(s.distance) || 0) <= max);
+  // The GM's own list is always in reach: the GM put it there.
+  return (settlements ?? []).filter(s => s?.key && !taken.has(s.key) && (s.source === "gm" || (Number(s.distance) || 0) <= max));
 }
 
 /** The chance (%) a settlement asks for a route this turn. */

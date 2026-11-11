@@ -275,6 +275,15 @@ span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-fac-slots .dxpb-route-op.dxpb-ok { color: #4fae55; border-color: #4fae55; }
 .dxpb-route-requested, .dxpb-route-accepted { background: rgba(201, 162, 39, 0.10); }
 .dxpb-route-requested .dxpb-def-img, .dxpb-route-accepted .dxpb-def-img { border-style: dashed; }
+.dxpb-places-head { display: flex; align-items: center; gap: 6px; margin: 10px 0 4px; font-size: var(--font-size-13, 13px); }
+.dxpb-places-head .dxpb-fac-plan { margin-left: auto; }
+.dxpb-places { list-style: none; margin: 0; padding: 0; }
+.dxpb-place { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.15); }
+.dxpb-place-name { flex: 1; min-width: 0; }
+.dxpb-place-status { font-size: 11px; color: var(--dxpb-gold); white-space: nowrap; }
+.dxpb-place-actions { display: flex; gap: 4px; }
+.dxpb-place-actions button { width: auto; height: 22px; line-height: 20px; padding: 0 6px; font-size: 11px; flex: none; }
+.dxpb-place-actions button.dxpb-ok { color: #4fae55; border-color: #4fae55; }
 .dxpb-fac-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--dxpb-good); }
 .dxpb-embedded .dxpb-def { grid-template-columns: 30px minmax(0, 1fr) repeat(var(--cols), 3.4rem) 14px; gap: 0.35rem; }
 .dxpb-embedded .dxpb-def-img { width: 30px; height: 30px; }

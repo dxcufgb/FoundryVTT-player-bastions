@@ -5,26 +5,26 @@
  */
 import { MODULE_ID, t, rules, gp } from "./util.js";
 import { settlementsNear } from "./marker.js";
+import { settlementList } from "./core/trade.js";
 
 const QUEST_LOG = "dxcufgbs-quest-log";
 
-/** Settlements a route can go to: { key, name, distance, size? }. The founding settlement has key "home". */
+/**
+ * Settlements a route can go to: the Bastion's own ("home"), the GM's list (record.settlements) and the map notes
+ * within reach of its marker (core settlementList: { key, name, distance, size?, source }).
+ */
 export function tradeSettlements(record) {
-  const out = [];
-  const home = record?.location?.settlement;
-  if (home?.name) out.push({ key: "home", name: home.name, distance: Number(home.distance) || 0, size: home.size });
+  const notes = [];
   const scene = record?.marker?.sceneUuid ? fromUuidSync(record.marker.sceneUuid) : null;
   const note = scene && record.marker?.noteId ? scene.notes.get(record.marker.noteId) : null;
   if (note) {
     const max = rules().tradeMaxMiles ?? 150;
     for (const s of settlementsNear(scene, note)) {
       if (s.distance > max) break;
-      // The founding settlement is usually a note on the map too: keep it once.
-      if (home?.name && s.name.trim().toLowerCase() === home.name.trim().toLowerCase()) continue;
-      out.push({ key: s.id, name: s.name, distance: Math.round(s.distance) });
+      notes.push({ id: s.id, name: s.name, distance: s.distance });
     }
   }
-  return out;
+  return settlementList(record, notes);
 }
 
 /** Dxcufgb's Quest Log API, when that module is active and ready. */

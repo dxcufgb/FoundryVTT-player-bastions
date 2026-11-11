@@ -883,7 +883,7 @@
       "Title": "Trade routes",
       "NewRequest": "New request",
       "NewRequestHint": "The settlement asks for a trade route now; the owners accept or decline it on this page.",
-      "None": "No trade routes yet. Settlements ask from time to time; a Trading Post lets the Bastion take more.",
+      "None": "No trade routes yet. Settlements ask from time to time, or the party seeks one below.",
       "Sum": "Routes {active} of {capacity} · {income} a turn · {food} food a day",
       "SumWaiting": "{n} waiting for an answer or a signature",
       "Limit": "Room for {free} more. Without a trading building the Bastion holds one route; each Trading Post handles 3, a Trading Company 2 more.",
@@ -934,7 +934,34 @@
       "QuestText": "{name} wants a trade route with {bastion} ({goods}, worth {worth}). Travel there, agree the terms and sign the contract before turn {deadline}. Setting it up costs {setup}.",
       "QuestTravel": "Travel to {name} ({miles} miles)",
       "QuestTerms": "Agree the terms with the town's council or guild",
-      "QuestSign": "Sign the contract and pay the setup ({setup})"
-    }
+      "QuestSign": "Sign the contract and pay the setup ({setup})",
+      "Settlements": "Settlements to trade with",
+      "AddSettlement": "Add settlement",
+      "EditSettlement": "Edit settlement",
+      "RemoveSettlement": "Remove settlement",
+      "RemoveConfirm": "Remove {name} from the settlements? A route already made with it goes on.",
+      "SettlementName": "A settlement needs a name.",
+      "SettlementNameLabel": "Name",
+      "DistanceLabel": "Distance from the Bastion (miles)",
+      "SizeLabel": "Size",
+      "SettlementHint": "Bigger settlements trade more; farther ones pay more for goods. The settlement can ask for a route at a turn, and the party can seek one there.",
+      "NoSettlements": "No settlements yet. The GM adds them here; map notes near the Bastion's marker count too.",
+      "Miles": "{n} miles",
+      "Source": {
+        "home": "the Bastion's settlement",
+        "gm": "added by the GM",
+        "map": "on the map"
+      },
+      "Status": {
+        "requested": "asks for a route",
+        "accepted": "route being negotiated",
+        "active": "trade route"
+      },
+      "Seek": "Seek a trade route here: the party travels there to negotiate, and the GM signs",
+      "SeekShort": "Seek a route",
+      "SeekText": "The party will travel to {name} ({miles} miles) to negotiate. What should the route carry?",
+      "SeekSizeHint": "This settlement is only a map note: its size is rolled. The GM can add it to the list with a size."
+    },
+    "Save": "Save"
   }
 }

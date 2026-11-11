@@ -8,6 +8,7 @@ import { featureEffects } from "../core/catalog.js";
 import { footprintOf } from "../core/grounds.js";
 import { codexUuid, codexArt } from "../core/codex.js";
 import { routesOf } from "../core/trade.js";
+import { tradeSettlements } from "../trade.js";
 import { averageFormula } from "../core/stats.js";
 import { methodAvailable } from "../core/dispatch.js";
 import { ownerActors } from "../store.js";
@@ -357,12 +358,12 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       totals: columns.map((c, i) => ({ value: totalOf(c.kind, built.map(card => card.raw?.[i])) }))
     };
   });
-  page.routes = tradeRoutesPage({ record, stats, R, mine });
+  page.routes = tradeRoutesPage({ record, stats, R, mine, settlements: tradeSettlements(record) });
   return page;
 }
 
 /** The Trade routes block (after Trade and crafting): requests, routes waiting to be signed, active routes. */
-export function tradeRoutesPage({ record, stats, R, mine }) {
+export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
   const trade = stats.trade ?? { capacity: 0, active: 0, income: 0, food: 0 };
   const isGM = !!game.user?.isGM;
   const turn = record.turn?.number ?? 0;
@@ -391,7 +392,16 @@ export function tradeRoutesPage({ record, stats, R, mine }) {
       cells: raw.map((v, i) => ({ value: fmtValue(columns[i].kind, v) })) };
   });
   const active = rows.filter(r => r.state === "active");
+  // The settlements the party can trade with: the GM keeps the list; owners seek a route with one themselves.
+  const openBy = new Map(routes.map(r => [r.key, r]));
+  const places = settlements.map(s => {
+    const r = openBy.get(s.key);
+    return { key: s.key, id: s.id ?? "", name: s.name, distance: s.distance, gm: s.source === "gm" && isGM,
+      detail: [SIZE_NAMES[s.size] ?? "", t("Trade.Miles", { n: s.distance }), t(`Trade.Source.${s.source}`)].filter(Boolean).join(" · "),
+      status: r ? t(`Trade.Status.${r.state}`) : "", seek: mine && !r && free > 0 };
+  });
   return {
+    places, canEdit: isGM, sizes: Object.entries(SIZE_NAMES).map(([key, label]) => ({ key, label })),
     count: active.length, rows, cols: columns.length, img: codexArt(MODULE_ID, "caravans", true),
     codex: codexUuid(MODULE_ID, "inhabitant", "caravans"),
     columns: columns.map(c => ({ key: c.key, label: t(`Trade.Col.${c.key}`) })),

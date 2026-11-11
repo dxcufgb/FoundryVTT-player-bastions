@@ -119,6 +119,9 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       tradeRoute: BastionSheet.#onTradeRoute,
       tradeSign: BastionSheet.#onTradeSign,
       tradeRequest: BastionSheet.#onTradeRequest,
+      tradeSeek: BastionSheet.#onTradeSeek,
+      settlementEdit: BastionSheet.#onSettlementEdit,
+      settlementRemove: BastionSheet.#onSettlementRemove,
       addFacility: BastionSheet.#onAddFacility
     }
   };
@@ -750,6 +753,66 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!from) return;
     const res = await BastionSheet.#run("signTradeRoute", { entryId: this.entryId, routeId, from });
     if (res?.ok) ui.notifications.info(t("Trade.Signed", { name: route.name }));
+  }
+
+  /** Owners seek a route with a settlement: they choose the goods, then the party travels there to negotiate. */
+  static async #onTradeSeek(event, target) {
+    const key = target.closest("[data-key]")?.dataset.key;
+    const record = getRecord(getEntry(this.entryId));
+    const { tradeSettlements } = await import("../trade.js");
+    const { quoteRoute } = await import("../core/trade.js");
+    const { TRADE_GOODS } = await import("../data/tables.js");
+    const place = tradeSettlements(record).find(s => s.key === key);
+    if (!place) return;
+    const { stats } = statsFor(record);
+    const worth = g => {
+      const q = quoteRoute({ size: place.size ?? "village", distance: place.distance, goods: g }, rules(),
+        { accessibility: stats.accessibility, foodPrice: stats.food.buyPrice });
+      return q.kind === "food" ? t("Trade.FoodWorth", { n: q.food }) : t("Trade.CoinWorth", { gold: gp(q.income) });
+    };
+    const content = `<div class="dxpb-plan"><p>${t("Trade.SeekText", { name: escapeHTML(place.name), miles: place.distance })}</p>
+      <label>${t("Trade.GoodsLabel")}<select name="goods">${Object.keys(TRADE_GOODS)
+        .map(k => `<option value="${k}">${t(`Trade.Goods.${k}`)} (${worth(k)})</option>`).join("")}</select></label>
+      ${place.size ? "" : `<p class="dxpb-muted">${t("Trade.SeekSizeHint")}</p>`}</div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t("Trade.Seek") }, content,
+      ok: { label: t("Trade.SeekShort"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result?.goods) return;
+    const res = await BastionSheet.#run("proposeTradeRoute", { entryId: this.entryId, key, goods: result.goods });
+    if (res?.ok) ui.notifications.info(t(res.questId ? "Trade.AcceptedQuest" : "Trade.Accepted", { name: place.name }));
+  }
+
+  /** The GM adds a settlement to trade with, or edits one: name, distance in miles, size. */
+  static async #onSettlementEdit(event, target) {
+    if (!game.user.isGM) return;
+    const id = target.closest("[data-id]")?.dataset.id || "";
+    const record = getRecord(getEntry(this.entryId));
+    const cur = record?.settlements?.[id] ?? { name: "", distance: 20, size: "village" };
+    const { SETTLEMENT_SIZES } = await import("../data/location.js");
+    const content = `<div class="dxpb-plan">
+      <label>${t("Trade.SettlementNameLabel")}<input type="text" name="name" value="${escapeHTML(cur.name)}" required autofocus></label>
+      <label>${t("Trade.DistanceLabel")}<input type="number" name="distance" min="0" step="1" value="${Number(cur.distance) || 0}"></label>
+      <label>${t("Trade.SizeLabel")}<select name="size">${Object.entries(SETTLEMENT_SIZES)
+        .map(([k, v]) => `<option value="${k}" ${k === cur.size ? "selected" : ""}>${v.label}</option>`).join("")}</select></label>
+      <p class="dxpb-muted">${t("Trade.SettlementHint")}</p></div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t(id ? "Trade.EditSettlement" : "Trade.AddSettlement") }, content,
+      ok: { label: t("Save"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result) return;
+    await BastionSheet.#run("saveSettlement", { entryId: this.entryId, settlement: { ...result, id: id || undefined } });
+  }
+
+  /** The GM removes a listed settlement. */
+  static async #onSettlementRemove(event, target) {
+    if (!game.user.isGM) return;
+    const id = target.closest("[data-id]")?.dataset.id;
+    const place = getRecord(getEntry(this.entryId))?.settlements?.[id];
+    if (!place) return;
+    const ok = await DialogV2.confirm({ window: { title: t("Trade.RemoveSettlement") },
+      content: `<p>${t("Trade.RemoveConfirm", { name: escapeHTML(place.name) })}</p>` });
+    if (ok) await BastionSheet.#run("removeSettlement", { entryId: this.entryId, id });
   }
 
   /** The GM has a settlement ask for a route now. */

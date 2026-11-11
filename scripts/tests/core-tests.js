@@ -20,7 +20,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility } from "../core/sections.js";
-import { quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance } from "../core/trade.js";
+import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -1466,6 +1466,19 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(raid.lostFood, 20);
       const quiet = advanceTrade(structuredClone(rec), rules, { rng: () => 0.99, turn: 5, danger: "frontier" });
       assert.equal(quiet.raided.length, 0);
+    });
+    it("settlements: the Bastion's own, the GM's list (any distance) and map notes, each name once", () => {
+      const rec = workedExampleRecord();
+      rec.location.settlement = { name: "Ashford", size: "town", distance: 12 };
+      rec.settlements = { s1: cleanSettlement({ name: "  Port  Vell ", distance: "420", size: "city" }, "s1"),
+        s2: cleanSettlement({ name: "Brook", distance: 35 }, "s2") };
+      assert.deepEqual(rec.settlements.s1, { id: "s1", name: "Port Vell", distance: 420, size: "city" });
+      assert.equal(rec.settlements.s2.size, "village");
+      assert.equal(cleanSettlement({ name: " " }, "x"), null);
+      const list = settlementList(rec, [{ id: "n1", name: "brook", distance: 30 }, { id: "n2", name: "Mill End", distance: 50 },
+        { id: "n3", name: "Ashford", distance: 12 }]);
+      assert.deepEqual(list.map(x => x.key), ["home", "gm:s2", "gm:s1", "n2"]);
+      assert.deepEqual(tradeCandidates(rec, list, rules).map(x => x.key), ["home", "gm:s2", "gm:s1", "n2"], "the GM's far city counts");
     });
     it("a turn can bring a request from a nearby settlement", () => {
       const rec = workedExampleRecord();

@@ -141,7 +141,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `routeCapacity` = `rules.tradeBaseRoutes` + fx.tradeRoutes); `record.tradeRoutes.<id>` (requested → accepted → active;
   ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat` and food to `food.outside`; a turn
   lapses offers past `deadline`, rolls raids (lost gold / food that turn) and maybe a request from `opts.settlements`
-  (`tradeSettlements`, scripts/trade.js: "home" + map notes near the marker). Actions `tradeRoute` (owners: accept,
+  (`tradeSettlements`, scripts/trade.js → core `settlementList`: "home", the GM's `record.settlements.<id>` as key `gm:<id>`
+  (any distance), then map notes near the marker; a name once). GM actions `saveSettlement` / `removeSettlement`; owners'
+  `proposeTradeRoute` makes a route that starts accepted (`proposed: true`). Actions `tradeRoute` (owners: accept,
   decline, withdraw, cancel), `signTradeRoute` / `requestTradeRoute` (GM). Quest Log (`dxcufgbs-quest-log`, optional):
   `createRouteQuest` on accept, `closeRouteQuest` completed on sign, failed on lapse / withdraw. Facilities page block
   `page.routes` (`tradeRoutesPage`), rendered after the trade section (`data-section="routes"`).
