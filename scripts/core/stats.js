@@ -194,7 +194,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const dice = incomeDice.map(d => {
     let mult = d.share ?? 1;
     if (d.id === "inn") mult *= fx.innMult ?? 1;
-    if (d.id === "mine" && gems) mult *= rules.gemsMult ?? 1.5;
+    if (d.id === "mine" && gems) mult *= rules.gemsMult ?? 1.25;
     const { share, ...rest } = d;
     void share;
     return { ...rest, mult, average: Math.round(averageFormula(d.formula) * mult) };

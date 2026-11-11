@@ -362,7 +362,7 @@ export const EXPANSIONS = [
       { label: "Deep mine", cost: 12500, days: 150, effects: { incomeDice: "3d6*10", workers: 8 } },
       { label: "Mining company", cost: 20000, days: 200, effects: { incomeDice: "4d6*10", upkeep: 5, workers: 10 } }
     ], { incomeDice: "1d6*10", workers: 8 }),
-    summary: "Ore or gems (gems pay half as much again). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
+    summary: "Ore or gems (gems pay a quarter more). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
   { id: "caravanserai", group: "trade", name: "Caravanserai", unit: "flat", cost: 3000, days: 60,
     requires: { check: ["dryLand"] }, effects: { accessibility: 1, merchant: 10, income: 40, visitors: 5 },
     tiers: [
