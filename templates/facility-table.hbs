@@ -1,7 +1,0 @@
-{{!-- The owners' dnd5e facilities (bastion-sheet.hbs, Facilities tab). --}}
-<table class="dxpb-table">
-  <thead><tr><th>{{localize "DXPB.FacilityCol"}}</th><th>{{localize "DXPB.Owner"}}</th><th>{{localize "DXPB.Type"}}</th><th>{{localize "DXPB.Order"}}</th><th>{{localize "DXPB.Progress"}}</th><th></th></tr></thead>
-  <tbody>{{#each facilities}}<tr class="{{#if disabled}}dxpb-bad{{/if}}"><td>{{name}}</td><td>{{actorName}}</td><td>{{typeLabel}}</td><td>{{orderLabel}}</td><td>{{progressText}}{{#if disabled}} {{localize "DXPB.Disabled"}}{{/if}}</td>
-    <td><button type="button" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-up-right-from-square"></i></button></td></tr>
-  {{else}}<tr><td colspan="6" class="dxpb-muted">{{localize "DXPB.NoFacilities"}}</td></tr>{{/each}}</tbody>
-</table>

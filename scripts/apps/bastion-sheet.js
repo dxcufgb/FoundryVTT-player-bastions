@@ -18,6 +18,7 @@ import { syncLayout } from "../core/layout.js";
 import { buildMap, viewMap, mapScene } from "../map.js";
 import { quoteDispatch, orderCount } from "../core/dispatch.js";
 import { partyDistance } from "../marker.js";
+import { facilitiesPage, systemFacilityCatalog } from "./facilities-page.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -64,6 +65,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     this.calc = { troops: 150, quality: "soldiers", monsterCR: 0, monsterCount: 0, casterLevel: 0, casterCount: 0, engine: "light" };
     this.draft = { method: "envoy", orders: {}, maintain: false, payments: [], note: "", gold: 0, distance: null, slotLevel: 2, signal: "" };
     this.catalogFilter = "";
+    /** A section of the Facilities page whose "Plan" button opened the catalog: only that group shows. */
+    this.catalogGroup = "";
   }
 
   static DEFAULT_OPTIONS = {
@@ -106,7 +109,11 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       openMap: BastionSheet.#onOpenMap,
       editBastion: BastionSheet.#onEdit,
       dispatchStatus: BastionSheet.#onDispatchStatus,
-      popOut: BastionSheet.#onPopOut
+      popOut: BastionSheet.#onPopOut,
+      planSection: BastionSheet.#onPlanSection,
+      clearCatalogGroup: BastionSheet.#onClearCatalogGroup,
+      useFacility: BastionSheet.#onUseFacility,
+      addFacility: BastionSheet.#onAddFacility
     }
   };
 
@@ -206,11 +213,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       food: Math.round(record.siege.food ?? 0), estimate: record.siege.estimate ?? "∞", fallen: record.siege.fallen ? t(`Reason.${record.siege.fallen}`) : null,
       force: record.siege.force?.label ?? t("Siege.Custom") };
 
-    /* Facilities (dnd5e) */
-    // In a character sheet's Bastion tab the system lists this character's own facilities: list the others' here.
-    c.facilities = ctx.facilities.filter(f => !this.embedded || f.actorId !== this.actorId).map(f => ({ ...f, typeLabel: f.type === "special" ? t("Facility.Special") : t("Facility.Basic"),
-      progressText: f.progress?.max ? `${f.progress.order}: ${f.progress.value}/${f.progress.max} ${t("Days")}` : "",
-      orderLabel: f.order ? game.i18n.localize(`DND5E.FACILITY.Orders.${f.order}.inf`) : "" }));
+    /* Facilities: defenders and a section per kind of building */
+    if (this.tab === "facilities") c.page = facilitiesPage({ record, stats, ctx, C, R, mine, actorId: this.embedded ? this.actorId : null });
 
     /* Projects */
     const crew = crewStatus(record, stats);
@@ -288,7 +292,10 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       const gold = groups.reduce((a, x) => a + x.rawGold, 0), work = groups.reduce((a, x) => a + x.rawWork, 0);
       c.everything = { n: groups.reduce((a, x) => a + x.n, 0), gold: gp(gold), work: `${work} ${workUnit()}`, groups };
     }
-    c.catalog = Object.entries(GROUPS).map(([g, label]) => ({
+    c.catalogGroup = this.catalogGroup && GROUPS[this.catalogGroup] ? { key: this.catalogGroup, label: t(`Fac.Section.${this.catalogGroup}`) } : null;
+    // The system's special facilities defined in this world, each under its section.
+    const systemItems = this.tab === "projects" ? await systemFacilityCatalog({ record, isGM, actorId: this.embedded ? this.actorId : null, filter }) : [];
+    c.catalog = Object.entries(GROUPS).filter(([g]) => !c.catalogGroup || g === c.catalogGroup.key).map(([g, label]) => ({
       label,
       // Only what can be planned right now (the same checks as planning it: prerequisites, room, once-only, planned).
       items: [...C.values()].filter(e => e.group === g && !e.legacy && (!filter || e.name.toLowerCase().includes(filter))
@@ -312,7 +319,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
           days: sized ? `${sizedDays.join(" / ")} ${workUnit()}` : `${workText(q.days)}${unit ? ` ${unit}` : ""}`,
           upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: (e.tiers ?? []).map(x => x.label).join(" → "),
           perks: perksText(e) };
-      })
+      }).concat(systemItems.filter(x => x.section === g))
     })).filter(g => g.items.length);
     c.features = Object.entries(record.features ?? {}).map(([fid, f]) => {
       const e = C.get(f.id);
@@ -684,6 +691,34 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onSiegeEnd() {
     return BastionSheet.#run("endSiege", { entryId: this.entryId });
+  }
+
+  /** A section's "Plan" button: the catalog on the Projects page, showing only that section's buildings. */
+  static #onPlanSection(event, target) {
+    this.catalogGroup = target.dataset.group ?? "";
+    this.tab = "projects";
+    return this.render();
+  }
+
+  static #onClearCatalogGroup() {
+    this.catalogGroup = "";
+    return this.render();
+  }
+
+  /** Gives one of the system's facilities an order (the system's own dialog). */
+  static async #onUseFacility(event, target) {
+    const item = await fromUuid(target.closest("[data-uuid]")?.dataset.uuid);
+    if (!item?.isOwner) return;
+    item.use({ legacy: false, chooseActivity: true, event });
+  }
+
+  /** Adds one of the system's special facilities defined in the world to an owner's sheet. */
+  static async #onAddFacility(event, target) {
+    const row = target.closest("[data-uuid]");
+    const actorId = row?.querySelector("select[name=facilityOwner]")?.value;
+    if (!row || !actorId) return;
+    const res = await BastionSheet.#run("addSystemFacility", { entryId: this.entryId, uuid: row.dataset.uuid, actorId });
+    if (res?.ok) ui.notifications.info(t("Fac.Added", { name: res.name, actor: res.actor }));
   }
 
   static async #onOpenFacility(event, target) {

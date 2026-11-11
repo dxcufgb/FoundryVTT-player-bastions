@@ -1,5 +1,5 @@
 import { ownerActors } from "./store.js";
-import { rules, catalog } from "./util.js";
+import { MODULE_ID, rules, catalog } from "./util.js";
 import { computeStats } from "./core/stats.js";
 
 /**
@@ -15,8 +15,12 @@ export function systemContext(record) {
     levels += actor.system?.details?.level ?? 0;
     for (const f of actor.itemTypes?.facility ?? []) {
       const sys = f.system;
-      ctx.facilities.push({ uuid: f.uuid, id: f.id, actorId: actor.id, actorName: actor.name, name: f.name, type: sys.type?.value,
-        subtype: sys.type?.subtype, order: sys.order, progress: sys.progress, disabled: sys.disabled, size: sys.size });
+      ctx.facilities.push({ uuid: f.uuid, id: f.id, actorId: actor.id, actorName: actor.name, name: f.name, img: f.img, type: sys.type?.value,
+        subtype: sys.type?.subtype, order: sys.order, progress: sys.progress, disabled: sys.disabled, size: sys.size,
+        free: !!sys.free, enlargeable: !!sys.enlargeable, built: sys.building?.built !== false, level: sys.level,
+        featureId: f.getFlag?.(MODULE_ID, "featureId") ?? null,
+        defenders: [...(sys.defenders?.value ?? [])], defendersMax: Number(sys.defenders?.max) || 0,
+        hirelings: [...(sys.hirelings?.value ?? [])], hirelingsMax: Number(sys.hirelings?.max) || 0 });
       if (sys.disabled) continue;
       if (sys.type?.value === "special") {
         ctx.dmgDefenders += sys.defenders?.value?.length ?? 0;

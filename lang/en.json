@@ -161,7 +161,6 @@
       "stone": "Stone wall",
       "reinforced": "Reinforced stone"
     },
-    "FacilitiesHint": "These are the DMG facilities from the dnd5e system on the owners' sheets. Give their orders there when you are home, or by dispatch when you are away.",
     "Facility": {
       "Special": "Special",
       "Basic": "Basic"
@@ -170,7 +169,6 @@
     "Order": "Order",
     "Progress": "Progress",
     "Disabled": "(not usable this turn)",
-    "NoFacilities": "No facilities yet.",
     "ProjectsTitle": "Construction",
     "Project": "Project",
     "StateLabel": "State",
@@ -613,7 +611,6 @@
       "Result": "{pass} of {total} engine tests passed.",
       "QuenchHint": "Activate Quench to also run the tests inside Foundry."
     },
-    "FacilityCol": "Facility",
     "GroundsTitle": "Grounds",
     "GroundsSize": "{label} ({side} × {side} squares)",
     "GroundsUse": "{used} squares built · {reserved} held for planned projects · {free} of {usable} free",
@@ -699,14 +696,92 @@
       "Group": "Bastions",
       "Found": "Found a Bastion"
     },
-    "OtherFacilities": "The other owners' facilities",
     "PopOut": "Open the Bastion in a window",
     "TabNameHint": "The Bastion's name: the GM renames it",
     "SheetTab": {
-      "Miles": "{n} miles",
-      "Guard": "Hired guard",
-      "Guards": "{n} hired guards",
-      "PlanHere": "Plan it on the Bastion's Projects page"
+      "Miles": "{n} miles"
+    },
+    "Fac": {
+      "Defenders": "Defenders",
+      "Plan": "Plan",
+      "None": "Nothing here yet.",
+      "ShowAll": "Show every group",
+      "Grounds": "Grounds: {used} of {usable} squares in use, {free} free",
+      "Slots": "{name}: special facilities {used} of {max}",
+      "Use": "Give an order",
+      "Add": "Add",
+      "Read": "Read",
+      "SysCost": "From the level table: no gold, no build time",
+      "SysSummary": "dnd5e special facility, from level {level}",
+      "Added": "{name} added to {actor}'s Bastion.",
+      "Section": {
+        "rooms": "Living quarters",
+        "fortifications": "Fortifications",
+        "supplies": "Food and water",
+        "access": "Access and travel",
+        "trade": "Trade and crafting",
+        "staff": "Staff and prestige",
+        "arcane": "Communication and arcane"
+      },
+      "Def": {
+        "Summary": "Garrison strength {garrison}: holds against {walled} behind the walls, {breached} once they are breached.",
+        "Manage": "Hire or dismiss on the Defense page",
+        "guards": "Guards",
+        "guardsNote": "Hired, {upkeep} a turn each",
+        "guardsNone": "Build a Garrison Hall to hire guards",
+        "mercenaries": "Mercenaries",
+        "mercenariesNote": "Joined through events; they stay until dismissed or killed",
+        "system": "Facility defenders",
+        "systemNote": "The defenders on the owners' special facilities",
+        "systemArmory": "The defenders on the owners' special facilities, armed from the stocked Armory",
+        "lieutenants": "War Room lieutenants",
+        "lieutenantsNote": "The hirelings in a War Room",
+        "engines": "Engine crews",
+        "enginesNote": "Manning the ballista emplacements"
+      },
+      "Sum": {
+        "rooms": "{pop} people in {housing} beds · Comfort {comfort}",
+        "servants": "Servants {n} of {cap}",
+        "wall": "Wall: {wall} (integrity {integrity})",
+        "towers": "Watchtowers {n} · Wards {wards}%",
+        "food": "Food {stock} of {cap} · {net} a day",
+        "lasts": "Lasts {peace} in peace, {siege} under siege",
+        "water": "Water: {water}",
+        "road": "{road}, {miles} miles to {place}: {days}",
+        "access": "Accessibility {n}",
+        "money": "Income {income} · Upkeep {upkeep} · Net {net} a turn",
+        "merchants": "Merchants {chance}% a turn ({tier})",
+        "staff": "Renown {renown} · Comfort {comfort} · Building crews {crews}",
+        "arcane": "Wards {wards}%",
+        "ways": "Dispatches by: {ways}"
+      },
+      "Lim": {
+        "beds": "Room for {n} more people",
+        "crowded": "Crowded: {n} more people than beds, comfort falls",
+        "wallNext": "The wall can be raised to {to}",
+        "wallTop": "The wall is at its highest tier",
+        "noWall": "No wall yet",
+        "towers": "Towers +{pct}% defense of +{max}% at most",
+        "stores": "Stores hold up to {cap} food (a day's food for one person each)",
+        "roadNext": "Next road step: {name}",
+        "roadTop": "The road is a paved highway: as good as it gets",
+        "merchants": "Best merchants the Bastion can draw: {tier}",
+        "crews": "Hired building crews {hired} of {max}",
+        "ways": "{n} of {max} ways to send dispatches"
+      },
+      "Up": {
+        "Tier": "Can be upgraded: {to} ({cost})",
+        "Enlarge": "Can be enlarged to {to}",
+        "Road": "Can be upgraded: {name}",
+        "Order": "Can be enlarged (the facility's Enlarge order)"
+      },
+      "Need": {
+        "Level": "Level {level}",
+        "Have": "Already has it",
+        "Slots": "No free special facility ({used} of {max})",
+        "Owner": "No character of yours owns this Bastion",
+        "NotFacility": "That isn't a special facility."
+      }
     }
   }
 }

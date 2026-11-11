@@ -12,6 +12,7 @@ import { placeMarker, partyDistance } from "./marker.js";
 import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
 import { resolveEventChoice } from "./events.js";
+import { canTakeFacility } from "./core/sections.js";
 
 /**
  * GM-side actions. Every handler gets (data, user) and re-checks the user's rights, because players reach them over
@@ -265,6 +266,31 @@ export const ACTIONS = {
    * a queued one back out, "up" / "down" / "first" / "last" move it. Queued projects start by themselves, in this
    * order, as soon as a crew is free and they are paid for, so the next one starts the moment one is done.
    */
+  /** Adds one of the system's special facilities defined in the world to an owner's sheet (level and slots checked). */
+  async addSystemFacility({ entryId, uuid, actorId }, user) {
+    const { record } = load(entryId);
+    ownerOnly(record, user);
+    const actor = actorFor(record, actorId, user);
+    const item = await fromUuid(uuid);
+    if (item?.type !== "facility" || item.system?.type?.value !== "special") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    const level = actor.system?.details?.level ?? 0;
+    const facilities = (actor.itemTypes?.facility ?? []).map(i => ({ type: i.system.type?.value, subtype: i.system.type?.subtype,
+      name: i.name, free: !!i.system.free }));
+    const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level },
+      CONFIG.DND5E?.facilities?.advancement?.special ?? {});
+    if (!check.ok) {
+      const reason = check.reason === "level" ? t("Fac.Need.Level", { level: item.system.level })
+        : check.reason === "have" ? t("Fac.Need.Have") : t("Fac.Need.Slots", { used: check.used, max: check.max });
+      return { ok: false, reason };
+    }
+    const data = item.toObject();
+    delete data._id;
+    data._stats = { ...(data._stats ?? {}), compendiumSource: item.pack ? item.uuid : (data._stats?.compendiumSource ?? null) };
+    foundry.utils.setProperty(data, `flags.${MODULE_ID}.entryId`, entryId);
+    const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+    return { ok: !!created, name: item.name, actor: actor.name };
+  },
+
   async queueProject({ entryId, projectId, op }, user) {
     const { entry, record } = load(entryId);
     ownerOnly(record, user);

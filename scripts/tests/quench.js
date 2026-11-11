@@ -139,7 +139,7 @@ export function registerQuench(quench) {
           assert.ok(tab(), "the system's Bastion tab");
           assert.ok(panel(), "the Bastion page inside it");
           assert.notOk(el().querySelector(".window-header .dxpb-open-bastion"), "no extra button in the window header");
-          assert.ok(tab().querySelector(":scope > .contents .facilities.basic"), "the system's own sections stay");
+          assert.equal(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "the Facilities page replaces the system's lists");
           const record = getRecord(getEntry(entryId));
           const nameInput = tab().querySelector(":scope > .name input");
           const shown = nameInput ? nameInput.value : tab().querySelector(":scope > .name .document-name")?.textContent;
@@ -154,7 +154,6 @@ export function registerQuench(quench) {
             for (let i = 0; i < 40 && !panel()?.querySelector(`.dxpb-tab.active[data-tab="${key}"]`); i++) await new Promise(r => setTimeout(r, 50));
           };
           await go("projects");
-          assert.equal(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "the system's sections hide on other sub-tabs");
           assert.ok(panel().querySelector(".dxpb-crews"), "the Projects page with its building crews");
           const select = panel().querySelector("select");
           if (select) {
@@ -165,29 +164,8 @@ export function registerQuench(quench) {
           Hooks.off("updateActor", hook);
           assert.equal(updates, 0, "nothing on the page updates the character");
           await go("facilities");
-          assert.notEqual(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "Facilities shows the system's sections");
-          // The Bastion's buildings in the system's lists, its hired guards with the defenders.
-          const { patchRecord } = await import("../store.js");
-          const guardsBefore = getRecord(getEntry(entryId)).garrison?.guards ?? 0;
-          await patchRecord(getEntry(entryId), { "garrison.guards": 3 });
-          for (let i = 0; i < 40 && tab()?.querySelectorAll(".roster .dxpb-guard").length !== 3; i++) await new Promise(r => setTimeout(r, 50));
-          assert.equal(tab().querySelectorAll(".roster .dxpb-guard").length, 3, "three hired guards under Defenders");
-          assert.ok(tab().querySelector(".facilities.special .facility.dxpb-virtual"), "buildings under Special Facilities");
-          const special = [...tab().querySelectorAll(".facilities.special .dxpb-virtual .title")].map(x => x.textContent);
-          assert.include(special, "Gatehouse");
-          const specialIds = [...tab().querySelectorAll(".facilities.special .dxpb-virtual")].map(x => x.dataset.dxpbFeature)
-            .map(fid => getRecord(getEntry(entryId)).features[fid]?.id).filter(Boolean);
-          assert.notOk(specialIds.some(id => catalog().get(id)?.room), "basic facilities (rooms, granary, servants' quarters) stay out of Special Facilities");
-          assert.isAtMost(specialIds.filter(id => catalog().get(id)?.effects?.roadTier).length, 1, "the road shows once");
-          // "Build facility" plans on the Projects page instead of opening the compendium browser.
-          const browsers = () => [...foundry.applications.instances.values()].filter(a => a.constructor.name.includes("CompendiumBrowser") && a.rendered).length;
-          const browsersBefore = browsers();
-          tab().querySelector('.contents [data-action="findItem"]').click();
-          for (let i = 0; i < 40 && !panel()?.querySelector('.dxpb-tab.active[data-tab="projects"]'); i++) await new Promise(r => setTimeout(r, 50));
-          assert.ok(panel().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the Projects page");
-          assert.equal(browsers(), browsersBefore, "no compendium browser");
-          await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
-          await go("facilities");
+          assert.notEqual(getComputedStyle(tab().querySelector(":scope > .description")).display, "none", "the system's description under the page");
+          await checkFacilitiesPage(() => BastionTabPanel.panels.get(sheet.id), () => go("facilities"));
           // A re-render of the sheet keeps the page and its sub-tab.
           const before = BastionTabPanel.panels.get(sheet.id);
           await sheet.render();
@@ -206,6 +184,100 @@ export function registerQuench(quench) {
         }
         assert.notOk(BastionTabPanel.panels.get(sheet.id), "the page goes with the sheet");
         assert.equal(hero.system.bastion.name, getRecord(getEntry(entryId)).name, "the owners' system Bastion name follows the Bastion");
+      });
+
+      /**
+       * The Facilities page, in the window or a character sheet: the defenders by kind, a section per kind of building
+       * with a summary and a limit, the Bastion's buildings and the owners' dnd5e facilities as cards, upgrade arrows,
+       * and a section's Plan button opening the catalog on that section only. `reopen` comes back to the page.
+       */
+      async function checkFacilitiesPage(app, reopen) {
+        const { patchRecord } = await import("../store.js");
+        const el = () => app().element;
+        const wait = async test => { for (let i = 0; i < 60 && !test(); i++) await new Promise(r => setTimeout(r, 50)); };
+        const guardsBefore = getRecord(getEntry(entryId)).garrison?.guards ?? 0;
+        await patchRecord(getEntry(entryId), { "garrison.guards": 3 });
+        await wait(() => el()?.querySelector('[data-defenders="guards"] .dxpb-def-count')?.dataset.count === "3");
+        try {
+          assert.ok(el().querySelector(".dxpb-facpage"), "the Facilities page");
+          assert.equal(el().querySelector('[data-defenders="guards"] .dxpb-def-count').dataset.count, "3", "hired guards in the defenders list");
+          assert.ok(el().querySelector('[data-defenders="mercenaries"]'), "mercenaries listed");
+          assert.equal(el().querySelector('[data-defenders="system"] .dxpb-def-count').dataset.count, "2", "the Barrack's defenders");
+          assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portraits img').length, 2, "with their portraits");
+          const sections = [...el().querySelectorAll(".dxpb-fac-section[data-section]")].map(x => x.dataset.section);
+          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "staff", "arcane"]);
+          for (const sec of el().querySelectorAll('.dxpb-fac-section:not([data-section="defenders"])')) {
+            assert.ok(sec.querySelector(".dxpb-fac-summary span")?.textContent.trim(), `${sec.dataset.section}: a summary`);
+            assert.ok(sec.querySelector(".dxpb-fac-limit")?.textContent.trim(), `${sec.dataset.section}: a limit`);
+          }
+          const titles = key => [...el().querySelectorAll(`[data-section="${key}"] .dxpb-fac .title`)].map(x => x.textContent.trim());
+          assert.include(titles("fortifications"), "Gatehouse");
+          assert.include(titles("fortifications"), `${PREFIX} Barrack`, "a system special facility in its section");
+          assert.include(titles("rooms"), "Kitchen");
+          assert.notInclude(titles("fortifications"), "Kitchen");
+          const kitchen = [...el().querySelectorAll('[data-section="rooms"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Kitchen");
+          assert.ok(kitchen.querySelector(".dxpb-fac-up"), "a roomy kitchen can be enlarged: double arrow up");
+          const wall = [...el().querySelectorAll('[data-section="fortifications"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Wall");
+          assert.ok(wall?.querySelector(".dxpb-fac-up"), "a stone wall can be raised");
+          // A section's Plan button: the catalog on the Projects page, only that section.
+          el().querySelector('[data-section="rooms"] [data-action="planSection"]').click();
+          await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-chip"));
+          assert.ok(el().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the Projects page");
+          assert.ok(el().querySelector(".dxpb-chip"), "the catalog shows one section");
+          assert.isAtMost(el().querySelectorAll(".dxpb-group").length, 1, "only that section's group");
+          el().querySelector('[data-action="clearCatalogGroup"]').click();
+          await wait(() => !el()?.querySelector(".dxpb-chip"));
+          assert.notOk(el().querySelector(".dxpb-chip"), "every group again");
+          await reopen();
+        } finally {
+          await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
+        }
+      }
+
+      it("the Bastion window has the same Facilities page", async () => {
+        const app = BastionSheet.open(entryId, { tab: "facilities" });
+        await app.render({ force: true });
+        try {
+          await checkFacilitiesPage(() => app, async () => { app.tab = "facilities"; await app.render(); });
+        } finally {
+          await app.close();
+        }
+      });
+
+      it("the world's dnd5e special facilities can be added from the Projects page, by level and free slots", async () => {
+        const [cls] = await hero.createEmbeddedDocuments("Item", [{ name: `${PREFIX} Fighter`, type: "class", system: { identifier: "fighter", levels: 5 } }]);
+        const smithy = await Item.create({ name: `${PREFIX} Smithy`, type: "facility",
+          system: { type: { value: "special", subtype: "smithy" }, level: 5, size: "roomy" } });
+        const vault = await Item.create({ name: `${PREFIX} Demiplane`, type: "facility",
+          system: { type: { value: "special", subtype: "demiplane" }, level: 17, size: "roomy" } });
+        const app = BastionSheet.open(entryId, { tab: "projects" });
+        try {
+          await app.render({ force: true });
+          const row = id => app.element.querySelector(`.dxpb-system-facility[data-uuid="${id}"]`);
+          assert.ok(row(smithy.uuid), "listed in the catalog");
+          assert.ok(row(smithy.uuid).closest(".dxpb-group"), "under a group");
+          assert.ok(row(vault.uuid)?.classList.contains("dxpb-locked"), "a level 17 facility is locked");
+          // Too high a level: refused by the GM side too.
+          let res = await ACTIONS.addSystemFacility({ entryId, uuid: vault.uuid, actorId: hero.id }, game.user);
+          assert.isFalse(res.ok);
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: smithy.uuid, actorId: hero.id }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          const added = hero.itemTypes.facility.find(i => i.name === `${PREFIX} Smithy`);
+          assert.ok(added, "on the character's sheet");
+          assert.equal(added.getFlag(MODULE_ID, "entryId"), entryId);
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: smithy.uuid, actorId: hero.id }, game.user);
+          assert.isFalse(res.ok, "not twice");
+          app.tab = "facilities";
+          await app.render();
+          const titles = [...app.element.querySelectorAll('[data-section="trade"] .dxpb-fac .title')].map(x => x.textContent.trim());
+          assert.include(titles, `${PREFIX} Smithy`, "a smithy is trade and crafting");
+          await added.delete();
+        } finally {
+          await app.close();
+          await smithy.delete();
+          await vault.delete();
+          await cls.delete();
+        }
       });
 
       it("the party's group sheet keeps a rook button in its header", async () => {

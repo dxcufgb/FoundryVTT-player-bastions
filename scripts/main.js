@@ -291,7 +291,7 @@ function onInit() {
     `modules/${MODULE_ID}/templates/dashboard.hbs`
   ]);
   foundry.applications.handlebars.loadTemplates({ dxpbQueueButtons: `modules/${MODULE_ID}/templates/queue-buttons.hbs`,
-    dxpbFacilityTable: `modules/${MODULE_ID}/templates/facility-table.hbs` });
+    dxpbFacilityCard: `modules/${MODULE_ID}/templates/facility-card.hbs` });
   registerUI();
   if (game.system?.id === "dnd5e") registerBastionTab();
   registerTime();

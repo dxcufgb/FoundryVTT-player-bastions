@@ -19,6 +19,7 @@ import { footprintOf, groundsOf, extendGroundsBase, spaceUsed } from "../core/gr
 import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
+import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility } from "../core/sections.js";
 
 /**
  * Tests of the pure engine. Written against a small interface so the same tests run in Quench (Foundry) and in the
@@ -1259,6 +1260,39 @@ export function registerCoreTests({ describe, it, assert }) {
       rec.features.paved = { id: "pave-road", count: Math.ceil(rec.location.settlement?.distance ?? 1) };
       assert.equal(roadTier(rec, catalog), "highway");
       assert.isFalse(plan(rec, { expansionId: "pave-road", count: 3 }, "w").ok, "paved: no more paving");
+    });
+  });
+
+  describe("Facilities page sections", () => {
+    it("every expansion has a section, and every group is one", () => {
+      for (const g of Object.keys(GROUPS)) assert.include(SECTIONS, g);
+      for (const e of EXPANSIONS) assert.include(SECTIONS, sectionOfExpansion(e), e.id);
+      assert.equal(sectionOfExpansion({ group: "supplies", room: "storage" }), "supplies", "a granary is food and water");
+    });
+    it("the system's facilities go to their sections: basic ones with the rooms, special ones by kind", () => {
+      assert.equal(sectionOfFacility({ type: "basic", subtype: "bedroom" }), "rooms");
+      assert.equal(sectionOfFacility({ type: "special", subtype: "armory" }), "fortifications");
+      assert.equal(sectionOfFacility({ type: "special", subtype: "library" }), "arcane");
+      assert.equal(sectionOfFacility({ type: "special", subtype: "someHomebrew" }), "staff");
+      for (const s of Object.values(SYSTEM_SECTION)) assert.include(SECTIONS, s);
+    });
+    it("special facility slots follow the character's level", () => {
+      const adv = { 5: 2, 9: 4, 13: 5, 17: 6 };
+      assert.equal(specialSlots(4, adv), 0);
+      assert.equal(specialSlots(9, adv), 4);
+      assert.equal(specialSlots(20, adv), 6);
+    });
+    it("a character takes a special facility only at its level, with a free slot, and not twice", () => {
+      const adv = { 5: 2, 9: 4 };
+      const smithy = { name: "Smithy", subtype: "smithy", level: 5 };
+      const who = { level: 5, facilities: [{ type: "basic", subtype: "bedroom", name: "Bedroom" }] };
+      assert.isTrue(canTakeFacility(who, smithy, adv).ok);
+      assert.equal(canTakeFacility({ ...who, level: 4 }, smithy, adv).reason, "level");
+      assert.equal(canTakeFacility({ ...who, facilities: [{ type: "special", subtype: "smithy", name: "Smithy" }] }, smithy, adv).reason, "have");
+      const full = { level: 5, facilities: [{ type: "special", subtype: "pub", name: "Pub" }, { type: "special", subtype: "garden", name: "Garden" }] };
+      assert.equal(canTakeFacility(full, smithy, adv).reason, "slots");
+      full.facilities[1].free = true;
+      assert.isTrue(canTakeFacility(full, smithy, adv).ok, "a free facility takes no slot");
     });
   });
 }
