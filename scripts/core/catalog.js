@@ -117,6 +117,7 @@ export const CHECKS = {
   roadBelowTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 1,
   roadTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 1,
   roadRoad: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) >= 2,
+  roadUnpaved: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 2,
   riverRoute: r => ["river", "lake"].includes(r?.location?.waterway) || !!r?.location?.riverOnRoute,
   pierWater: r => ["river", "lake", "coast"].includes(r?.location?.waterway),
   harborWater: r => ["coast", "river"].includes(r?.location?.waterway),
@@ -135,7 +136,7 @@ export const CHECK_LABELS = {
   anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", wellSite: "water on site (spring or high water table)",
   rockSite: "a rock site without water", notUnderground: "open sky (not underground)", farmland: "farmland (fertile or poor land)",
   millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby", stone: "stone nearby",
-  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadRoad: "a road", riverRoute: "a river on the route",
+  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",
   pierWater: "a river, lake or coast", harborWater: "a coast or large river", access3: "Accessibility 3+", access4: "Accessibility 4+",
   access5: "Accessibility 5+", marketTier2: "a Market Hall (Market Square upgraded once)", courtyardRoomy: "a Roomy or Vast Courtyard",
   anyWater: "a water source"

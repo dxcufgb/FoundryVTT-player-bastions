@@ -1,5 +1,6 @@
-import { MODULE_ID, t } from "../util.js";
-import { bastionForActor, getRecord } from "../store.js";
+import { MODULE_ID, t, catalog, escapeHTML } from "../util.js";
+import { bastionForActor, getEntry, getRecord } from "../store.js";
+import { GROUPS, SIZE_LABELS } from "../data/catalog.js";
 import { request } from "../socket.js";
 import { BastionSheet } from "./bastion-sheet.js";
 
@@ -55,6 +56,13 @@ export class BastionTabPanel extends BastionSheet {
     if (!this.host) return;
     this.host.classList.add("dxpb-has-bastion");
     this.host.classList.toggle("dxpb-sub-facilities", this.tab === "facilities");
+    try { decorateSystemSections(this); } catch (err) { console.warn(`${MODULE_ID} | Bastion tab`, err); }
+  }
+
+  /** Opens one of the page's sub-tabs. */
+  go(tab) {
+    this.tab = tab;
+    return this.render();
   }
 
   _insertElement(element) {
@@ -100,6 +108,116 @@ export class BastionTabPanel extends BastionSheet {
     for (const [key, panel] of BastionTabPanel.panels) if (panel === this) BastionTabPanel.panels.delete(key);
     this.host?.classList.remove("dxpb-has-bastion", "dxpb-sub-facilities");
   }
+}
+
+const GROUP_ICONS = { rooms: "fa-bed", fortifications: "fa-chess-rook", supplies: "fa-wheat-awn", access: "fa-road", trade: "fa-coins",
+  staff: "fa-crown", arcane: "fa-wand-sparkles" };
+const GUARD_IMG = "systems/dnd5e/tokens/humanoid/Guard.webp";
+const BUILD_ICON = "systems/dnd5e/icons/svg/facilities/build.svg";
+const MAX_GUARD_ICONS = 12;
+
+/** One facility card in the system's own markup (character-bastion.hbs), for a building of this module's Bastion. */
+function facilityCard({ name, subtitle, icon, building = false, damaged = false, progress = null, fid = "" }) {
+  const li = document.createElement("li");
+  li.className = `facility dxpb-virtual ${building ? "building" : ""} ${damaged ? "damaged" : ""}`;
+  if (fid) li.dataset.dxpbFeature = fid;
+  const pct = progress?.max ? Math.round(100 * Math.min(1, progress.value / progress.max)) : 0;
+  li.innerHTML = `${progress?.max ? `<div class="facility-progress meter progress" role="meter" aria-valuemin="0"
+      aria-valuenow="${pct}" aria-valuetext="${progress.value}" aria-valuemax="${progress.max}" style="--bar-percentage: ${pct}%">
+      <div class="label"><span class="value">${progress.value}</span><span class="separator">&sol;</span><span class="max">${progress.max}</span></div>
+    </div>` : ""}
+    <div class="facility-header">
+      <div class="name-stacked rollable"><span class="title">${escapeHTML(name)}</span><span class="subtitle">${escapeHTML(subtitle)}</span></div>
+      <div class="slots">${building ? `<div class="slot order-slot"><dnd5e-icon src="${BUILD_ICON}"></dnd5e-icon></div>`
+        : `<div class="slot dxpb-group-slot"><i class="fa-solid ${icon}" inert></i></div>`}</div>
+    </div>`;
+  return li;
+}
+
+/**
+ * Puts this module's Bastion into the system's own sections of the tab, the way the system shows its facilities:
+ * built rooms (not already a facility item on this character) under Basic Facilities, every other building under
+ * Special Facilities, buildings under construction greyed with their progress, and the hired guards in the
+ * defenders' roster. The system's "add facility" and "Build facility" slots open the Projects page instead of the
+ * compendium browser. Clicking one of these opens the page that handles it. Redone after every render.
+ */
+function decorateSystemSections(panel) {
+  const tab = panel.host;
+  const record = getRecord(getEntry(panel.entryId));
+  if (!tab || !record) return;
+  tab.querySelectorAll(".dxpb-virtual").forEach(n => n.remove());
+  tab.querySelectorAll(".dxpb-hidden-by-bastion").forEach(n => n.classList.remove("dxpb-hidden-by-bastion"));
+  const C = catalog();
+  const actor = game.actors.get(panel.actorId);
+  const asItems = new Set((actor?.itemTypes?.facility ?? []).map(i => i.getFlag(MODULE_ID, "featureId")).filter(Boolean));
+  const cards = { basic: [], special: [] };
+  const describe = (e, f) => {
+    const parts = [GROUPS[e.group] ?? ""];
+    if (f?.size) parts.push(SIZE_LABELS[f.size] ?? f.size);
+    if (e.tiers) parts.push(e.tiers[(f?.tier ?? 1) - 1]?.label ?? "");
+    else if (f?.count > 1 && e.unit !== "flat") parts.push(e.unit === "mile" ? t("SheetTab.Miles", { n: f.count }) : `× ${f.count}`);
+    return parts.filter(Boolean).join(" · ");
+  };
+  for (const [fid, f] of Object.entries(record.features ?? {})) {
+    const e = C.get(f?.id);
+    if (!e || e.legacy) continue;
+    const room = e.group === "rooms";
+    if (room && asItems.has(fid)) continue;
+    cards[room ? "basic" : "special"].push(facilityCard({ name: e.name, subtitle: describe(e, f), icon: GROUP_ICONS[e.group] ?? "fa-chess-rook",
+      damaged: !!f.damaged, fid }));
+  }
+  for (const p of Object.values(record.projects ?? {})) {
+    if (p?.kind !== "build" || !["building", "paused"].includes(p.state)) continue;
+    const e = C.get(p.expansionId);
+    if (!e) continue;
+    cards[e.group === "rooms" ? "basic" : "special"].push(facilityCard({ name: e.name, subtitle: t(`State.${p.state}`), building: true,
+      progress: { value: Math.floor(p.progress ?? 0), max: p.days ?? 0 } }));
+  }
+  for (const type of ["basic", "special"]) {
+    const ul = tab.querySelector(`:scope > .contents .facilities.${type} ul`);
+    if (!ul) continue;
+    const before = ul.querySelector(":scope > .facility.empty");
+    for (const card of cards[type]) {
+      card.addEventListener("click", event => { event.stopPropagation(); panel.go("projects"); });
+      ul.insertBefore(card, before);
+    }
+  }
+  // Hired guards stand with the defenders.
+  const guards = Math.max(0, Math.floor(Number(record.garrison?.guards) || 0));
+  const roster = tab.querySelector(":scope > .contents .roster ul");
+  if (roster && guards) {
+    roster.querySelector(":scope > li.empty")?.classList.add("dxpb-hidden-by-bastion");
+    const label = t("SheetTab.Guard");
+    for (let i = 0; i < Math.min(guards, MAX_GUARD_ICONS); i++) {
+      const li = document.createElement("li");
+      li.className = "defender dxpb-virtual dxpb-guard";
+      li.dataset.tooltip = label;
+      li.innerHTML = `<img src="${GUARD_IMG}" alt="${escapeHTML(label)}">`;
+      roster.append(li);
+    }
+    if (guards > MAX_GUARD_ICONS) {
+      const more = document.createElement("li");
+      more.className = "defender dxpb-virtual dxpb-guard dxpb-guard-more";
+      more.dataset.tooltip = t("SheetTab.Guards", { n: guards });
+      more.textContent = `+${guards - MAX_GUARD_ICONS}`;
+      roster.append(more);
+    }
+    roster.querySelectorAll(".dxpb-guard").forEach(li => li.addEventListener("click", event => {
+      event.stopPropagation();
+      panel.go("defense");
+    }));
+  }
+  // "Add facility" / "Build facility": plan it on the Projects page.
+  tab.querySelectorAll(':scope > .contents [data-action="findItem"]').forEach(slot => {
+    if (slot.dataset.dxpbHooked) return;
+    slot.dataset.dxpbHooked = "1";
+    slot.dataset.tooltip = t("SheetTab.PlanHere");
+    slot.addEventListener("click", event => {
+      event.stopPropagation();
+      event.preventDefault();
+      panel.go("projects");
+    });
+  });
 }
 
 /** Which character sheet class to extend, once dnd5e is ready. */

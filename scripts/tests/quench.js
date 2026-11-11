@@ -166,6 +166,26 @@ export function registerQuench(quench) {
           assert.equal(updates, 0, "nothing on the page updates the character");
           await go("facilities");
           assert.notEqual(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "Facilities shows the system's sections");
+          // The Bastion's buildings in the system's lists, its hired guards with the defenders.
+          const { patchRecord } = await import("../store.js");
+          const guardsBefore = getRecord(getEntry(entryId)).garrison?.guards ?? 0;
+          await patchRecord(getEntry(entryId), { "garrison.guards": 3 });
+          for (let i = 0; i < 40 && tab()?.querySelectorAll(".roster .dxpb-guard").length !== 3; i++) await new Promise(r => setTimeout(r, 50));
+          assert.equal(tab().querySelectorAll(".roster .dxpb-guard").length, 3, "three hired guards under Defenders");
+          assert.ok(tab().querySelector(".facilities.special .facility.dxpb-virtual"), "buildings under Special Facilities");
+          const special = [...tab().querySelectorAll(".facilities.special .dxpb-virtual .title")].map(x => x.textContent);
+          assert.include(special, "Gatehouse");
+          assert.notInclude([...tab().querySelectorAll(".facilities.special .dxpb-virtual")].map(x => x.dataset.dxpbFeature)
+            .map(fid => getRecord(getEntry(entryId)).features[fid]?.id), "bedroom", "rooms go under Basic Facilities");
+          // "Build facility" plans on the Projects page instead of opening the compendium browser.
+          const browsers = () => [...foundry.applications.instances.values()].filter(a => a.constructor.name.includes("CompendiumBrowser") && a.rendered).length;
+          const before = browsers();
+          tab().querySelector('.contents [data-action="findItem"]').click();
+          for (let i = 0; i < 40 && !panel()?.querySelector('.dxpb-tab.active[data-tab="projects"]'); i++) await new Promise(r => setTimeout(r, 50));
+          assert.ok(panel().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the Projects page");
+          assert.equal(browsers(), before, "no compendium browser");
+          await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
+          await go("facilities");
           // A re-render of the sheet keeps the page and its sub-tab.
           const before = BastionTabPanel.panels.get(sheet.id);
           await sheet.render();

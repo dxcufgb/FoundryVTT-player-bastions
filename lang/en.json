@@ -701,6 +701,12 @@
     },
     "OtherFacilities": "The other owners' facilities",
     "PopOut": "Open the Bastion in a window",
-    "TabNameHint": "The Bastion's name: the GM renames it"
+    "TabNameHint": "The Bastion's name: the GM renames it",
+    "SheetTab": {
+      "Miles": "{n} miles",
+      "Guard": "Hired guard",
+      "Guards": "{n} hired guards",
+      "PlanHere": "Plan it on the Bastion's Projects page"
+    }
   }
 }

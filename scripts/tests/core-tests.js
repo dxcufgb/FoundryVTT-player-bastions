@@ -1221,4 +1221,44 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.deepEqual([BUILD_PRICES.dmg.crewHireCost, BUILD_PRICES.dmg.crewUpkeep], [rules.crewHireCost, rules.crewUpkeep]);
     });
   });
+
+  describe("One of a kind", () => {
+    const plan = (rec, opts, id = "x") => planProject(rec, catalog, stats(rec), rules, opts, { id });
+    it("a Parlor and a Courtyard can only be built once (enlarge them instead), also not planned twice", () => {
+      for (const id of ["parlor", "courtyard"]) {
+        const rec = workedExampleRecord();
+        for (const [fid, f] of Object.entries(rec.features)) if (f.id === id) delete rec.features[fid];
+        const first = plan(rec, { expansionId: id, size: "cramped" });
+        assert.isTrue(first.ok, `${id}: ${first.reason}`);
+        rec.projects = { [first.project.id]: first.project };
+        assert.isFalse(plan(rec, { expansionId: id, size: "cramped" }, "y").ok, `${id}: not planned twice`);
+        rec.projects = {};
+        rec.features.built = { id, size: "cramped" };
+        assert.isFalse(plan(rec, { expansionId: id, size: "roomy" }, "z").ok, `${id}: not built twice`);
+      }
+    });
+    it("one Beacon Tower", () => {
+      const rec = workedExampleRecord();
+      assert.isTrue(plan(rec, { expansionId: "beacon-tower" }).ok);
+      rec.features.beacon = { id: "beacon-tower" };
+      assert.isFalse(plan(rec, { expansionId: "beacon-tower" }, "y").ok);
+    });
+    it("the road is paved once: not once it is a highway, and not planned twice", () => {
+      const rec = workedExampleRecord();
+      rec.location.road = "road";
+      for (const [fid, f] of Object.entries(rec.features)) if (["clear-trail", "build-road", "pave-road"].includes(f.id)) delete rec.features[fid];
+      assert.equal(roadTier(rec, catalog), "road");
+      const first = plan(rec, { expansionId: "pave-road", count: 3 });
+      assert.isTrue(first.ok, first.reason);
+      rec.projects = { [first.project.id]: first.project };
+      assert.isFalse(plan(rec, { expansionId: "pave-road", count: 3 }, "y").ok, "not planned twice");
+      rec.projects = {};
+      rec.location.road = "highway";
+      assert.isFalse(plan(rec, { expansionId: "pave-road", count: 3 }, "z").ok, "a highway is paved already");
+      rec.location.road = "road";
+      rec.features.paved = { id: "pave-road", count: Math.ceil(rec.location.settlement?.distance ?? 1) };
+      assert.equal(roadTier(rec, catalog), "highway");
+      assert.isFalse(plan(rec, { expansionId: "pave-road", count: 3 }, "w").ok, "paved: no more paving");
+    });
+  });
 }

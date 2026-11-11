@@ -197,7 +197,8 @@ export function planProject(record, catalog, stats, rules, opts, { id, userId, n
   if (kind === "build") {
     const pre = prerequisites(record, exp, catalog, stats);
     if (!pre.ok) return { ok: false, reason: `Needs ${pre.missing.join(", ")}` };
-    if (exp.unit === "flat" && Object.values(record.projects ?? {}).some(p => p.expansionId === exp.id && p.kind === "build"
+    // One at a time: a one-off building, and each step of the road (a trail, a road, paving), which covers the route.
+    if ((exp.unit === "flat" || exp.effects?.roadTier) && Object.values(record.projects ?? {}).some(p => p.expansionId === exp.id && p.kind === "build"
       && !["complete", "cancelled"].includes(p.state))) return { ok: false, reason: "Already planned" };
   }
   // Room inside the walls: a new building, a bigger room or a bigger tier needs free ground.

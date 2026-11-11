@@ -223,3 +223,14 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-embedded .dxpb-crews, .dxpb-embedded .dxpb-grounds { border: var(--dnd5e-border-gold, 1px solid var(--dxpb-gold)); border-radius: 5px; background: var(--dnd5e-background-card, transparent); }
 .dxpb-embedded .dxpb-perks { max-width: 12rem; }
 .dxpb-embedded .dxpb-other-facilities { margin-top: 0.5rem; }
+
+/* The Bastion's own buildings and guards in the system's sections. */
+.tab[data-tab="bastion"] .dxpb-hidden-by-bastion { display: none !important; }
+.tab[data-tab="bastion"] .facility.dxpb-virtual { cursor: var(--cursor-pointer, pointer); }
+.tab[data-tab="bastion"] .facility.dxpb-virtual .dxpb-group-slot {
+  display: grid; place-content: center; width: 30px; height: 30px; color: var(--dnd5e-color-gold, #9f9275); font-size: 15px;
+  border: 1px solid var(--dnd5e-color-gold, #9f9275); border-radius: 4px; box-shadow: inset 0 0 3px var(--dnd5e-shadow-45, transparent);
+}
+.tab[data-tab="bastion"] .roster .dxpb-guard-more {
+  display: grid; place-content: center; font-weight: bold; color: var(--dnd5e-color-gold, #9f9275); background: var(--dnd5e-background-card, transparent);
+}
