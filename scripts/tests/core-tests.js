@@ -1497,6 +1497,13 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.isTrue(fin.ok);
       assert.equal(r2.projects.ha.state, "cancelled");
       assert.deepEqual(cancelHiddenApproach(r2, rules).cancelled, [], "once only");
+      // On its own it leaves the record alone and returns the change.
+      const r3 = { treasury: 5, projects: { ha: { id: "ha", expansionId: "hidden-approach", label: "HA", state: "planned", cost: 100, funded: 40, days: 10, progress: 0, contributions: { treasury: 40 } } } };
+      const before = JSON.stringify(r3);
+      const res3 = cancelHiddenApproach(r3, rules);
+      assert.equal(JSON.stringify(r3), before, "the input isn't changed");
+      assert.equal(res3.projects.ha.state, "cancelled");
+      assert.equal(res3.treasury, 45, "the unspent funding back in the treasury");
     });
     it("possibleHere: a prerequisite cycle can't be built; alternatives don't spoil each other; the caller's set isn't touched", () => {
       const rec = workedExampleRecord();

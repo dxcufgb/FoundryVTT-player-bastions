@@ -1,6 +1,6 @@
 import { advanceTrade, rollTradeRequest, routeTotals, rememberSize } from "./trade.js";
 import { rollFormula } from "./stats.js";
-import { advanceProjects, applyCompletion, fund, cancelHiddenApproach, mergeCancelled, ROADS_END_HIDDEN } from "./projects.js";
+import { advanceProjects, applyCompletion, fund, cancelHiddenApproach, ROADS_END_HIDDEN } from "./projects.js";
 import { syncLayout } from "./layout.js";
 import { assignCrews } from "./crews.js";
 import { arrivedBy, mergeOrders } from "./dispatch.js";
@@ -196,8 +196,30 @@ export function finishProject(record, projectId, opts = {}) {
   const done = workDays(record, Math.max(1, (p.days ?? 0) - (p.progress ?? 0)), { ...opts, payAsYouBuild: false, crews: undefined });
   record.projects = { ...others, ...record.projects };
   // The others weren't in view while it finished: a finished road ends their Hidden Approach too.
-  if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) mergeCancelled(done, cancelHiddenApproach(record, opts.rules));
+  if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) endHiddenApproach(record, done, opts.rules);
   return { ok: true, ...done };
+}
+
+/** Folds cancelled projects (cancelHiddenApproach's shape) into a workDays-shaped result. */
+function addCancelled(out, res) {
+  if (!res?.cancelled?.length) return;
+  out.cancelled = [...(out.cancelled ?? []), ...res.cancelled];
+  out.refunds ??= {};
+  for (const [id, gold] of Object.entries(res.refunds)) out.refunds[id] = (out.refunds[id] ?? 0) + gold;
+  out.lines.push(...res.lines);
+}
+
+/**
+ * A finished road: open Hidden Approach projects are cancelled (cancelHiddenApproach). Like workDays, in place on
+ * `record` (the turn's own copy): its projects, treasury and refunds owed; `out` gets the cancellations.
+ */
+function endHiddenApproach(record, out, rules) {
+  const res = cancelHiddenApproach(record, rules);
+  if (!res.cancelled.length) return;
+  record.projects = res.projects;
+  record.treasury = res.treasury;
+  record.refundsDue = res.refundsDue;
+  addCancelled(out, res);
 }
 
 /** The GM finishes every open project at once, in the order they were planned. Same result shape as workDays. */
@@ -210,7 +232,7 @@ export function finishAllProjects(record, opts = {}) {
     out.completed.push(...res.completed);
     out.lines.push(...res.lines);
     if (res.layoutChanged) out.layoutChanged = true;
-    mergeCancelled(out, { cancelled: res.cancelled ?? [], refunds: res.refunds ?? {}, lines: [] });
+    addCancelled(out, { cancelled: res.cancelled ?? [], refunds: res.refunds ?? {}, lines: [] });
   }
   return out;
 }
@@ -257,7 +279,7 @@ export function workDays(record, days, opts = {}) {
         out.lines.push("The Hidden Approach is gone: the new road leads anyone straight to the Bastion.");
         out.removedFeatures = [...(out.removedFeatures ?? []), ...res.removed];
       }
-      if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) mergeCancelled(out, cancelHiddenApproach(record, opts.rules));
+      if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) endHiddenApproach(record, out, opts.rules);
     }
     finished += completed.length;
     if (completed.length && left > 0) assign();

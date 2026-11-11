@@ -298,22 +298,25 @@ export const ACTIONS = {
     const item = await fromUuid(uuid);
     if (item?.type !== "facility" || item.system?.type?.value !== "special" || item.parent) return { ok: false, reason: t("Fac.Need.NotFacility") };
     if (!pack && !item.testUserPermission(user, "LIMITED")) return { ok: false, reason: t("Fac.Need.NotFacility") };
-    const level = actor.system?.details?.level ?? 0;
-    const facilities = (actor.itemTypes?.facility ?? []).map(i => ({ type: i.system.type?.value, subtype: i.system.type?.subtype,
-      name: i.name, free: !!i.system.free }));
-    const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level, free: !!item.system.free },
-      CONFIG.DND5E?.facilities?.advancement?.special ?? {});
-    if (!check.ok) {
-      const reason = check.reason === "level" ? t("Fac.Need.Level", { level: item.system.level })
-        : check.reason === "have" ? t("Fac.Need.Have") : t("Fac.Need.Slots", { used: check.used, max: check.max });
-      return { ok: false, reason };
-    }
-    const data = item.toObject();
-    delete data._id;
-    data._stats = { ...(data._stats ?? {}), compendiumSource: item.pack ? item.uuid : (data._stats?.compendiumSource ?? null) };
-    foundry.utils.setProperty(data, `flags.${MODULE_ID}.entryId`, entryId);
-    const [created] = await actor.createEmbeddedDocuments("Item", [data]);
-    return { ok: !!created, name: item.name, actor: actor.name };
+    // The slot check and the new item go together, one at a time per character (two Bastions can share an owner).
+    return withActorLock(actor, async () => {
+      const level = actor.system?.details?.level ?? 0;
+      const facilities = (actor.itemTypes?.facility ?? []).map(i => ({ type: i.system.type?.value, subtype: i.system.type?.subtype,
+        name: i.name, free: !!i.system.free }));
+      const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level, free: !!item.system.free },
+        CONFIG.DND5E?.facilities?.advancement?.special ?? {});
+      if (!check.ok) {
+        const reason = check.reason === "level" ? t("Fac.Need.Level", { level: item.system.level })
+          : check.reason === "have" ? t("Fac.Need.Have") : t("Fac.Need.Slots", { used: check.used, max: check.max });
+        return { ok: false, reason };
+      }
+      const data = item.toObject();
+      delete data._id;
+      data._stats = { ...(data._stats ?? {}), compendiumSource: item.pack ? item.uuid : (data._stats?.compendiumSource ?? null) };
+      foundry.utils.setProperty(data, `flags.${MODULE_ID}.entryId`, entryId);
+      const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+      return { ok: !!created, name: item.name, actor: actor.name };
+    });
   },
 
   /* ---------------- Trade routes ---------------- */
@@ -322,6 +325,10 @@ export const ACTIONS = {
   async saveSettlement({ entryId, settlement }, user) {
     gmOnly(user);
     const { entry } = load(entryId);
+    // The id is a record key (settlements.<id>): a plain id only, no dots or other path characters.
+    if (settlement?.id !== undefined && settlement?.id !== "" && !(typeof settlement.id === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(settlement.id))) {
+      return { ok: false, reason: t("Trade.NoSettlement") };
+    }
     const clean = cleanSettlement(settlement, settlement?.id || randomId());
     if (!clean) return { ok: false, reason: t("Trade.SettlementName") };
     await patchRecord(entry, { [`settlements.${clean.id}`]: clean });

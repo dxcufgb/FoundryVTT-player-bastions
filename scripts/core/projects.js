@@ -392,43 +392,36 @@ export const ROADS_END_HIDDEN = ["build-road", "pave-road"];
 
 /**
  * A finished road also ends any Hidden Approach still planned or under way: it could never be built beside the road.
- * In place on `record`: those projects are cancelled like a cancel by the party (cancelRefund: unspent funding back, a
- * share of what was spent); the treasury's share goes back into record.treasury, the characters' shares are owed in
- * record.refundsDue ({ actorId: gp }, kept until the Foundry side has paid each one) and returned in `refunds`.
- * Returns { cancelled: [{projectId, label, refunded}], refunds, lines }.
+ * Those projects are cancelled like a cancel by the party (cancelRefund: unspent funding back, a share of what was
+ * spent): the treasury's share goes back into the treasury, the characters' shares are owed in refundsDue
+ * ({ actorId: gp }, kept until the Foundry side has paid each one). The record isn't changed: returns
+ * { projects, treasury, refundsDue, cancelled: [{projectId, label, refunded}], refunds: { actorId: gp }, lines }.
  */
 export function cancelHiddenApproach(record, rules = {}) {
+  const projects = { ...(record?.projects ?? {}) };
+  let treasury = Number(record?.treasury) || 0;
+  const refundsDue = { ...(record?.refundsDue ?? {}) };
   const out = { cancelled: [], refunds: {}, lines: [] };
-  for (const p of Object.values(record.projects ?? {})) {
+  for (const p of Object.values(projects)) {
     if (p?.expansionId !== "hidden-approach" || ["complete", "cancelled"].includes(p.state)) continue;
     const res = transition(p, "cancel");
     if (!res.ok) continue;
     const refund = cancelRefund(p, { cancelRefundPct: rules.cancelRefundPct ?? 50 });
     for (const [payer, gold] of Object.entries(refund.byPayer)) {
-      if (payer === "treasury") record.treasury = (Number(record.treasury) || 0) + gold;
+      if (payer === "treasury") treasury += gold;
       else if (gold > 0) {
         out.refunds[payer] = (out.refunds[payer] ?? 0) + gold;
-        record.refundsDue = { ...(record.refundsDue ?? {}), [payer]: (Number(record.refundsDue?.[payer]) || 0) + gold };
+        refundsDue[payer] = (Number(refundsDue[payer]) || 0) + gold;
       }
     }
     res.project.refunded = refund.total;
     res.project.cancelledBy = "road";
     delete res.project.queuePos;
-    record.projects[p.id] = res.project;
+    projects[p.id] = res.project;
     out.cancelled.push({ projectId: p.id, label: p.label, refunded: refund.total });
     out.lines.push(`Cancelled: ${p.label} (the road leads straight to the Bastion now; ${refund.total} GP back).`);
   }
-  return out;
-}
-
-/** Folds a cancelHiddenApproach result into a workDays-shaped result. */
-export function mergeCancelled(out, res) {
-  if (!res?.cancelled?.length) return out;
-  out.cancelled = [...(out.cancelled ?? []), ...res.cancelled];
-  out.refunds ??= {};
-  for (const [id, gold] of Object.entries(res.refunds)) out.refunds[id] = (out.refunds[id] ?? 0) + gold;
-  out.lines.push(...res.lines);
-  return out;
+  return { projects, treasury, refundsDue, ...out };
 }
 
 export function applyCompletion(featuresIn, project, newId) {
