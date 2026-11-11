@@ -179,11 +179,11 @@ export function registerQuench(quench) {
             .map(fid => getRecord(getEntry(entryId)).features[fid]?.id), "bedroom", "rooms go under Basic Facilities");
           // "Build facility" plans on the Projects page instead of opening the compendium browser.
           const browsers = () => [...foundry.applications.instances.values()].filter(a => a.constructor.name.includes("CompendiumBrowser") && a.rendered).length;
-          const before = browsers();
+          const browsersBefore = browsers();
           tab().querySelector('.contents [data-action="findItem"]').click();
           for (let i = 0; i < 40 && !panel()?.querySelector('.dxpb-tab.active[data-tab="projects"]'); i++) await new Promise(r => setTimeout(r, 50));
           assert.ok(panel().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the Projects page");
-          assert.equal(browsers(), before, "no compendium browser");
+          assert.equal(browsers(), browsersBefore, "no compendium browser");
           await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
           await go("facilities");
           // A re-render of the sheet keeps the page and its sub-tab.
