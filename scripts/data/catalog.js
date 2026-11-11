@@ -177,15 +177,15 @@ export const EXPANSIONS = [
   { id: "mill", group: "supplies", name: "Mill", unit: "flat", cost: 1900, days: 60,
     requires: { features: ["fields"], check: ["millSite"] }, effects: { farmMult: 1.5, income: 15 }, summary: "Field output x1.5, +15 GP a turn." },
   { id: "hunting-lodge", group: "supplies", name: "Hunting Lodge", unit: "flat", cost: 875, days: 25,
-    requires: { check: ["game"] }, effects: { foodOutside: 20, renown: 1 }, summary: "+20 food a day, Renown +1." },
+    requires: { check: ["game"] }, effects: { foodOutside: 20, income: 5, renown: 1 }, summary: "+20 food a day, +5 GP a turn from hides and furs, Renown +1." },
   { id: "hunters-guild", group: "supplies", name: "Hunters' Guild", unit: "flat", cost: 1500, days: 30,
-    requires: { check: ["notUnderground"] }, effects: { foodOutside: 25, workers: 6 },
+    requires: { check: ["notUnderground"] }, effects: { foodOutside: 25, income: 6, workers: 6 },
     tiers: [
-      { label: "Hunters' guild", cost: 1500, days: 30, effects: { foodOutside: 25, workers: 6 } },
-      { label: "Trappers' and rangers' lodge", cost: 2500, days: 45, effects: { foodOutside: 25, income: 5, workers: 4 } },
+      { label: "Hunters' guild", cost: 1500, days: 30, effects: { foodOutside: 25, income: 6, workers: 6 } },
+      { label: "Trappers' and rangers' lodge", cost: 2500, days: 45, effects: { foodOutside: 25, income: 6, workers: 4 } },
       { label: "Great hunt", cost: 4500, days: 60, effects: { foodOutside: 40, income: 10, renown: 1, workers: 6 } }
     ],
-    summary: "Hunters and trappers who range far into the wilds, game or not: +25 food a day, much more upgraded." },
+    summary: "Hunters and trappers who range far into the wilds, game or not: +25 food a day and +6 GP a turn in pelts, much more upgraded." },
   { id: "highland-herds", group: "supplies", name: "Highland Herds", unit: "flat", cost: 1250, days: 30,
     requires: { check: ["highland"] }, effects: { foodOutside: 20, income: 6 },
     tiers: [
