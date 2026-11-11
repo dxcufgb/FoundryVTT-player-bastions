@@ -56,8 +56,9 @@ export function canTakeFacility(who, item, advancement = {}) {
 
 /**
  * One row per kind of building: buildings of the same kind (three watchtowers, two kitchens) share a row with their
- * number (`many`), their stats added up, and the subtitles that differ joined. The row acts on one of them: a damaged
- * one first (repair), else one that can be upgraded. Buildings under way keep their own rows.
+ * number (`many`), their stats added up (multipliers multiplied), and the subtitles that differ joined. The row acts on one
+ * of them: a damaged one with no repair under way first (repair), else one that can be upgraded. Buildings under way
+ * keep their own rows.
  */
 export function mergeSameKind(cards, columns, format = v => v) {
   const out = [];
@@ -71,11 +72,16 @@ export function mergeSameKind(cards, columns, format = v => v) {
   return out.map(x => {
     if (!Array.isArray(x)) return x;
     if (x.length === 1) return x[0];
-    const rep = x.find(c => c.repair || c.damaged) ?? x.find(c => c.upgrade) ?? x[0];
+    // One the party can act on: a damaged one without a repair under way (repair), else one that can be upgraded.
+    const rep = x.find(c => c.repair) ?? x.find(c => c.upgrade) ?? x.find(c => c.damaged) ?? x[0];
     const raw = columns.map((c, i) => {
       const vals = x.map(card => card.raw?.[i]);
       if (["num", "gp", "pct"].includes(c.kind) && vals.some(v => typeof v === "number")) {
         return vals.reduce((n, v) => n + (typeof v === "number" ? v : 0), 0);
+      }
+      // Multipliers stack like the section total: the product of the numbers.
+      if (c.kind === "mult" && vals.some(v => typeof v === "number")) {
+        return vals.reduce((n, v) => n * (typeof v === "number" ? v : 1), 1);
       }
       return vals.find(v => v !== null && v !== undefined && v !== "") ?? null;
     });

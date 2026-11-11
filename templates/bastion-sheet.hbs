@@ -3,7 +3,7 @@
   <p class="dxpb-empty">{{localize "DXPB.Missing"}}</p>
 {{else}}
   <nav class="dxpb-tabs">
-    {{#each tabs}}<a class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}">{{label}}</a>{{/each}}
+    {{#each tabs}}<button type="button" class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">{{label}}</button>{{/each}}
     {{#if embedded}}<button type="button" class="dxpb-linkbtn dxpb-popout" data-action="popOut" data-tooltip="{{localize 'DXPB.PopOut'}}" aria-label="{{localize 'DXPB.PopOut'}}"><i class="fa-solid fa-arrow-up-right-from-square" inert></i></button>{{/if}}
   </nav>
   <section class="dxpb-tab-body">
@@ -142,7 +142,7 @@
           <span class="dxpb-def-main">
             <button type="button" class="dxpb-linkbtn dxpb-def-name" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{label}}</strong><span class="subtitle dxpb-muted">{{note}}</span></button>
             <span class="dxpb-fac-slots">
-              {{#each portraits}}<img class="dxpb-def-portrait" src="{{img}}" alt="{{name}}" data-tooltip="{{name}}" data-action="openFacility" data-uuid="{{uuid}}">{{/each}}
+              {{#each portraits}}<button type="button" class="dxpb-linkbtn dxpb-def-portrait-btn" data-action="openFacility" data-uuid="{{uuid}}" data-tooltip="{{name}}" aria-label="{{name}}"><img class="dxpb-def-portrait" src="{{img}}" alt=""></button>{{/each}}
               {{#if tab}}{{#if @root.mine}}<button type="button" class="dxpb-def-hire" data-action="dxpbTab" data-tab="{{tab}}" data-tooltip="{{localize 'DXPB.Fac.Def.Manage'}}" aria-label="{{localize 'DXPB.Fac.Def.Manage'}}"><i class="fa-solid fa-user-plus" inert></i></button>{{/if}}{{/if}}
             </span>
           </span>
@@ -246,7 +246,7 @@
   </details>
   {{/if}}
   <div class="dxpb-inline"><input type="search" class="dxpb-search" data-catalog-filter value="{{catalogFilter}}" placeholder="{{localize 'DXPB.Search'}}">
-    {{#if catalogGroup}}<span class="dxpb-chip">{{catalogGroup.label}} <a data-action="clearCatalogGroup" data-tooltip="{{localize 'DXPB.Fac.ShowAll'}}" aria-label="{{localize 'DXPB.Fac.ShowAll'}}"><i class="fa-solid fa-xmark" inert></i></a></span>{{/if}}</div>
+    {{#if catalogGroup}}<span class="dxpb-chip">{{catalogGroup.label}} <button type="button" class="dxpb-linkbtn" data-action="clearCatalogGroup" data-tooltip="{{localize 'DXPB.Fac.ShowAll'}}" aria-label="{{localize 'DXPB.Fac.ShowAll'}}"><i class="fa-solid fa-xmark" inert></i></button></span>{{/if}}</div>
   {{#each catalog}}
   <details class="dxpb-group" open>
     <summary>{{label}}</summary>
@@ -254,7 +254,7 @@
       {{#each items}}{{#if system}}<tr class="dxpb-system-facility {{#unless ok}}dxpb-locked{{/unless}}" data-uuid="{{uuid}}">
         <td><img class="dxpb-catalog-img" src="{{img}}" alt=""> <strong>{{name}}</strong> <span class="dxpb-tag">dnd5e</span><br><span class="dxpb-muted">{{summary}}</span></td>
         <td class="dxpb-muted">{{localize "DXPB.Fac.SysCost"}}</td>
-        <td class="dxpb-perks"><a data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-book-open" inert></i> {{localize "DXPB.Fac.Read"}}</a></td>
+        <td class="dxpb-perks"><button type="button" class="dxpb-linkbtn" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-book-open" inert></i> {{localize "DXPB.Fac.Read"}}</button></td>
         <td>{{#if ok}}{{#if @root.mine}}<div class="dxpb-inline"><select name="facilityOwner">{{#each owners}}<option value="{{id}}">{{name}}</option>{{/each}}</select>
           <button type="button" data-action="addFacility"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Fac.Add"}}</button></div>{{/if}}
           {{else}}<span class="dxpb-muted" data-tooltip="{{missing}}"><i class="fa-solid fa-lock" inert></i> {{missing}}</span>{{/if}}</td>
@@ -332,7 +332,7 @@
     <label>{{localize "DXPB.PayFrom"}}</label><select name="buyFrom"><option value="actor">{{localize "DXPB.FromCharacter"}}</option><option value="treasury">{{localize "DXPB.FromTreasury"}}</option></select>
   </div>{{/if}}
   <table class="dxpb-table">
-    {{#each merchant.stock}}<tr data-ware="{{i}}" class="{{#if sold}}dxpb-locked{{/if}}"><td><a class="dxpb-ware" data-action="viewWare" data-uuid="{{uuid}}" data-tooltip="{{localize 'DXPB.ViewWare'}}"><img class="dxpb-icon" src="{{img}}"><span>{{name}}</span></a></td><td class="dxpb-muted">{{rarity}}</td><td>{{priceText}}</td>
+    {{#each merchant.stock}}<tr data-ware="{{i}}" class="{{#if sold}}dxpb-locked{{/if}}"><td><button type="button" class="dxpb-linkbtn dxpb-ware" data-action="viewWare" data-uuid="{{uuid}}" data-tooltip="{{localize 'DXPB.ViewWare'}}"><img class="dxpb-icon" src="{{img}}" alt=""><span>{{name}}</span></button></td><td class="dxpb-muted">{{rarity}}</td><td>{{priceText}}</td>
       <td>{{#if sold}}{{localize "DXPB.SoldTo" name=buyer}}{{else}}{{#if @root.mine}}<button type="button" data-action="buy"><i class="fa-solid fa-cart-shopping"></i></button>{{/if}}{{/if}}</td></tr>
     {{else}}<tr><td class="dxpb-muted">{{localize "DXPB.NoStock"}}</td></tr>{{/each}}
   </table>

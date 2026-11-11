@@ -64,7 +64,7 @@ export function fullBuild(location, { rules, catalog, structure = "keep", owners
   rec.grounds = grounds.key;
   for (const f of Object.values(rec.features)) if (catalog.get(f.id)?.unit === "square") f.count = grounds.perimeter;
   s = stats(rec);
-  const foodBuy = s.food.peaceNet < 0 ? Math.ceil(-s.food.peaceNet * (rules.turnDays ?? 7) * s.food.buyPrice) : 0;
+  const foodBuy = s.food.peaceNet < 0 ? Math.ceil(-s.food.peaceNet * (rules.turnDays ?? 7) * s.food.buyPrice / Math.max(0.01, Number(rules.foodPerPerson ?? 1) || 1)) : 0;
   const gold = s.economy.net - foodBuy + (s.merchant.visitGoldAverage ?? 0);
   return { record: rec, stats: s, gold, foodNet: s.food.peaceNet, foodBuy };
 }

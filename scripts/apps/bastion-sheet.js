@@ -334,7 +334,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       if ((e.unit === "flat" || e.once) && (hasFeatureId(record, e.id) || openIds.has(e.id))) return false;
       return !prerequisites(record, e, C, stats).missing.some(m => m.startsWith("at most") || m === "already built");
     };
-    c.impossible = this.tab === "projects" ? [...C.values()].filter(e => !e.legacy && !hasFeatureId(record, e.id))
+    c.impossible = this.tab === "projects" ? [...C.values()].filter(e => !e.legacy && !hasFeatureId(record, e.id)
+        && (!c.catalogGroup || e.group === c.catalogGroup.key) && (!filter || e.name.toLowerCase().includes(filter)))
       .map(e => ({ e, why: possibleHere(record, e, C) })).filter(x => !x.why.ok)
       .map(x => ({ name: x.e.name, why: x.why.missing.join(", ") })).sort((a, b) => a.name.localeCompare(b.name)) : [];
     c.catalog = Object.entries(GROUPS).filter(([g]) => !c.catalogGroup || g === c.catalogGroup.key).map(([g, label]) => ({

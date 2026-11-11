@@ -12,6 +12,7 @@ import { quote, planProject, fund, transition, cancelRefund, advanceProjects, ap
 import { quoteDispatch, methodAvailable, mergeOrders, arrivedBy } from "../core/dispatch.js";
 import { rollMerchant, rollVisitor, eventForRoll, eventKeyFromText, requestForAid } from "../core/visitors.js";
 import { advanceTurn, workDays, finishProject, finishAllProjects, feedBastion } from "../core/turn.js";
+import { cancelHiddenApproach } from "../core/projects.js";
 import { countRest, restsLeft, restsToTurn, REST_BATCH_MS } from "../core/rests.js";
 import { BUILD_PRICES, priceGp } from "../core/price.js";
 import { projectTeams, crewsInUse, crewStatus, canAssign, canDismiss, assignCrews, queueOrder, nextQueuePos, moveInQueue } from "../core/crews.js";
@@ -21,7 +22,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility, mergeSameKind } from "../core/sections.js";
-import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity } from "../core/trade.js";
+import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity, routeCharge } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -1470,6 +1471,46 @@ export function registerCoreTests({ describe, it, assert }) {
       r2.features = { r: { id: "build-road", count: 5, tier: 1 } };
       assert.isFalse(prerequisites(r2, catalog.get("hidden-approach"), catalog, stats(r2)).ok);
     });
+    it("a finished road cancels a Hidden Approach still planned or under way, refunded like a cancel", () => {
+      const rec = workedExampleRecord();
+      rec.treasury = 0;
+      rec.projects = {
+        ha: { id: "ha", kind: "build", expansionId: "hidden-approach", label: "Hidden Approach", state: "building", cost: 1000, funded: 1000,
+          days: 10, progress: 5, contributions: { treasury: 600, hero: 400 } },
+        rd: { id: "rd", kind: "build", expansionId: "build-road", label: "Road", state: "building", cost: 100, funded: 100, days: 1, progress: 0, count: 5 }
+      };
+      const done = workDays(rec, 1, { rules, newId });
+      assert.equal(rec.projects.rd.state, "complete");
+      assert.equal(rec.projects.ha.state, "cancelled", "the Hidden Approach can't be finished beside a road");
+      assert.equal(rec.projects.ha.cancelledBy, "road");
+      const refund = cancelRefund(rec.projects.ha, rules);
+      assert.equal(rec.treasury + (done.refunds?.hero ?? 0), refund.total, "the payers get the cancel refund");
+      assert.ok(done.refunds.hero > 0, "a character's share is returned for the GM side to pay");
+      assert.equal(done.cancelled.length, 1);
+      assert.ok(done.lines.some(l => l.startsWith("Cancelled: Hidden Approach")));
+      // Finishing the road at once does the same to a Hidden Approach that wasn't in view.
+      const r2 = workedExampleRecord();
+      r2.projects = { ha: { id: "ha", kind: "build", expansionId: "hidden-approach", label: "HA", state: "planned", cost: 1000, funded: 0, days: 10, progress: 0 },
+        rd: { id: "rd", kind: "build", expansionId: "pave-road", label: "Paving", state: "planned", cost: 100, funded: 0, days: 3, progress: 0, count: 5 } };
+      const fin = finishProject(r2, "rd", { rules, newId });
+      assert.isTrue(fin.ok);
+      assert.equal(r2.projects.ha.state, "cancelled");
+      assert.deepEqual(cancelHiddenApproach(r2, rules).cancelled, [], "once only");
+    });
+    it("possibleHere: a prerequisite cycle can't be built; alternatives don't spoil each other; the caller's set isn't touched", () => {
+      const rec = workedExampleRecord();
+      const C = new Map(catalog);
+      C.set("loop-a", { id: "loop-a", name: "A", requires: { features: ["loop-b"] } });
+      C.set("loop-b", { id: "loop-b", name: "B", requires: { features: ["loop-a"] } });
+      C.set("shared", { id: "shared", name: "Shared" });
+      C.set("either", { id: "either", name: "Either", requires: { anyFeature: ["via-1", "via-2"] } });
+      C.set("via-1", { id: "via-1", name: "V1", requires: { features: ["shared"] } });
+      C.set("via-2", { id: "via-2", name: "V2", requires: { features: ["shared"] } });
+      assert.isFalse(possibleHere(rec, C.get("loop-a"), C).ok, "a cycle");
+      const path = new Set(["unrelated"]);
+      assert.isTrue(possibleHere(rec, C.get("either"), C, path).ok, "both branches share a building");
+      assert.deepEqual([...path], ["unrelated"], "the set passed in is left alone");
+    });
     it("the Facilities page gives buildings of one kind a single row with their stats added up", () => {
       const cols = [{ key: "defense", kind: "pct" }, { key: "upkeep", kind: "gp" }];
       const rows = mergeSameKind([
@@ -1482,6 +1523,14 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(rows[0].many, 2);
       assert.deepEqual(rows[0].raw, [4, 0]);
       assert.equal(rows[0].fid, "b", "the row acts on the one that can be upgraded");
+      // A damaged one with its repair under way isn't the one to act on; multipliers multiply.
+      const m = mergeSameKind([
+        { group: "exp:x", fid: "d", damaged: true, repair: false, raw: [1.5] },
+        { group: "exp:x", fid: "u", upgrade: { kind: "upgrade" }, raw: [2] }
+      ], [{ key: "defense", kind: "mult" }]);
+      assert.equal(m[0].fid, "u");
+      assert.deepEqual(m[0].raw, [3]);
+      assert.isTrue(m[0].damaged);
     });
     it("what the site rules out for good: no ore, no water, no farmland; and what needs a building that can't be built", () => {
       const rec = workedExampleRecord();
@@ -1564,6 +1613,22 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(grain.income, 0);
       assert.equal(grain.cost, 40, "the Bastion pays for its grain: 48 a day × 7 × 0.2 GP × 0.6, to the nearest 5");
       assert.ok(grain.cost < grain.food * 7 * 0.2, "less than food bought in a hurry");
+      assert.equal(grain.days, 7, "quoted for a turn of 7 days");
+      assert.equal(quoteRoute({ size: "town", distance: 40, goods: "grain" }, { ...rules, tradeFoodPrice: 0 }).cost, 0, "food given for nothing stays free");
+      assert.equal(routeCharge({ ...grain }, 7), 40);
+      assert.equal(routeCharge({ ...grain }, 14), 80, "a turn twice as long pays for twice the food");
+      assert.equal(routeCharge({ kind: "coin", income: 30, cost: 99 }, 7), 0);
+    });
+    it("food caravans the treasury can't pay for keep their food back", () => {
+      const rec = workedExampleRecord();
+      rec.treasury = 0;
+      rec.food = 0;
+      rec.tradeRoutes = { f: { id: "f", key: "b", name: "B", state: "active", kind: "food", income: 0, food: 50, cost: 100000, days: 7 } };
+      const st = stats(rec);
+      const paid = advanceTurn({ ...rec, tradeRoutes: { f: { ...rec.tradeRoutes.f, cost: 0 } } }, { stats: stats({ ...rec, tradeRoutes: { f: { ...rec.tradeRoutes.f, cost: 0 } } }), rules, now: 604800, rng: () => 0.99, newId });
+      const { report } = advanceTurn(rec, { stats: st, rules, now: 604800, rng: () => 0.99, newId });
+      assert.ok(report.unpaidRoutes > 0, "the charge it couldn't pay");
+      assert.ok(report.foodDelta < paid.report.foodDelta, "less food came in than when paid");
     });
     it("settlements ask now and then (with a Trading Post); never more than two waiting, never beyond reach, never in a siege", () => {
       const rec = workedExampleRecord();

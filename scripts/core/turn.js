@@ -1,6 +1,6 @@
-import { advanceTrade, rollTradeRequest } from "./trade.js";
+import { advanceTrade, rollTradeRequest, routeTotals } from "./trade.js";
 import { rollFormula } from "./stats.js";
-import { advanceProjects, applyCompletion, fund } from "./projects.js";
+import { advanceProjects, applyCompletion, fund, cancelHiddenApproach, mergeCancelled, ROADS_END_HIDDEN } from "./projects.js";
 import { syncLayout } from "./layout.js";
 import { assignCrews } from "./crews.js";
 import { arrivedBy, mergeOrders } from "./dispatch.js";
@@ -73,10 +73,11 @@ export function advanceTurn(recordIn, opts) {
     report.completed.push(...done.completed);
     report.lines.push(...done.lines);
     if (done.layoutChanged) report.layoutChanged = true;
+    if (done.cancelled?.length) { report.cancelled = done.cancelled; report.refunds = done.refunds; }
   }
 
   /* 3b. Trade routes: lapsed offers, raided caravans, a new request from a settlement (opts.settlements) */
-  const trade = advanceTrade(record, rules, { rng, turn: report.turn, danger: record.location?.danger, siege });
+  const trade = advanceTrade(record, rules, { rng, turn: report.turn, danger: record.location?.danger, siege, days });
   report.lines.push(...trade.lines);
   report.tradeLapsed = trade.lapsed;
   const request = rollTradeRequest(record, stats, rules, opts.settlements, { rng, turn: report.turn, id: newId() });
@@ -92,9 +93,23 @@ export function advanceTurn(recordIn, opts) {
   for (const dce of econ.dice) income += Math.round(rollFormula(dce.formula, rng) * (dce.mult ?? 1));
   if (siege) income = 0;
   const tax = econ.tax ? Math.round(income * (econ.tax / Math.max(1, econ.incomeAverage))) : 0;
-  const upkeep = econ.upkeep - trade.savedCost;
+  // Food routes pay for the days of food this turn brings (stats priced a turn of rules.turnDays).
+  const routeCost = routeTotals(record, days).cost - (Number(stats.trade?.cost) || 0);
+  const upkeep = econ.upkeep + routeCost - trade.savedCost;
   let net = income - tax - upkeep;
   record.treasury = (record.treasury ?? 0) + net;
+  // Food routes are paid on delivery: what the treasury can't pay for isn't delivered (that share of the food).
+  let unpaidFood = 0;
+  const routeCharge = Math.max(0, routeTotals(record, days).cost - trade.savedCost);
+  if (record.treasury < 0 && routeCharge > 0) {
+    const unpaid = Math.min(-record.treasury, routeCharge);
+    const brought = Math.max(0, routeTotals(record, days).food - trade.lostFood);
+    unpaidFood = Math.round(brought * unpaid / routeCharge);
+    record.treasury += unpaid;
+    net += unpaid;
+    report.unpaidRoutes = unpaid;
+    report.lines.push(`The treasury couldn't pay the food caravans ${unpaid} GP: they kept back ${unpaidFood} food a day.`);
+  }
   record.unpaidUpkeep = record.treasury < 0;
   if (record.treasury < 0) {
     report.lines.push(`The treasury could not cover upkeep (${-record.treasury} GP short).`);
@@ -102,7 +117,7 @@ export function advanceTurn(recordIn, opts) {
   }
 
   /* 5. Food: what the stores can't cover is bought with the treasury; who can't be fed moves away. */
-  const food = feedBastion(record, stats, rules, { days, siege, lostFood: trade.lostFood });
+  const food = feedBastion(record, stats, rules, { days, siege, lostFood: trade.lostFood + unpaidFood });
   Object.assign(report, { foodDelta: food.delta, foodBought: food.bought, foodCost: food.cost, left: food.left, returned: food.returned });
   report.lines.push(...food.lines);
   net -= food.cost;
@@ -179,6 +194,8 @@ export function finishProject(record, projectId, opts = {}) {
   record.projects = { [projectId]: { ...p, state: "building" } };
   const done = workDays(record, Math.max(1, (p.days ?? 0) - (p.progress ?? 0)), { ...opts, payAsYouBuild: false, crews: undefined });
   record.projects = { ...others, ...record.projects };
+  // The others weren't in view while it finished: a finished road ends their Hidden Approach too.
+  if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) mergeCancelled(done, cancelHiddenApproach(record, opts.rules));
   return { ok: true, ...done };
 }
 
@@ -192,6 +209,7 @@ export function finishAllProjects(record, opts = {}) {
     out.completed.push(...res.completed);
     out.lines.push(...res.lines);
     if (res.layoutChanged) out.layoutChanged = true;
+    mergeCancelled(out, { cancelled: res.cancelled ?? [], refunds: res.refunds ?? {}, lines: [] });
   }
   return out;
 }
@@ -238,6 +256,7 @@ export function workDays(record, days, opts = {}) {
         out.lines.push("The Hidden Approach is gone: the new road leads anyone straight to the Bastion.");
         out.removedFeatures = [...(out.removedFeatures ?? []), ...res.removed];
       }
+      if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) mergeCancelled(out, cancelHiddenApproach(record, opts.rules));
     }
     finished += completed.length;
     if (completed.length && left > 0) assign();
@@ -270,7 +289,8 @@ export function feedBastion(record, stats, rules, { days, siege = false, lostFoo
   record.hungry = false;
   if (after < 0) {
     const short = Math.ceil(-after);
-    const price = siege ? Infinity : Math.max(0, Number(stats.food.buyPrice) || 0);
+    // buyPrice is a person-day's food: a unit of food costs that over foodPerPerson.
+    const price = siege ? Infinity : Math.max(0, Number(stats.food.buyPrice) || 0) / Math.max(0.01, Number(rules.foodPerPerson ?? 1) || 1);
     const affordable = price > 0 ? Math.floor((record.treasury ?? 0) / price) : (Number.isFinite(price) ? short : 0);
     out.bought = Math.min(short, affordable);
     out.cost = Number.isFinite(price) ? Math.ceil(out.bought * price) : 0;
@@ -303,9 +323,10 @@ export function feedBastion(record, stats, rules, { days, siege = false, lostFoo
   // Fed: workers who left come back, a share each turn.
   const away = Math.max(0, Number(record.people?.workersAway) || 0);
   if (!record.hungry && away > 0 && !siege) {
-    out.returned = Math.min(away, Math.max(1, Math.ceil(away * (rules.workersReturn ?? 0.5))));
+    const share = Math.max(0, Number(rules.workersReturn ?? 0.5) || 0);
+    out.returned = share > 0 ? Math.min(away, Math.max(1, Math.ceil(away * share))) : 0;
     record.people.workersAway = away - out.returned;
-    out.lines.push(`${out.returned} workers came back.`);
+    if (out.returned) out.lines.push(`${out.returned} workers came back.`);
   }
   record.food = Math.max(0, Math.min(stats.food.cap, after));
   out.delta = record.food - before;

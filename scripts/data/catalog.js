@@ -429,7 +429,7 @@ export const EXPANSIONS = [
     summary: "Where there is no stone to cut, clay is dug and fired: bricks and tiles to sell, and stone projects cost x0.9. Sells its surplus like a Quarry." },
   { id: "trading-post", group: "trade", name: "Trading Post", unit: "each", max: 5, cost: 2000, days: 45,
     effects: { tradeRoutes: 3, tradePosts: 1, income: 10, workers: 3 },
-    summary: "A counting house and loading yard: trade routes need one; each handles 3 and earns 10 GP a turn in fees. Build several for more." },
+    summary: "A counting house and loading yard: trade routes need one; each handles a few routes and earns a little in fees. Build several for more." },
   { id: "trading-company", group: "trade", name: "Trading Company", unit: "flat", cost: 10000, days: 120,
     requires: { features: ["market-square"], check: ["marketTier2", "access5"] }, effects: { income: 60, incomeAccess: true, merchantTier: 1, tradeRoutes: 2 },
     tiers: [

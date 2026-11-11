@@ -1,6 +1,6 @@
 <div class="dxpb-wizard-wrap">
   <ol class="dxpb-steps">
-    {{#each steps}}<li class="{{#if active}}active{{/if}} {{#if done}}done{{/if}}"><a data-action="step" data-step="{{i}}">{{label}}</a></li>{{/each}}
+    {{#each steps}}<li class="{{#if active}}active{{/if}} {{#if done}}done{{/if}}"><button type="button" class="dxpb-linkbtn" data-action="step" data-step="{{i}}" {{#if active}}aria-current="step"{{/if}}>{{label}}</button></li>{{/each}}
   </ol>
   <div class="dxpb-wizard-body">
     <div class="dxpb-wizard-main">
@@ -26,7 +26,7 @@
       {{else}}<p class="dxpb-muted">{{localize "DXPB.Wizard.NoMarker"}}</p>{{/if}}
       {{#if settlements.length}}
       <h4>{{localize "DXPB.Wizard.Nearby"}}</h4>
-      <ul class="dxpb-list">{{#each settlements}}<li><a data-action="settlement" data-id="{{id}}">{{name}}</a> <span class="dxpb-muted">{{distance}} {{@root.units}}</span></li>{{/each}}</ul>
+      <ul class="dxpb-list">{{#each settlements}}<li><button type="button" class="dxpb-linkbtn" data-action="settlement" data-id="{{id}}">{{name}}</button> <span class="dxpb-muted">{{distance}} {{@root.units}}</span></li>{{/each}}</ul>
       {{/if}}
     {{/if}}
 
@@ -80,7 +80,7 @@
       <h3>{{localize "DXPB.Wizard.BuildTitle"}}</h3>
       <p class="dxpb-muted">{{localize "DXPB.Wizard.BuildHint"}}</p>
       {{#unless editing}}
-      <ul class="dxpb-list">{{#each included}}<li>{{name}} {{size}} {{#if count}}×{{count}}{{/if}} <a data-action="removeIncluded" data-i="{{i}}"><i class="fa-solid fa-xmark"></i></a></li>{{/each}}</ul>
+      <ul class="dxpb-list">{{#each included}}<li>{{name}} {{size}} {{#if count}}×{{count}}{{/if}} <button type="button" class="dxpb-linkbtn" data-action="removeIncluded" data-i="{{i}}" aria-label="{{localize 'DXPB.Wizard.RemoveIncluded'}}"><i class="fa-solid fa-xmark" inert></i></button></li>{{/each}}</ul>
       <div class="dxpb-inline">
         <select name="newIncluded">{{#each catalogOptions}}<option value="{{id}}" {{#if sel}}selected{{/if}}>{{name}}</option>{{/each}}</select>
         <select name="newIncludedSize">{{#each sizeOptions}}<option value="{{k}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select>

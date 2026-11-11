@@ -12,6 +12,7 @@ import { FoundingWizard, defaultMapScene } from "../apps/wizard.js";
 import { BastionDashboard } from "../apps/dashboard.js";
 import { sceneDistance, settlementsNear } from "../marker.js";
 import { computeStats } from "../core/stats.js";
+import { syncLayout } from "../core/layout.js";
 import { buildMap, planFor, wallData, lightData, mapScene, fileMaps } from "../map.js";
 import { EXPANSIONS } from "../data/catalog.js";
 import { INHABITANTS, codexUuid, CODEX_PACK } from "../core/codex.js";
@@ -153,7 +154,7 @@ export function registerQuench(quench) {
           const shown = nameInput ? nameInput.value : tab().querySelector(":scope > .name .document-name")?.textContent;
           assert.equal(shown, record.name, "the name field shows the Bastion's name");
           const subTabs = [...panel().querySelectorAll(".dxpb-tabs .dxpb-tab")].map(a => a.dataset.tab);
-          assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"]);
+          assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "routes", "history"]);
           // Our clicks and changes stay ours: the character isn't updated and the sheet isn't submitted.
           let updates = 0;
           // The system Bastion name the GM keeps in step with the Bastion's (syncBastionNames) may land late, and other
@@ -724,7 +725,7 @@ export function registerQuench(quench) {
         assert.equal(scene.folder?.name, t("FolderName"), "the map is in the Bastions scene folder");
         assert.equal(scene.folder?.type, "Scene");
         await scene.update({ folder: null });
-        assert.ok(await fileMaps() >= 1, "a map outside any folder is filed");
+        assert.equal(await fileMaps([scene]), 1, "a map outside any folder is filed (only the test's own scene)");
         assert.equal(scene.folder?.name, t("FolderName"));
         const ours = scene.walls.filter(w => w.getFlag(MODULE_ID, "generated"));
         assert.equal(ours.length, wallData(plan).length);
@@ -1174,12 +1175,20 @@ export function registerQuench(quench) {
       it("finishing a project always redraws the battle map, even one that adds no building to the layout", async () => {
         const { patchRecord } = await import("../store.js");
         if (!mapScene(getRecord(getEntry(entryId)))) await buildMap(getEntry(entryId), { notify: false });
+        // A layout already in step with the buildings, so nothing else moves when this one finishes.
+        const lay = syncLayout(getRecord(getEntry(entryId)), catalog(), rules());
+        if (lay.changed) {
+          const { writeRecordKeys } = await import("../store.js");
+          await writeRecordKeys(getEntry(entryId), { ...getRecord(getEntry(entryId)), layout: lay.layout }, ["layout"]);
+        }
+        assert.isFalse(syncLayout(getRecord(getEntry(entryId)), catalog(), rules()).changed, "the layout is in step");
         const before = getRecord(getEntry(entryId)).map?.builtAt ?? 0;
         // The spike barricade is a ring along the wall: no layout item.
         const res = await ACTIONS.planProject({ entryId, opts: { expansionId: "spike-barricade" } }, game.user);
         assert.isTrue(res.ok, res.reason);
         const out = await ACTIONS.finishProject({ entryId, projectId: res.projectId }, game.user);
         assert.isTrue(out.ok, out.reason);
+        assert.isFalse(out.layoutChanged, "the finish changed nothing on the layout");
         let after = before;
         for (let i = 0; i < 200 && after === before; i++) {
           await new Promise(r => setTimeout(r, 100));

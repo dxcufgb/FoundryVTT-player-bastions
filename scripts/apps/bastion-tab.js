@@ -253,8 +253,12 @@ async function syncNow(id) {
   else lastNamed.delete(id);
 }
 
-/** Forget a deleted Bastion, clearing its name from everyone it named (responsible GM). */
-export function forgetBastionNames(entryId, name) {
+/**
+ * Forget a deleted Bastion (responsible GM): waits for its name sync still under way, so none can write the name back
+ * after the deletion clears it, and gives the name and the characters it named.
+ */
+export async function forgetBastionNames(entryId, name) {
+  await nameQueue.get(entryId)?.catch(() => {});
   const before = lastNamed.get(entryId);
   lastNamed.delete(entryId);
   return { name: before?.name ?? name, actors: before?.actors ?? [] };

@@ -124,11 +124,16 @@ export function codexRows(type, ref) {
       add("food", t("Codex.RouteFood", { n: R.tradeFood ?? 30, pct: Math.round(100 * (R.tradeFoodPrice ?? 0.6)) }));
       add("setup", t("Codex.RouteSetup", { n: R.tradeSetupTurns ?? 6 }));
       add("risk", t("Codex.RouteRaid", { safe: R.tradeRaid?.safe ?? 0, frontier: R.tradeRaid?.frontier ?? 0, wild: R.tradeRaid?.wild ?? 0, hostile: R.tradeRaid?.hostile ?? 0 }));
-      add("limit", t("Codex.RouteLimit"));
+      const routesOf = id => { const e = catalog().get(id); return e?.effects?.tradeRoutes ?? e?.tiers?.[0]?.effects?.tradeRoutes ?? 0; };
+      const per = R.tradeRoutesPerSettlement ?? {};
+      const sizes = Object.values(per).map(Number).filter(Number.isFinite);
+      add("limit", t("Codex.RouteLimit", { post: routesOf("trading-post"), company: routesOf("trading-company"),
+        min: sizes.length ? Math.min(...sizes) : 0, max: sizes.length ? Math.max(...sizes) : 0 }));
     }
   };
   people[ref]?.();
-  if (INHABITANTS[ref] && !["merchants", "guests", "visitors", "lieutenants", "caravans"].includes(ref)) {
+  // Food for those the population counts (core/stats.js): not visitors, caravans, lieutenants or crews.
+  if (INHABITANTS[ref] && !["merchants", "visitors", "lieutenants", "caravans", "building-crews", "engine-crews"].includes(ref)) {
     add("food", t("Codex.FoodEach", { n: R.foodPerPerson }));
   }
   return rows;

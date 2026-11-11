@@ -168,7 +168,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const farmMult = (LANDS[loc.land]?.farm ?? 1) * (climate.farm ?? 1) * (fx.farmMult ?? 1);
   const resourceFood = (loc.resources ?? []).reduce((n, r) => n + (RESOURCES[r]?.effects?.food ?? 0), 0);
   const foodInside = fx.foodPerDay ?? 0;
-  const trade = { ...routeTotals(record), capacity: routeCapacity(fx, rules), waiting: routesOf(record, ["requested", "accepted"]).length,
+  const trade = { ...routeTotals(record, rules.turnDays), capacity: routeCapacity(fx, rules), waiting: routesOf(record, ["requested", "accepted"]).length,
     accepted: routesOf(record, ["accepted"]).length };
   // Farms (fields, orchards, pasture) grow with the land and climate; hunting, fishing, herding and foraging don't.
   const foodOutside = Math.round((fx.foodFarm ?? 0) * farmMult) + (fx.foodOutside ?? 0) + resourceFood + trade.food;

@@ -1,5 +1,6 @@
 import { MODULE_ID, isResponsibleGM, randomId, t } from "./util.js";
 import { crumb, noteError, ownId } from "./debug-recorder.js";
+import { withBastionLock } from "./lock.js";
 
 /**
  * Player → GM relay. Players read their Bastion but never write it: every change is an action the responsible GM runs
@@ -13,6 +14,9 @@ let handlers = {};
  * Runs one action and leaves a breadcrumb for the Debug Recorder: the action's own name, whether it worked, how long
  * it took, and whether a player's request was relayed. Never the action's data.
  */
+/** Actions that lock inside their turn-runner call (see lock.js). */
+const RUNS_ITSELF = new Set(["advanceTurn", "longRest", "countRest", "siegeDay", "finishProject", "finishAllProjects"]);
+
 async function runAction(action, data, user, relayed) {
   const started = Date.now();
   const fn = handlers[action];
@@ -21,7 +25,10 @@ async function runAction(action, data, user, relayed) {
     return { ok: false, reason: "Unknown action" };
   }
   try {
-    const result = await fn(data ?? {}, user);
+    // Actions on one Bastion run one at a time, and wait for its turn (lock.js). The ones that run a turn, a rest, a
+    // siege day or a finish take the lock inside (turn-runner.js) instead.
+    const entryId = typeof data?.entryId === "string" && !RUNS_ITSELF.has(action) ? data.entryId : null;
+    const result = await withBastionLock(entryId, () => fn(data ?? {}, user));
     crumb("action.run", () => ({ action: ownId(action, handlers), ok: result?.ok !== false, ms: Date.now() - started, relayed,
       byGM: !!user?.isGM }));
     return result;

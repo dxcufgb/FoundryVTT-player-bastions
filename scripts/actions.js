@@ -7,7 +7,7 @@ import { planProject as corePlan, fund as coreFund, transition, cancelRefund } f
 import { assignCrews, canAssign, canDismiss, crewStatus, crewsInUse, projectTeams, nextQueuePos, moveInQueue } from "./core/crews.js";
 import { quoteDispatch, orderCount } from "./core/dispatch.js";
 import { holdout } from "./core/siege.js";
-import { FORCES, DISPATCH_METHODS } from "./data/tables.js";
+import { FORCES, DISPATCH_METHODS, TRADE_GOODS } from "./data/tables.js";
 import { placeMarker, partyDistance } from "./marker.js";
 import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
@@ -67,7 +67,7 @@ async function takeGold(actor, amount) {
   return true;
 }
 
-async function giveGold(actor, amount) {
+export async function giveGold(actor, amount) {
   amount = Math.max(0, Math.floor(Number(amount) || 0));
   if (!amount || !actor) return;
   await actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + amount });
@@ -138,7 +138,7 @@ export const ACTIONS = {
     // The owners' (and former owners') system Bastion name showed this Bastion's name: clear it again, unless another
     // Bastion has them now.
     const { forgetBastionNames } = await import("./apps/bastion-tab.js");
-    const named = forgetBastionNames(entry.id, record.name);
+    const named = await forgetBastionNames(entry.id, record.name);
     const actors = new Map(ownerActors(record).map(a => [a.id, a]));
     for (const id of named.actors) if (!actors.has(id) && game.actors.get(id)) actors.set(id, game.actors.get(id));
     for (const actor of actors.values()) {
@@ -337,6 +337,8 @@ export const ACTIONS = {
     ownerOnly(record, user);
     const { stats } = statsFor(record);
     if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
+    // The owners name the goods: an unknown one is refused, not swapped for a random good.
+    if (typeof goods !== "string" || !Object.hasOwn(TRADE_GOODS, goods)) return { ok: false, reason: t("Trade.UnknownGoods") };
     const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
     if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
     if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };

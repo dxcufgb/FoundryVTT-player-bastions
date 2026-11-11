@@ -8,13 +8,20 @@ import { assignCrews } from "./core/crews.js";
 import { siegeDay } from "./core/siege.js";
 import { rollBastionEvent, restoreDisabled } from "./events.js";
 import { fillStock } from "./merchant.js";
-import { describeOrder } from "./actions.js";
+import { describeOrder, giveGold } from "./actions.js";
+import { withBastionLock } from "./lock.js";
 
 /** Bastions whose turn is being run right now, so the system's own turn summary message isn't processed twice. */
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
   "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes"];
+
+/* One at a time per Bastion with its actions (lock.js). */
+export function runTurn(entry, opts) { return withBastionLock(entry?.id, () => runTurnNow(entry, opts)); }
+export function runRest(entry, actorUuid, opts) { return withBastionLock(entry?.id, () => runRestNow(entry, actorUuid, opts)); }
+export function runFinish(entry, projectId) { return withBastionLock(entry?.id, () => runFinishNow(entry, projectId)); }
+export function runSiegeDay(entry) { return withBastionLock(entry?.id, () => runSiegeDayNow(entry)); }
 
 /** When a Bastion's next turn is due, in game seconds. */
 export function turnDueTime(record) {
@@ -23,7 +30,7 @@ export function turnDueTime(record) {
 }
 
 /** Runs one Bastion turn for a Bastion journal entry (responsible GM only). Returns the report. */
-export async function runTurn(entry, { systemAdvance = true } = {}) {
+async function runTurnNow(entry, { systemAdvance = true } = {}) {
   if (!entry || !game.user.isGM) return null;
   running.add(entry.id);
   try {
@@ -47,6 +54,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
 
     // Rooms finished: add the dnd5e basic facility to an owner's sheet; enlarged rooms grow there too.
     for (const c of report.completed) await syncRoom(entry, c);
+    await payRefunds(report.refunds);
 
     // A new merchant: roll the stock from compendium items.
     if (report.merchant) {
@@ -104,7 +112,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
  * members close together count once (see core/rests.js). A counted rest is one work day on every running project.
  * Returns { counted, rests, completed, layoutChanged, turnDue }.
  */
-export async function runRest(entry, actorUuid, { force = false } = {}) {
+async function runRestNow(entry, actorUuid, { force = false } = {}) {
   if (!entry || !game.user.isGM) return null;
   const record = getRecord(entry);
   if (!record) return null;
@@ -117,9 +125,12 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
   next.rests = rests;
   const done = workDays(next, 1, { rules: rules(), catalog: catalog(), now: now(), newId: randomId,
     payAsYouBuild: !!setting("payAsYouBuild"), crews: statsFor(next).stats.crews });
-  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout"]);
+  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout", "treasury"]);
   for (const c of done.completed) await syncRoom(entry, c);
-  if (done.completed.length || done.started.length) {
+  await payRefunds(done.refunds);
+  // Only the lines that aren't already a finished / started row (a Hidden Approach ended, a cancelled project).
+  const extra = done.lines.filter(l => !/^(Finished|Started|Waiting for a crew):/.test(l));
+  if (done.completed.length || done.started.length || extra.length) {
     const fresh = getRecord(entry);
     const users = ownerActors(fresh, { includeGroup: true })
       .flatMap(a => game.users.filter(u => !u.isGM && a.testUserPermission(u, "OWNER")).map(u => u.id));
@@ -127,7 +138,8 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
       content: `<div class="dxpb-card dxpb-turn"><h3><i class="fa-solid fa-chess-rook"></i> ${escapeHTML(fresh.name)}</h3>
         <p class="dxpb-muted">${t("Chat.RestTitle", { n: rests.count })}</p>
         <ul>${done.completed.map(c => `<li>${escapeHTML(t("Chat.Finished", { label: c.label }))}</li>`).join("")}
-        ${done.started.map(c => `<li>${escapeHTML(t("Chat.Started", { label: c.label }))}</li>`).join("")}</ul></div>`,
+        ${done.started.map(c => `<li>${escapeHTML(t("Chat.Started", { label: c.label }))}</li>`).join("")}
+        ${extra.map(l => `<li>${escapeHTML(l)}</li>`).join("")}</ul></div>`,
       whisper: [...new Set([...users, ...ChatMessage.getWhisperRecipients("GM").map(u => u.id)])],
       flags: { [MODULE_ID]: { rest: { entryId: entry.id, count: rests.count } } }
     });
@@ -139,7 +151,7 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
 }
 
 /** GM: finish one project now (rooms join an owner's sheet and the battle map like any finished building). */
-export async function runFinish(entry, projectId) {
+async function runFinishNow(entry, projectId) {
   if (!entry || !game.user.isGM) return { ok: false };
   const record = getRecord(entry);
   if (!record) return { ok: false };
@@ -152,13 +164,15 @@ export async function runFinish(entry, projectId) {
   // The crews it freed (and any a finished Workers' Lodge brings) pick up queued projects.
   const crewed = assignCrews(next.projects, statsFor(next).stats.crews, { payAsYouBuild: !!setting("payAsYouBuild"), now: now() });
   next.projects = crewed.projects;
-  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout"]);
+  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout", "treasury"]);
   for (const c of res.completed) await syncRoom(entry, c);
+  await payRefunds(res.refunds);
   const fresh = getRecord(entry);
   for (const c of res.completed) {
     const p = fresh.projects[c.projectId];
     Hooks.callAll(`${MODULE_ID}.projectStateChanged`, entry, p, before[c.projectId], p.state);
   }
+  for (const c of res.cancelled ?? []) Hooks.callAll(`${MODULE_ID}.projectStateChanged`, entry, fresh.projects[c.projectId], before[c.projectId], "cancelled");
   // One hook (and one map redraw) for the lot.
   Hooks.callAll(`${MODULE_ID}.projectFinished`, { entryId: entry.id, projectId: all ? null : projectId, completed: res.completed,
     layoutChanged: res.layoutChanged });
@@ -168,6 +182,11 @@ export async function runFinish(entry, projectId) {
 /** GM: finish every open project at once. */
 export function runFinishAll(entry) {
   return runFinish(entry, null);
+}
+
+/** Pays characters back for projects a finished road cancelled ({ actorId: gp }, core cancelHiddenApproach). */
+async function payRefunds(refunds) {
+  for (const [id, gold] of Object.entries(refunds ?? {})) await giveGold(game.actors.get(id), gold);
 }
 
 /** Creates or updates the dnd5e basic facility item for a finished room project. */
@@ -226,7 +245,7 @@ async function postSummary(entry, record, report, event) {
 }
 
 /** One day of a live siege (GM button). */
-export async function runSiegeDay(entry) {
+async function runSiegeDayNow(entry) {
   const record = getRecord(entry);
   if (!record?.siege) return { ok: false };
   const { stats } = statsFor(record);

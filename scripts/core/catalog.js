@@ -185,16 +185,17 @@ export const SITE_CHECKS = ["moatWater", "fishing", "highland", "wellSite", "roc
  * Whether an expansion can ever be built at this Bastion: its site checks pass, and every building it needs can be
  * built here too (any one of anyFeature). { ok, missing: [labels] } with the site's reasons.
  */
-export function possibleHere(record, exp, catalog, seen = new Set()) {
+export function possibleHere(record, exp, catalog, path = new Set()) {
   if (!exp) return { ok: false, missing: [] };
-  if (seen.has(exp.id)) return { ok: true, missing: [] };
-  seen.add(exp.id);
+  // A building that needs itself through its prerequisites (a cycle on this branch) can't be built.
+  if (path.has(exp.id)) return { ok: false, missing: [] };
+  const here = new Set(path).add(exp.id);
   const missing = [];
   const req = exp.requires ?? {};
   for (const check of req.check ?? []) {
     if (SITE_CHECKS.includes(check) && CHECKS[check] && !CHECKS[check](record, catalog, null)) missing.push(CHECK_LABELS[check] ?? check);
   }
-  const can = id => hasFeature(record, id) || possibleHere(record, catalog.get(id), catalog, seen).ok;
+  const can = id => hasFeature(record, id) || possibleHere(record, catalog.get(id), catalog, here).ok;
   for (const id of req.features ?? []) if (!can(id)) missing.push(catalog.get(id)?.name ?? id);
   if (req.anyFeature?.length && !req.anyFeature.some(can)) missing.push(req.anyFeature.map(id => catalog.get(id)?.name ?? id).join(" or "));
   return { ok: missing.length === 0, missing };

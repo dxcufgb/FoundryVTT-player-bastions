@@ -50,10 +50,11 @@ export async function postSystemRulesNotice({ force = false, responsible = isRes
     return null;
   }
   if (state && !force) return null;
-  const message = await ChatMessage.create({
+  const Msg = CONFIG.ChatMessage.documentClass;
+  const message = await Msg.create({
     content: cardHTML("ask"),
     speaker: { alias: game.modules.get(MODULE_ID)?.title ?? "Player Bastions" },
-    whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id),
+    whisper: Msg.getWhisperRecipients("GM").map(u => u.id),
     flags: { [MODULE_ID]: { [FLAG]: true } }
   });
   await game.settings.set(MODULE_ID, "systemRulesNotice", "posted");

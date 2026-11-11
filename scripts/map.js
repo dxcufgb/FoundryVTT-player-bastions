@@ -101,15 +101,20 @@ export function lightData(plan) {
  * GM only; created on first use.
  */
 export async function mapFolder() {
-  let f = game.folders.find(x => x.type === "Scene" && x.getFlag(MODULE_ID, "mapFolder"))
-    ?? game.folders.find(x => x.type === "Scene" && !x.folder && x.name === t("FolderName"));
-  if (!f) f = await Folder.create({ name: t("FolderName"), type: "Scene", color: "#6b4f2a", flags: { [MODULE_ID]: { mapFolder: true } } });
-  return f;
+  const flagged = game.folders.find(x => x.type === "Scene" && x.getFlag(MODULE_ID, "mapFolder"));
+  if (flagged) return flagged;
+  // A folder of that name made by hand is taken over: flagged, so a rename later doesn't make a second one.
+  const named = game.folders.find(x => x.type === "Scene" && !x.folder && x.name === t("FolderName"));
+  if (named) { await named.setFlag(MODULE_ID, "mapFolder", true); return named; }
+  return Folder.create({ name: t("FolderName"), type: "Scene", color: "#6b4f2a", flags: { [MODULE_ID]: { mapFolder: true } } });
 }
 
-/** Files the Bastions' existing battle maps that sit outside any folder into the Bastions folder. Responsible GM, ready. */
-export async function fileMaps() {
-  const loose = (game.scenes ?? []).filter(s => s.getFlag(MODULE_ID, "entryId") && !s.folder);
+/**
+ * Files the Bastions' existing battle maps that sit outside any folder into the Bastions folder. Responsible GM, ready.
+ * `scenes`: only these (default every scene). Returns how many were filed.
+ */
+export async function fileMaps(scenes = game.scenes ?? []) {
+  const loose = [...scenes].filter(s => s.getFlag(MODULE_ID, "entryId") && !s.folder);
   if (!loose.length) return 0;
   const folder = await mapFolder();
   await Scene.updateDocuments(loose.map(s => ({ _id: s.id, folder: folder.id })));

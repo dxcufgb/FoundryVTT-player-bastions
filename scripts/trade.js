@@ -3,7 +3,7 @@
  * marker) and the quest in Dxcufgb's Quest Log (`dxcufgbs-quest-log`, optional) that follows an accepted route.
  * The rules are in core/trade.js.
  */
-import { MODULE_ID, t, rules, gp } from "./util.js";
+import { MODULE_ID, t, rules, gp, escapeHTML } from "./util.js";
 import { settlementsNear } from "./marker.js";
 import { settlementList } from "./core/trade.js";
 
@@ -50,8 +50,8 @@ export async function createRouteQuest(record, route) {
       reward: worth(route),
       questType: "side",
       tags: [t("Trade.QuestTag"), record.name],
-      description: `<p>${t("Trade.QuestText", { name: route.name, bastion: record.name, goods: t(`Trade.Goods.${route.goods}`),
-        worth: worth(route), setup: gp(route.setup), deadline: route.deadline })}</p>`,
+      description: `<p>${escapeHTML(t("Trade.QuestText", { name: route.name, bastion: record.name, goods: t(`Trade.Goods.${route.goods}`),
+        worth: worth(route), setup: gp(route.setup), deadline: route.deadline }))}</p>`,
       objectives: [t("Trade.QuestTravel", { name: route.name, miles: route.distance }), t("Trade.QuestTerms"),
         t("Trade.QuestSign", { setup: gp(route.setup) })]
     });

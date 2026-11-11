@@ -41,6 +41,24 @@ const shortLabel = label => String(label ?? "").replace(/\s*\(.*\)\s*$/, "");
  * "num" (summed), "pct" (summed, %), "gp" (summed, gold), "mult" (multiplied, ×), "text" (no total).
  */
 const num = v => (typeof v === "number" && v !== 0 ? v : null);
+
+/**
+ * A building's income a turn as the Bastion earns it (core/stats.js): its share of the workers still there, a market's
+ * Accessibility factor, tolls, the Quarry's and Lumber Camp's surplus, gems in a Mine, and the average of rolled income.
+ */
+function incomeOf(fx, exp, c) {
+  const s = c?.stats;
+  const needed = s?.people?.workersNeeded ?? 0;
+  const share = fx.workers && needed ? (s.people.workers ?? needed) / needed : 1;
+  let flat = (fx.income ?? 0) * share;
+  if (fx.incomeAccess) flat *= s?.economy?.accessFactor ?? 1;
+  const material = fx.stoneDiscount ? "stone" : fx.timberDiscount ? "timber" : null;
+  if (material && s?.surplus?.[material]) flat *= c?.R?.surplusSaleMult ?? 1;
+  flat += fx.tollPerAccess ? fx.tollPerAccess * (s?.accessibility ?? 0) : 0;
+  let dice = fx.incomeDice ? String(fx.incomeDice).split("+").reduce((n, d) => n + averageFormula(d), 0) * share : 0;
+  if (exp?.id === "mine" && (c?.record?.location?.resources ?? []).includes("gems")) dice *= c?.R?.gemsMult ?? 1;
+  return Math.round(flat + dice);
+}
 export const SECTION_COLUMNS = {
   rooms: [
     { key: "beds", kind: "num", get: fx => num(fx.housing) },
@@ -59,17 +77,16 @@ export const SECTION_COLUMNS = {
     { key: "food", kind: "num", get: fx => num((fx.foodPerDay ?? 0) + (fx.foodOutside ?? 0) + (fx.foodFarm ?? 0)) },
     { key: "stores", kind: "num", get: fx => num(fx.foodStock) },
     { key: "water", kind: "text", get: fx => fx.waterUnlimited ? "∞" : num(fx.cistern) },
-    { key: "income", kind: "gp", get: fx => num(fx.income) }
+    { key: "income", kind: "gp", get: (fx, exp, f, c) => num(incomeOf(fx, exp, c)) }
   ],
   access: [
     { key: "access", kind: "num", get: fx => num(fx.accessibility) },
     { key: "concealment", kind: "num", get: fx => num(fx.concealment) },
     { key: "merchants", kind: "pct", get: fx => num(fx.merchant) },
-    { key: "income", kind: "gp", get: fx => num(fx.income) }
+    { key: "income", kind: "gp", get: (fx, exp, f, c) => num(incomeOf(fx, exp, c)) }
   ],
   trade: [
-    { key: "income", kind: "gp", get: (fx, exp, f, c) => num((fx.income ?? 0) + (fx.tollPerAccess ? fx.tollPerAccess * c.stats.accessibility : 0)
-      + (fx.incomeDice ? averageFormula(fx.incomeDice) : 0)) },
+    { key: "income", kind: "gp", get: (fx, exp, f, c) => num(incomeOf(fx, exp, c)) },
     { key: "merchants", kind: "pct", get: fx => num(fx.merchant) },
     { key: "workers", kind: "num", get: fx => num(fx.workers) },
     { key: "renown", kind: "num", get: fx => num(fx.renown) }
@@ -323,7 +340,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
         t("Fac.Sum.lasts", { peace: Number.isFinite(food.peaceDays) ? daysText(food.peaceDays) : t("Unlimited"),
           siege: Number.isFinite(food.siegeDays) ? daysText(food.siegeDays) : t("Unlimited") }),
         t("Fac.Sum.water", { water: stats.water.unlimited ? t("Unlimited") : daysText(stats.water.days) }),
-        net < 0 ? t("Fac.Sum.buy", { gp: gp(Math.ceil(-net * (R.turnDays ?? 7) * (food.buyPrice ?? 0))) }) : ""],
+        net < 0 ? t("Fac.Sum.buy", { gp: gp(Math.ceil(-net * (R.turnDays ?? 7) * (food.buyPrice ?? 0) / Math.max(0.01, Number(R.foodPerPerson ?? 1) || 1))) }) : ""],
       limit: t("Fac.Lim.stores", { cap: food.cap })
     },
     access: {
@@ -351,7 +368,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       limit: t("Fac.Lim.ways", { n: ways.length, max: Object.keys(DISPATCH_METHODS).length })
     }
   };
-  const colCtx = { R, stats };
+  const colCtx = { R, stats, record };
   page.sections = SECTIONS.map(key => {
     const columns = [...(SECTION_COLUMNS[key] ?? []), UPKEEP_COLUMN];
     const list = cards[key].sort((a, b) => String(a.sort).localeCompare(String(b.sort)));
@@ -439,10 +456,12 @@ export async function systemFacilityCatalog({ record, isGM, actorId = null, filt
   const found = new Map();
   const add = (uuid, name, img, sys) => {
     if (sys?.type?.value !== "special") return;
-    const key = `${sys.type.subtype ?? ""}|${name}`;
+    // One entry per facility and level: a level-5 and a level-17 variant of one name both stay, so each owner finds the one they can take.
+    const key = `${sys.type.subtype ?? ""}|${name}|${Number(sys.level) || 0}`;
     if (!found.has(key)) found.set(key, { uuid, name, img, level: Number(sys.level) || 0, subtype: sys.type.subtype ?? "", free: !!sys.free });
   };
-  for (const i of game.items ?? []) if (i.type === "facility" && i.visible !== false) add(i.uuid, i.name, i.img, i.system);
+  // Only the world facilities this user may see (a GM-private one keeps its name to itself).
+  for (const i of game.items ?? []) if (i.type === "facility" && i.testUserPermission(game.user, "LIMITED")) add(i.uuid, i.name, i.img, i.system);
   for (const pack of game.packs ?? []) {
     if (pack.documentName !== "Item" || pack.visible === false) continue;
     // The index Foundry loaded at start has every entry's type: only packs with facilities are asked for more fields.

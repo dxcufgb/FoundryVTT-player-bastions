@@ -678,7 +678,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/trading-post.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/trading-post.webp",
-        "description": "<p>A counting house with a loading yard: clerks with ledgers, carters, and a wall map of every road the Bastion trades along.</p><p>No trade route can be made until the Bastion has a Trading Post. Each one handles three routes and earns a little in fees, and a Bastion can build several, so the number of routes it keeps grows with them. Its clerks and carters live at the Bastion: they need beds and food, and draw wages.</p>"
+        "description": "<p>A counting house with a loading yard: clerks with ledgers, carters, and a wall map of every road the Bastion trades along.</p><p>No trade route can be made until the Bastion has a Trading Post. Each one handles a few routes (the rows below give the number) and earns a little in fees, and a Bastion can build several, so the number of routes it keeps grows with them. Its clerks and carters live at the Bastion: they need beds and food, and draw wages.</p>"
       },
       "ownership": {
         "default": -1

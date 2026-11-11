@@ -70,8 +70,11 @@ export function quoteRoute({ size = "village", distance = 0, goods = "cloth" }, 
     const food = Math.max(1, Math.round((rules?.tradeFood ?? 30) * sizeMult * g.mult));
     const value = food * turnDays * foodPrice;
     // The Bastion pays for the food: a contract price, below what food bought when the stores run dry costs.
-    const cost = round5(value * (rules?.tradeFoodPrice ?? 0.6));
-    return { kind: "food", income: 0, food, cost, setup: round25(value * (rules?.tradeSetupTurns ?? 6)) };
+    // A share of 0 (food given for nothing) stays free.
+    const share = Math.max(0, Number(rules?.tradeFoodPrice ?? 0.6) || 0);
+    const cost = share > 0 ? round5(value * share) : 0;
+    // `days`: the turn length the charge was quoted for (a turn of another length pays for the food it brings).
+    return { kind: "food", income: 0, food, cost, days: turnDays, setup: round25(value * (rules?.tradeSetupTurns ?? 6)) };
   }
   // Farther settlements trade goods the Bastion's market lacks: worth more, up to double.
   const distF = Math.min(2, Math.max(0.6, 0.6 + (Number(distance) || 0) / 100));
@@ -197,12 +200,25 @@ export function canAcceptRoute(record, capacity) {
 }
 
 /** What the active routes bring and cost: gold in a turn, gold paid a turn (for food), food a day. */
-export function routeTotals(record) {
+/**
+ * What a food route charges for a turn of `days` days: its quoted charge for the turn length it was quoted for
+ * (route.days), scaled to the days of food it brings. Coin routes charge nothing. Without `days`: the quoted charge.
+ */
+export function routeCharge(route, days) {
+  if (route?.kind !== "food") return 0;
+  const cost = Number(route.cost) || 0;
+  const quoted = Number(route.days) || 0;
+  if (!(days > 0) || !(quoted > 0) || days === quoted) return cost;
+  return Math.round(cost * days / quoted);
+}
+
+/** Active routes' totals; `days` (the turn length) scales food routes' charges (routeCharge). */
+export function routeTotals(record, days) {
   const active = routesOf(record, ["active"]);
   return {
     active: active.length,
     income: active.reduce((n, r) => n + (r.kind === "coin" ? Number(r.income) || 0 : 0), 0),
-    cost: active.reduce((n, r) => n + (r.kind === "food" ? Number(r.cost) || 0 : 0), 0),
+    cost: active.reduce((n, r) => n + routeCharge(r, days), 0),
     food: active.reduce((n, r) => n + (r.kind === "food" ? Number(r.food) || 0 : 0), 0)
   };
 }
@@ -213,7 +229,7 @@ export function routeTotals(record) {
  * A raided food delivery isn't paid for. Returns { lapsed: [route], raided: [route], lostIncome, lostFood (a day),
  * savedCost, lines }.
  */
-export function advanceTrade(record, rules, { rng = Math.random, turn = 0, danger = "frontier", siege = false } = {}) {
+export function advanceTrade(record, rules, { rng = Math.random, turn = 0, danger = "frontier", siege = false, days = rules?.turnDays } = {}) {
   const out = { lapsed: [], raided: [], lostIncome: 0, lostFood: 0, savedCost: 0, lines: [] };
   record.tradeRoutes ??= {};
   for (const r of Object.values(record.tradeRoutes)) {
@@ -230,7 +246,7 @@ export function advanceTrade(record, rules, { rng = Math.random, turn = 0, dange
       record.tradeRoutes[r.id] = { ...r, raidedTurn: turn };
       out.raided.push(r);
       if (r.kind === "coin") out.lostIncome += Number(r.income) || 0;
-      else { out.lostFood += Number(r.food) || 0; out.savedCost += Number(r.cost) || 0; }
+      else { out.lostFood += Number(r.food) || 0; out.savedCost += routeCharge(r, days); }
       out.lines.push(siege ? `No caravan from ${r.name} got through the siege.` : `The caravan from ${r.name} was raided: nothing arrived this turn.`);
     }
   }

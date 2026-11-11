@@ -26,8 +26,10 @@
 
 /* Tabs */
 .dxpb-tabs { display: flex; flex-wrap: wrap; gap: 0.15rem; border-bottom: 2px solid var(--dxpb-gold); flex: 0 0 auto; }
-.dxpb-tab { padding: 0.3rem 0.7rem; cursor: pointer; border-radius: 4px 4px 0 0; }
-.dxpb-tab.active { background: var(--dxpb-gold); color: #fff; font-weight: 600; }
+/* Tabs are buttons (keyboard, aria-pressed); strip Foundry's button look. */
+.dxpb-root button.dxpb-tab { flex: 0 0 auto; width: auto; height: auto; min-height: 0; margin: 0; line-height: inherit; font: inherit; color: inherit; background: none; border: none; box-shadow: none;
+  padding: 0.3rem 0.7rem; cursor: pointer; border-radius: 4px 4px 0 0; }
+.dxpb-root button.dxpb-tab.active { background: var(--dxpb-gold); color: #fff; font-weight: 600; }
 .dxpb-tab-body { flex: 1 1 auto; overflow-y: auto; padding-right: 0.25rem; }
 
 /* Overview */
@@ -137,8 +139,8 @@ body.dxpb-picking #board { cursor: crosshair; }
 .dxpb-bar-grounds .dxpb-reserved { background: repeating-linear-gradient(45deg, var(--dxpb-gold) 0 4px, transparent 4px 8px); }
 .dxpb-full .dxpb-bar-grounds span:first-child { background: var(--dxpb-bad); }
 .dxpb-warn { color: var(--dxpb-bad); margin: 0.3rem 0; }
-a.dxpb-ware { cursor: pointer; }
-a.dxpb-ware:hover span { text-decoration: underline; text-shadow: 0 0 6px var(--color-shadow-primary, #ff6400); }
+.dxpb-root button.dxpb-ware { display: flex; }
+.dxpb-root button.dxpb-ware:hover span { text-decoration: underline; text-shadow: 0 0 6px var(--color-shadow-primary, #ff6400); }
 button.dxpb-danger { color: #fff; background: var(--dxpb-bad); border-color: #7a1f1f; }
 button.dxpb-danger:hover:not(:disabled) { background: #c23b3b; box-shadow: 0 0 6px #c23b3b; }
 button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -199,13 +201,13 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
   display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px;
   border: none; padding: 0 0.5rem; margin: 0;
 }
-.dxpb-embedded .dxpb-tab {
+.dxpb-embedded .dxpb-root button.dxpb-tab {
   padding: 2px 10px; border: 1px solid var(--dxpb-gold); border-radius: 999px; background: var(--dnd5e-background-card, transparent);
   font-family: var(--dnd5e-font-roboto-condensed, sans-serif); font-size: var(--font-size-12, 12px); text-transform: uppercase;
   letter-spacing: 0.03em; color: var(--color-text-primary, inherit); box-shadow: 0 0 4px var(--dnd5e-shadow-15, transparent);
 }
-.dxpb-embedded .dxpb-tab:hover { text-shadow: 0 0 8px var(--color-shadow-primary, transparent); }
-.dxpb-embedded .dxpb-tab.active { background: var(--dxpb-gold); color: var(--dnd5e-color-light, #fff); font-weight: bold; }
+.dxpb-embedded .dxpb-root button.dxpb-tab:hover { text-shadow: 0 0 8px var(--color-shadow-primary, transparent); }
+.dxpb-embedded .dxpb-root button.dxpb-tab.active { background: var(--dxpb-gold); color: var(--dnd5e-color-light, #fff); font-weight: bold; }
 .dxpb-embedded .dxpb-popout { margin-left: 4px; color: var(--color-text-tertiary, inherit); cursor: pointer; }
 .dxpb-embedded .dxpb-tab-body { overflow: visible; padding: 0 0.5rem 1rem; }
 
@@ -247,9 +249,9 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-def-icon { display: grid; place-content: center; color: var(--dxpb-gold); font-size: 16px; }
 .dxpb-def-main { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
 /* A button that looks like the text it holds (keyboard-reachable rows, chevrons, the pop-out arrow). */
-.dxpb button.dxpb-linkbtn, .dxpb-root button.dxpb-linkbtn { background: none; border: none; box-shadow: none; padding: 0; margin: 0;
+.dxpb button.dxpb-linkbtn, .dxpb-root button.dxpb-linkbtn, .dxpb-wizard-wrap button.dxpb-linkbtn { background: none; border: none; box-shadow: none; padding: 0; margin: 0;
   width: auto; height: auto; min-height: 0; font: inherit; line-height: inherit; color: inherit; text-align: left; cursor: pointer; }
-.dxpb-root button.dxpb-linkbtn:focus-visible { outline: 2px solid var(--dxpb-gold); outline-offset: 1px; border-radius: 3px; }
+.dxpb-root button.dxpb-linkbtn:focus-visible, .dxpb-wizard-wrap button.dxpb-linkbtn:focus-visible, .dxpb-root button.dxpb-tab:focus-visible { outline: 2px solid var(--dxpb-gold); outline-offset: 1px; border-radius: 3px; }
 .dxpb-root button.dxpb-def-go { color: var(--dxpb-gold); text-align: center; }
 .dxpb-root button.dxpb-popout { color: var(--color-text-tertiary, inherit); }
 .dxpb-def-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; color: inherit; cursor: pointer; }
@@ -264,7 +266,8 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-fac-titleline { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .dxpb-fac-many { flex: none; font-size: 11px; font-weight: bold; padding: 0 5px; border-radius: 8px; color: var(--dxpb-gold);
   border: 1px solid var(--dxpb-gold); line-height: 15px; }
-.dxpb-def-portrait { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
+.dxpb-root button.dxpb-def-portrait-btn { margin-left: -6px; line-height: 0; }
+.dxpb-def-portrait { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
 .dxpb-def-go { color: var(--dxpb-gold); cursor: pointer; text-align: center; }
 
 /* Building rows: the same rows as the defenders. */

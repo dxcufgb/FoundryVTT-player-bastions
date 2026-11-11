@@ -464,6 +464,7 @@
       "None": "No Bastions yet."
     },
     "Wizard": {
+      "RemoveIncluded": "Remove",
       "PictureTerrain": "Terrain",
       "PictureSite": "Site",
       "PictureOther": "Other",
@@ -893,7 +894,7 @@
       "RouteFood": "Or the settlement sends food and the Bastion pays for it: about {n} food a day from a village sending grain, at {pct}% of the price of food bought when the stores run dry",
       "RouteSetup": "{n} turns of the route's worth, paid when the contract is signed",
       "RouteRaid": "Raided {safe}% / {frontier}% / {wild}% / {hostile}% of turns (safe / frontier / wild / hostile land); nothing gets through a siege",
-      "RouteLimit": "Routes need a Trading Post: each one handles 3, a Trading Company 2 more. One settlement holds 3 (hamlet) to 15 (metropolis)",
+      "RouteLimit": "Routes need a Trading Post: each one handles {post}, a Trading Company {company} more. One settlement holds {min} (hamlet) to {max} (metropolis)",
       "UpTo": "Up to {n}"
     },
     "Levels": "{n} levels",
@@ -913,6 +914,7 @@
         "miles": "Miles",
         "setup": "Setup"
       },
+      "UnknownGoods": "Pick the goods the route trades.",
       "Goods": {
         "grain": "Grain",
         "livestock": "Livestock and salt meat",
