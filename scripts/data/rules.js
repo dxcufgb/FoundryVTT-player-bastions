@@ -85,6 +85,10 @@ export const DEFAULT_RULES = {
   merchantPerAccess: 5,
   merchantPerRenown: 2,
   merchantCap: 90,
+  /** A visiting merchant's stall fees, tolls and trade, paid into the treasury when it arrives: GP by its tier, times
+   *  the market's (Market Square, Market Hall, Market Town). Nothing without a market. */
+  merchantVisitGold: { peddler: 10, caravan: 30, company: 75, exotic: 150 },
+  merchantMarketMult: [1, 2, 4],
   /** Dispatches */
   routeFactor: 1.25,
   roadRouteFactor: 1.0,

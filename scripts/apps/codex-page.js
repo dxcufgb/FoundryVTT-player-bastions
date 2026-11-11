@@ -111,7 +111,12 @@ export function codexRows(type, ref) {
     "building-crews": () => { add("hire", gp(R.crewHireCost ?? 0)); add("upkeep", t("Codex.PerTurnEach", { v: gp(R.crewUpkeep ?? 0) }));
       add("limit", t("Codex.CrewsLimit", { n: R.maxHiredCrews ?? 0 })); },
     refugees: () => add("limit", t("Codex.RefugeesLimit")),
-    merchants: () => add("chance", t("Codex.MerchantChance", { a: R.merchantPerAccess, r: R.merchantPerRenown, cap: R.merchantCap })),
+    merchants: () => {
+      add("chance", t("Codex.MerchantChance", { a: R.merchantPerAccess, r: R.merchantPerRenown, cap: R.merchantCap }));
+      const g = R.merchantVisitGold ?? {}, m = R.merchantMarketMult ?? [];
+      add("income", t("Codex.MerchantFees", { peddler: gp(g.peddler ?? 0), caravan: gp(g.caravan ?? 0), company: gp(g.company ?? 0),
+        exotic: gp(g.exotic ?? 0), square: m[0] ?? 1, hall: m[1] ?? 1, town: m[2] ?? 1 }));
+    },
     guests: () => add("limit", t("Codex.GuestsLimit")),
     visitors: () => add("limit", t("Codex.VisitorsLimit")),
     caravans: () => {

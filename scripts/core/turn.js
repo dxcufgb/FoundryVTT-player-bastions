@@ -127,6 +127,12 @@ export function advanceTurn(recordIn, opts) {
       record.merchant = { ...m, id: newId(), arrivedAt: now, leavesAt: now + m.stayDays * 86400, stock: [] };
       report.merchant = record.merchant;
       report.lines.push(`A ${m.label.toLowerCase()} arrived (stays ${m.stayDays} day${m.stayDays === 1 ? "" : "s"}).`);
+      const fees = stats.merchant?.visitGold ?? 0;
+      if (fees > 0) {
+        record.treasury = (record.treasury ?? 0) + fees;
+        report.merchantGold = fees;
+        report.lines.push(`Market fees, tolls and trade from the ${m.label.toLowerCase()}: ${fees} GP into the treasury.`);
+      }
     }
   }
 

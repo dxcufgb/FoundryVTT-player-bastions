@@ -883,6 +883,27 @@ export function registerCoreTests({ describe, it, assert }) {
       const v2 = rollVisitor(s, rec, seeded(9));
       assert.equal(v1.key, v2.key);
     });
+    it("a visiting merchant pays market fees into the treasury: by its tier, more with a bigger market, none without one", () => {
+      const r = workedExampleRecord();
+      assert.equal(stats(r).merchant.visitGold, 0, "no market, no fees");
+      r.features.m = { id: "market-square", tier: 1 };
+      const tierKey = k => stats(r).merchant.tier.key === k;
+      const fee = () => stats(r).merchant.visitGold;
+      const square = fee();
+      assert.equal(square, rules.merchantVisitGold[stats(r).merchant.tier.key] * rules.merchantMarketMult[0]);
+      r.features.m.tier = 3;
+      assert.ok(fee() > square, "a Market Town takes more than a Market Square");
+      assert.ok(tierKey(stats(r).merchant.tier.key));
+      // The turn a merchant arrives, the fees go into the treasury.
+      const before = { ...r, treasury: 0, food: 5000 };
+      const st = stats(before);
+      const run = fees => advanceTurn(structuredClone(before), { stats: { ...st, merchant: { ...st.merchant, chance: 100, visitGold: fees } },
+        rules, now: 604800, rng: seeded(3), newId });
+      const paid = run(st.merchant.visitGold);
+      assert.ok(paid.report.merchant, "a merchant came");
+      assert.equal(paid.report.merchantGold, st.merchant.visitGold);
+      assert.equal(paid.record.treasury - run(0).record.treasury, st.merchant.visitGold, "the fees are in the treasury");
+    });
     it("maps d100 and table text to events", () => {
       assert.equal(eventForRoll(53).key, "attack");
       assert.equal(eventForRoll(100).key, "treasure");

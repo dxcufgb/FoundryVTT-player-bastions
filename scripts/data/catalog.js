@@ -241,7 +241,7 @@ export const EXPANSIONS = [
       { label: "Market hall", cost: 4400, days: 60, effects: { merchant: 5, income: 25 } },
       { label: "Market town", cost: 7500, days: 90, effects: { merchant: 5, income: 40, merchantTier: 1 } }
     ],
-    summary: "Stalls and fees. Each upgrade brings more traders and rent." },
+    summary: "Stalls and fees: every merchant who visits pays into the treasury, more with each upgrade. Each upgrade brings more traders and rent." },
   { id: "inn", group: "trade", name: "Inn", unit: "flat", cost: 3750, days: 90,
     requires: { features: ["kitchen"], check: ["access3"] }, effects: { incomeDice: "2d6*5", visitors: 10, renown: 1, rumors: true },
     tiers: [

@@ -1,4 +1,4 @@
-import { MODULE_ID, t, gp, randomId, now, escapeHTML } from "./util.js";
+import { MODULE_ID, t, gp, randomId, now, escapeHTML, rules } from "./util.js";
 import { patchRecord, getRecord, ownerActors } from "./store.js";
 import { eventForRoll, eventKeyFromText, guestForRoll, treasureForRoll, requestForAid, rollDice } from "./core/visitors.js";
 import { EVENTS } from "./data/tables.js";
@@ -134,7 +134,8 @@ export async function applyEvent(entry, record, stats, ctx, ev) {
         break;
       }
       const lieutenants = ctx.lieutenants ?? 0;
-      const dice = Math.max(0, 6 - (stats.wall.enclosed ? 2 : 0) - lieutenants);
+      const R = rules();
+      const dice = Math.max(0, (R.attackDice ?? 6) - (stats.wall.enclosed ? (R.attackWallReduction ?? 2) : 0) - lieutenants);
       const die = ctx.armoryStocked ? 8 : 6;
       const roll = await new Roll(`${dice}d${die}`).evaluate();
       const ones = roll.dice.reduce((n, d) => n + d.results.filter(r => r.active && r.result === 1).length, 0);

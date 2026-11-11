@@ -217,6 +217,12 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const exotic = !!flags.exotic || !!ctx.teleportCircle;
   const maxTier = exotic ? MERCHANT_TIERS.length - 1 : MERCHANT_TIERS.length - 2;
   tierIndex = Math.max(0, Math.min(maxTier, tierIndex));
+  // A visiting merchant pays stall fees, tolls and trade into the treasury: by the merchant's tier, times the market's
+  // (Market Square, Market Hall, Market Town); nothing without a market.
+  const marketTier = Object.values(record?.features ?? {}).filter(f => f?.id === "market-square" && !f.damaged)
+    .reduce((n, f) => Math.max(n, Number(f.tier) || 1), 0);
+  const marketMult = marketTier ? (rules.merchantMarketMult?.[marketTier - 1] ?? rules.merchantMarketMult?.at?.(-1) ?? 1) : 0;
+  const visitGold = Math.round((rules.merchantVisitGold?.[MERCHANT_TIERS[tierIndex].key] ?? 0) * marketMult);
 
   /* ---------- travel ---------- */
   const distance = Number(loc.settlement?.distance) || 0;
@@ -248,7 +254,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     economy: { incomeFlat, dice, incomeAverage, tax, upkeep, net, accessFactor,
       dividend: net > 0 ? Math.floor(net * (record?.dividendPct ?? rules.dividendPct) / 100) : 0 },
     merchant: { chance: merchantChance, tierIndex, tier: MERCHANT_TIERS[tierIndex], score: tierScore, exotic,
-      stockMult: fx.merchantStock ?? 1 },
+      stockMult: fx.merchantStock ?? 1, marketTier, visitGold, visitGoldAverage: Math.round(visitGold * merchantChance / 100) },
     visitors: { chanceBonus: fx.visitors ?? 0, payMult: fx.visitorPay ?? 1 },
     travel: { distance, milesPerDay: accessRow.milesPerDay, days: travelDays, roadTier: tier },
     trade,

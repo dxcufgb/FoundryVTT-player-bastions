@@ -334,6 +334,8 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     trade: {
       summary: [t("Fac.Sum.money", { income: gp(stats.economy.incomeAverage), upkeep: gp(stats.economy.upkeep), net: gp(stats.economy.net) }),
         t("Fac.Sum.merchants", { chance: stats.merchant.chance, tier: stats.merchant.tier.label }),
+        stats.merchant.visitGold ? t("Fac.Sum.merchantGold", { gold: gp(stats.merchant.visitGold), avg: gp(stats.merchant.visitGoldAverage ?? 0) })
+          : t("Fac.Sum.merchantNoMarket"),
         stats.people.workersNeeded ? t(stats.people.workersAway ? "Fac.Sum.workersAway" : "Fac.Sum.workers",
           { n: stats.people.workers, needed: stats.people.workersNeeded, away: stats.people.workersAway, wage: gp(R.workerWage ?? 0) }) : "",
         ...["stone", "timber"].filter(m => m in (stats.surplus ?? {})).map(m => t(`Fac.Sum.surplus.${m}.${stats.surplus[m] ? "selling" : "busy"}`,

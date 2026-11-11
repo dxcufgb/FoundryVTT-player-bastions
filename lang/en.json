@@ -384,7 +384,8 @@
       "RestTitle": "After long rest {n}",
       "Finished": "Finished: {label}.",
       "Started": "Started: {label} (a crew came free).",
-      "FoodBought": "Food bought"
+      "FoodBought": "Food bought",
+      "MerchantGold": "Market fees from the merchant"
     },
     "Event": {
       "MonsterDefends": "The friendly monster drove the attackers off: no losses.",
@@ -754,6 +755,8 @@
         "access": "Accessibility {n}",
         "money": "Income {income} · Upkeep {upkeep} · Net {net} a turn",
         "merchants": "Merchants {chance}% a turn ({tier})",
+        "merchantGold": "Each visit pays {gold} into the treasury in market fees, tolls and trade (about {avg} a turn)",
+        "merchantNoMarket": "Build a Market Square and visiting merchants pay fees into the treasury",
         "staff": "Renown {renown} · Comfort {comfort} · Building crews {crews}",
         "arcane": "Wards {wards}%",
         "ways": "Dispatches by: {ways}",
@@ -859,6 +862,7 @@
       "CrewsLimit": "One crew to start, up to {n} hired, more from a Workers' Lodge",
       "RefugeesLimit": "Arrive through events",
       "MerchantChance": "{a}% a turn per Accessibility, +{r}% per Renown, at most {cap}%",
+      "MerchantFees": "Each visit pays the treasury {peddler} (peddler), {caravan} (caravan), {company} (company) or {exotic} (exotic trader), ×{square} with a Market Square, ×{hall} a Market Hall, ×{town} a Market Town; nothing without a market",
       "GuestsLimit": "Arrive through events",
       "VisitorsLimit": "Up to one a turn",
       "FoodEach": "{n} food a day each",
