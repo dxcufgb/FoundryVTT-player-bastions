@@ -12,7 +12,7 @@ The README stays short (intro, installation, links); the user guide, settings, A
 fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
-- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (75 expansions plus legacy wall entries,
+- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (93 expansions plus legacy wall entries,
   tiers, `levels()` / `MAX_LEVELS` for industries, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
   `rules.js` (every number, `mergeRules`), `grounds.js` (grounds sizes, footprint per expansion, wall layers),
   `map-style.js` (textures by terrain, floors and furnishings by building, wall-band crops).
@@ -22,7 +22,7 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `turn.js` (`advanceTurn`), `record.js` (`createRecord`), `grounds.js` (room used, held and free; `extendGroundsBase`),
   `coins.js` (`payFromPurse`), `layout.js` (`syncLayout`: where each building stands, `record.layout`),
   `mapplan.js` (`mapPlan`: the battle map as geometry: rings, roads, furnished buildings, Foundry wall segments),
-  `index.js` (api.core).
+  `fullbuild.js` (`fullBuild`: everything a site allows at top tier, max guards, beds for all; `RIVER_KEEP`), `index.js` (api.core).
 - `scripts/store.js` – one JournalEntry per Bastion, record in `flags.dxcufgbs-player-bastions.record`; owners' players
   get Observer; every write is a dot-path update by the responsible GM (`patchRecord`, `writeRecordKeys`).
 - `scripts/context.js` – reads DMG defenders/hirelings/Armory/War Room/Teleportation Circle from the owners' facilities.
@@ -149,6 +149,14 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   (engine test checks every level).
   `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
   dice of every building with workers by the share still there (`workforce` in stats.js).
+- Balance band (engine test "every site, fully built…"): `fullBuild` of the poorest choices (no resources, far hamlet,
+  grant, barren/arid, no river or coast, keep or cave, every terrain) earns ≥ RIVER_KEEP − 750 GP a turn (gold = net
+  − food bought + average merchant fees) with food net ≥ 0. Site buildings (checks `underground`, `landlocked` (none,
+  stream, lake), `dryLand`, `frozen`, `swampland`, `hardLand`, `mountainPass`, `plainsLand`, `urbanSite`, `seaside`,
+  `forestLand`, `noStone`; all SITE_CHECKS) make up for what a site lacks. Farm food is `foodFarm` (× land, climate,
+  Mill); `foodOutside` (hunting, fishing, herds, foraging) is not scaled. `timber`/`stone` checks also pass for forest /
+  hills, mountains, underground. A new site building needs Codex art like any other. Tune with `node tools/balance-sweep.mjs [--all]`
+  (not shipped).
 - Merchant fees: `stats.merchant.visitGold` = `rules.merchantVisitGold[tier.key]` × `rules.merchantMarketMult[market tier − 1]`
   (0 without a Market Square); `advanceTurn` adds it to the treasury when a merchant arrives (`report.merchantGold`).
 - Surplus: `stats.surplus` { stone, timber } (computeStats): a feature with `stoneDiscount` / `timberDiscount` (Quarry,

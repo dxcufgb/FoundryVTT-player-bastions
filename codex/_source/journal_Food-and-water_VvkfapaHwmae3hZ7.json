@@ -5,10 +5,43 @@
   "sort": 300000,
   "pages": [
     {
+      "_id": "4N49St2I12K9HnoB",
+      "name": "Cavern Fish Pools",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "cavern-fish-pools",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/cavern-fish-pools.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/cavern-fish-pools.webp",
+        "description": "<p>Still, black pools in the caverns, where pale blind fish are bred in wicker pens and netted by lamplight.</p><p>The pools give food inside the walls, even in a siege, and a little to sell. Grown into an underground lake fishery, they give more.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.4N49St2I12K9HnoB"
+    },
+    {
       "_id": "OTTr6ngNncgSZC9q",
       "name": "Cistern",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 100000,
+      "sort": 200000,
       "title": {
         "show": false,
         "level": 1
@@ -41,7 +74,7 @@
       "_id": "dvwpcI9AKTUnd8pc",
       "name": "Deep Well",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 200000,
+      "sort": 300000,
       "title": {
         "show": false,
         "level": 1
@@ -71,10 +104,43 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.dvwpcI9AKTUnd8pc"
     },
     {
+      "_id": "5snAQC7Pe2FUZySE",
+      "name": "Eel Weirs and Rice Paddies",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "eel-weirs",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/eel-weirs.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/eel-weirs.webp",
+        "description": "<p>Wicker traps across the swamp's channels and rice in flooded paddies on the higher ground.</p><p>Where fields drown, the weirs and paddies feed the Bastion every day and the surplus sells. Grown into rice paddies and fen farms, they feed many more. The fen workers live at the Bastion: they need beds, food and wages; nothing comes in during a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.5snAQC7Pe2FUZySE"
+    },
+    {
       "_id": "zgzH41r5AQlstkFe",
       "name": "Fields and Tenant Farms",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 300000,
+      "sort": 500000,
       "title": {
         "show": false,
         "level": 1
@@ -107,7 +173,7 @@
       "_id": "8NZ2YyTQ3tWr9mGW",
       "name": "Fishery",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 400000,
+      "sort": 600000,
       "title": {
         "show": false,
         "level": 1
@@ -137,10 +203,76 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.8NZ2YyTQ3tWr9mGW"
     },
     {
+      "_id": "hCBAmqZQspAzLfeW",
+      "name": "Foragers' Lodge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "foragers-lodge",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/foragers-lodge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/foragers-lodge.webp",
+        "description": "<p>A rough lodge for those who know every root, nut, snail, mushroom and bird's nest for miles around.</p><p>On poor or barren land, where fields give little or nothing, the foragers still bring food every day. Grown into a gatherers' guild and the wildlands provisioners, they bring more, and sell what the Bastion can spare. They live at the Bastion and draw wages; nothing comes in during a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.hCBAmqZQspAzLfeW"
+    },
+    {
+      "_id": "KvODIGYZLhe0FkEJ",
+      "name": "Fungus Farms",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "fungus-farms",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/fungus-farms.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/fungus-farms.webp",
+        "description": "<p>Great terraced beds of edible fungus in the caverns below the Bastion, watered by channels from the deep springs and tended by lantern light.</p><p>Where no field will ever see the sun, the fungus farms feed the Bastion from inside its rock, through any siege. Grown into spore galleries and a deep fungus forest, they feed hundreds, and what is left over is dried and sold. The farmers live at the Bastion: they need beds, food and wages.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.KvODIGYZLhe0FkEJ"
+    },
+    {
       "_id": "S4EOmhyhFcxnhQdp",
       "name": "Granary",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 500000,
+      "sort": 900000,
       "title": {
         "show": false,
         "level": 1
@@ -173,7 +305,7 @@
       "_id": "JZp9kno2UAaghqjY",
       "name": "Greenhouse",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 600000,
+      "sort": 1000000,
       "title": {
         "show": false,
         "level": 1
@@ -206,7 +338,7 @@
       "_id": "CDaPsOvRvLkZtm5r",
       "name": "Highland Herds",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 700000,
+      "sort": 1100000,
       "title": {
         "show": false,
         "level": 1
@@ -239,7 +371,7 @@
       "_id": "niLp4q6UQ2UqB07d",
       "name": "Hunters' Guild",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 800000,
+      "sort": 1200000,
       "title": {
         "show": false,
         "level": 1
@@ -272,7 +404,7 @@
       "_id": "X4kvWbi2K9b6t0jc",
       "name": "Hunting Lodge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 900000,
+      "sort": 1300000,
       "title": {
         "show": false,
         "level": 1
@@ -302,10 +434,43 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.X4kvWbi2K9b6t0jc"
     },
     {
+      "_id": "rhQisHxGqgGfdSba",
+      "name": "Ice Fishers' and Sealers' Camp",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "sealing-camp",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/sealing-camp.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/sealing-camp.webp",
+        "description": "<p>Holes cut in the ice, seal hunts on the floes and drying racks heavy with fish and oil.</p><p>In cold and arctic lands, where fields freeze, the camp's hunters and fishers bring in food every day and oil to sell. Grown into a sealers' station and a whalers' haven, they bring in much more. Its people live at the Bastion: they need beds, food and wages; the camp stops in a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.rhQisHxGqgGfdSba"
+    },
+    {
       "_id": "6JxAYSabFYrgdWNA",
       "name": "Kitchen Garden",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1000000,
+      "sort": 1500000,
       "title": {
         "show": false,
         "level": 1
@@ -338,7 +503,7 @@
       "_id": "AdO2aXvet8CcBgwz",
       "name": "Livestock Pens",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1100000,
+      "sort": 1600000,
       "title": {
         "show": false,
         "level": 1
@@ -371,7 +536,7 @@
       "_id": "cyLHKrE6lE1a5Itw",
       "name": "Mill",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1200000,
+      "sort": 1700000,
       "title": {
         "show": false,
         "level": 1
@@ -404,7 +569,7 @@
       "_id": "18HUSWh1sdGYpgZK",
       "name": "Mushroom Cellars",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1300000,
+      "sort": 1800000,
       "title": {
         "show": false,
         "level": 1
@@ -434,10 +599,43 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.18HUSWh1sdGYpgZK"
     },
     {
+      "_id": "Cz3Sk4gnnQuuZGOk",
+      "name": "Oasis Gardens",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "oasis-gardens",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/oasis-gardens.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/oasis-gardens.webp",
+        "description": "<p>Shade, water channels and date palms round the Bastion's well or spring, in land where nothing else will grow.</p><p>The gardens grow food inside the walls, so they count in a siege, and make the Bastion a pleasant place to live. Grown into date palm groves and a famous garden of the oasis, they feed many more and bring the Bastion renown. They need desert or arid land, and water on the site.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.Cz3Sk4gnnQuuZGOk"
+    },
+    {
       "_id": "ZsS76jOdw3H4BaVV",
       "name": "Orchard",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1400000,
+      "sort": 2000000,
       "title": {
         "show": false,
         "level": 1
@@ -470,7 +668,7 @@
       "_id": "Pn7YyKPZoTpvxgvZ",
       "name": "Smokehouse and Salt Store",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1500000,
+      "sort": 2100000,
       "title": {
         "show": false,
         "level": 1
@@ -503,7 +701,7 @@
       "_id": "QByMgALP7EGp7nlq",
       "name": "Well",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1600000,
+      "sort": 2200000,
       "title": {
         "show": false,
         "level": 1
@@ -536,7 +734,7 @@
       "_id": "nwE12RcT4iSINWNw",
       "name": "Workers' Lodge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1700000,
+      "sort": 2300000,
       "title": {
         "show": false,
         "level": 1

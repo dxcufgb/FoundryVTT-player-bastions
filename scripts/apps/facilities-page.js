@@ -56,7 +56,7 @@ export const SECTION_COLUMNS = {
     { key: "security", kind: "num", get: fx => num(fx.security) }
   ],
   supplies: [
-    { key: "food", kind: "num", get: fx => num((fx.foodPerDay ?? 0) + (fx.foodOutside ?? 0)) },
+    { key: "food", kind: "num", get: fx => num((fx.foodPerDay ?? 0) + (fx.foodOutside ?? 0) + (fx.foodFarm ?? 0)) },
     { key: "stores", kind: "num", get: fx => num(fx.foodStock) },
     { key: "water", kind: "text", get: fx => fx.waterUnlimited ? "∞" : num(fx.cistern) },
     { key: "income", kind: "gp", get: fx => num(fx.income) }

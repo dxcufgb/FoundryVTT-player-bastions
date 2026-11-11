@@ -122,8 +122,9 @@ export const CHECKS = {
   farmland: r => r?.location?.land !== "barren" && r?.location?.terrain !== "underground" && !r?.noFields,
   millSite: r => ["stream", "river"].includes(r?.location?.waterway) || ["plains", "hills"].includes(r?.location?.terrain),
   game: r => (r?.location?.resources ?? []).includes("game"),
-  timber: r => (r?.location?.resources ?? []).includes("timber"),
-  stone: r => (r?.location?.resources ?? []).includes("stone"),
+  // A forest has timber, and hills, mountains and caves have stone, whether or not the GM ticked the resource.
+  timber: r => (r?.location?.resources ?? []).includes("timber") || r?.location?.terrain === "forest",
+  stone: r => (r?.location?.resources ?? []).includes("stone") || ["hills", "mountains", "underground"].includes(r?.location?.terrain),
   ore: r => (r?.location?.resources ?? []).some(x => x === "ore" || x === "gems"),
   roadBelowTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 1,
   roadTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 1,
@@ -138,6 +139,18 @@ export const CHECKS = {
   access5: (r, c, s) => (s?.accessibility ?? 0) >= 5,
   marketTier2: r => Object.values(r?.features ?? {}).some(f => f?.id === "market-square" && (f.tier ?? 1) >= 2),
   courtyardRoomy: r => Object.values(r?.features ?? {}).some(f => f?.id === "courtyard" && ["roomy", "vast"].includes(f.size)),
+  landlocked: r => ["none", "stream", "lake"].includes(r?.location?.waterway ?? "none"),
+  forestLand: r => r?.location?.terrain === "forest",
+  noStone: (r, c) => !CHECKS.stone(r, c),
+  underground: r => r?.location?.terrain === "underground",
+  dryLand: r => r?.location?.terrain === "desert" || r?.location?.climate === "arid",
+  frozen: r => r?.location?.terrain === "arctic" || r?.location?.climate === "cold",
+  swampland: r => r?.location?.terrain === "swamp",
+  hardLand: r => ["barren", "poor"].includes(r?.location?.land),
+  mountainPass: r => ["hills", "mountains"].includes(r?.location?.terrain),
+  plainsLand: r => r?.location?.terrain === "plains",
+  urbanSite: r => r?.location?.terrain === "urban",
+  seaside: r => r?.location?.terrain === "coast" || r?.location?.waterway === "coast",
   anyWater: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway)
     || ["spring", "table"].includes(r?.location?.waterOnSite)
     || Object.values(r?.features ?? {}).some(f => ["well", "deep-well", "cistern"].includes(f?.id))
@@ -147,11 +160,14 @@ export const CHECKS = {
 export const CHECK_LABELS = {
   anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", fishing: "a stream, river, lake or coast", highland: "hills, mountains or barren land", wellSite: "water on site (spring or high water table)",
   rockSite: "a rock site without water", notUnderground: "open sky (not underground)", farmland: "farmland (fertile or poor land)",
-  millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby", stone: "stone nearby",
+  millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby (or a forest)", stone: "stone nearby (or hills, mountains, a cave)",
   ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadBelowRoad: "no road to the Bastion (a trail is fine)", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",
   pierWater: "a river, lake or coast", harborWater: "a coast or large river", access3: "Accessibility 3+", access4: "Accessibility 4+",
   access5: "Accessibility 5+", marketTier2: "a Market Hall (Market Square upgraded once)", courtyardRoomy: "a Roomy or Vast Courtyard",
-  anyWater: "a water source"
+anyWater: "a water source",
+  landlocked: "no river or coast (no water, a stream or a lake)", forestLand: "a forest", noStone: "no stone nearby (clay instead)", underground: "an underground site", dryLand: "desert or arid land",
+  frozen: "a cold or arctic land", swampland: "a swamp", hardLand: "poor or barren land", mountainPass: "hills or mountains",
+  plainsLand: "plains", urbanSite: "a town or city site", seaside: "the coast"
 };
 
 /**
@@ -162,7 +178,8 @@ export const CHECK_LABELS = {
 export const ROAD_PASSED_CHECKS = ["roadBelowTrail", "roadBelowRoad"];
 
 export const SITE_CHECKS = ["moatWater", "fishing", "highland", "wellSite", "rockSite", "notUnderground", "farmland", "millSite", "game",
-  "timber", "stone", "ore", "riverRoute", "pierWater", "harborWater"];
+  "timber", "stone", "ore", "riverRoute", "pierWater", "harborWater", "landlocked", "underground", "dryLand", "frozen", "swampland",
+  "hardLand", "mountainPass", "plainsLand", "urbanSite", "seaside", "forestLand", "noStone"];
 
 /**
  * Whether an expansion can ever be built at this Bastion: its site checks pass, and every building it needs can be

@@ -6,6 +6,7 @@ import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { payFromPurse } from "../core/coins.js";
 import { buildCatalog, prerequisites, possibleHere, featureEffects, roadTier, projectMaterial } from "../core/catalog.js";
 import { computeStats, averageFormula, rollFormula } from "../core/stats.js";
+import { fullBuild, RIVER_KEEP } from "../core/fullbuild.js";
 import { holdout, attackStrength, engineDamage, siegeDay } from "../core/siege.js";
 import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, rescaleProgress, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
 import { quoteDispatch, methodAvailable, mergeOrders, arrivedBy } from "../core/dispatch.js";
@@ -70,8 +71,8 @@ export function registerCoreTests({ describe, it, assert }) {
   const stats = (rec, ctx = WORKED_CTX) => computeStats(rec, { rules, catalog, ctx });
 
   describe("Data", () => {
-    it("ships 79 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
-      assert.equal(EXPANSIONS.length, 79);
+    it("ships 97 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
+      assert.equal(EXPANSIONS.length, 97);
       assert.equal(EXPANSIONS.filter(e => e.legacy).length, 4);
       for (const e of EXPANSIONS) {
         assert.ok(e.name, `${e.id} has a name`);
@@ -490,9 +491,9 @@ export function registerCoreTests({ describe, it, assert }) {
       const s = stats(rec);
       s.fx = { ...s.fx, stoneDiscount: 0.5, timberDiscount: 0.8 };
       const up = quote(rec, catalog.get("wall"), { kind: "upgrade", featureId: fid }, s, rules);
-      assert.ok(up.factors.some(f => f.label === "Quarry") && !up.factors.some(f => f.label === "Lumber camp"));
+      assert.ok(up.factors.some(f => f.label === "Quarry or brickworks") && !up.factors.some(f => f.label === "Lumber camp"));
       const build = quote(keepWith(), catalog.get("wall"), { count: 64 }, s, rules);
-      assert.ok(build.factors.some(f => f.label === "Lumber camp") && !build.factors.some(f => f.label === "Quarry"));
+      assert.ok(build.factors.some(f => f.label === "Lumber camp") && !build.factors.some(f => f.label === "Quarry or brickworks"));
     });
     it("old separate walls can't be planned, and old saves fold into one wall at the highest step", () => {
       const rec = keepWith();
@@ -1504,6 +1505,47 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.isFalse(prerequisites(rec, exp("fishery"), catalog, stats(rec)).ok);
       rec.features.gh = { id: "greenhouse", tier: 3 };
       assert.equal(stats(rec).food.inside - stats(workedExampleRecord()).food.inside, 30 + 30 + 38, "20, 20 and 25 a day, half as much again");
+    });
+  });
+  describe("Balance: fully built Bastions", () => {
+    const exp = id => catalog.get(id);
+    it("every site, fully built, earns within 750 GP a turn of the River Keep and feeds itself", () => {
+      const river = fullBuild(RIVER_KEEP, { rules, catalog });
+      assert.ok(river.gold > 1000 && river.foodNet > 0, `River Keep: ${river.gold} GP, ${river.foodNet} food a day`);
+      const terrains = ["plains", "forest", "hills", "mountains", "swamp", "desert", "coast", "arctic", "underground", "urban"];
+      const misses = [];
+      // The poorest choices: no resources, a far hamlet, a lord's grant (10% tax), barren or arid land, no river or coast.
+      for (const terrain of terrains) for (const waterway of ["none", "lake"]) for (const land of ["fertile", "barren"])
+      for (const climate of ["temperate", "arid"]) for (const structure of ["keep", "cave"]) {
+        const loc = { ...RIVER_KEEP, terrain, waterway, land, climate, resources: [], waterOnSite: "none", road: "none",
+          settlement: { name: "Hamlet", size: "hamlet", distance: 60 }, danger: "hostile", visibility: "hidden", political: "grant" };
+        const r = fullBuild(loc, { rules, catalog, structure });
+        if (r.gold < river.gold - 750 || r.foodNet < 0) misses.push(`${terrain}/${waterway}/${land}/${climate}/${structure}: ${r.gold} GP, ${r.foodNet} food`);
+      }
+      assert.deepEqual(misses, [], `River Keep earns ${river.gold}`);
+    });
+    it("site buildings make up for what a site lacks: each needs its own kind of land", () => {
+      const at = loc => ({ ...workedExampleRecord(), location: { ...workedExampleRecord().location, ...loc } });
+      const can = (id, loc) => possibleHere(at(loc), exp(id), catalog).ok;
+      assert.isTrue(can("fungus-farms", { terrain: "underground" }));
+      assert.isFalse(can("fungus-farms", { terrain: "plains" }));
+      assert.isTrue(can("caravan-depot", { waterway: "none" }));
+      assert.isFalse(can("caravan-depot", { waterway: "river" }));
+      assert.isTrue(can("oasis-gardens", { terrain: "desert", waterOnSite: "spring" }));
+      assert.isTrue(can("sealing-camp", { climate: "cold" }));
+      assert.isTrue(can("eel-weirs", { terrain: "swamp" }));
+      assert.isTrue(can("foragers-lodge", { land: "barren" }));
+      assert.isTrue(can("brickworks", { terrain: "plains", resources: [] }));
+      assert.isFalse(can("brickworks", { terrain: "mountains" }), "mountains have stone");
+      assert.isTrue(can("lumber-camp", { terrain: "forest", resources: [] }), "a forest has timber");
+    });
+    it("hunting, fishing and herding feed a Bastion on barren land; only farms need good soil", () => {
+      const rec = workedExampleRecord();
+      rec.location.land = "barren";
+      const before = stats(rec).food.outside;
+      rec.features.h = { id: "hunters-guild", tier: 1 };
+      rec.features.f = { id: "fields", tier: 1 };
+      assert.equal(stats(rec).food.outside - before, featureEffects(exp("hunters-guild"), { tier: 1 }).foodOutside, "the fields grow nothing");
     });
   });
   describe("Trade routes", () => {

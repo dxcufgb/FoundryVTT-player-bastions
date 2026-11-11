@@ -170,7 +170,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const foodInside = fx.foodPerDay ?? 0;
   const trade = { ...routeTotals(record), capacity: routeCapacity(fx, rules), waiting: routesOf(record, ["requested", "accepted"]).length,
     accepted: routesOf(record, ["accepted"]).length };
-  const foodOutside = Math.round((fx.foodOutside ?? 0) * farmMult) + resourceFood + trade.food;
+  // Farms (fields, orchards, pasture) grow with the land and climate; hunting, fishing, herding and foraging don't.
+  const foodOutside = Math.round((fx.foodFarm ?? 0) * farmMult) + (fx.foodOutside ?? 0) + resourceFood + trade.food;
   const foodCap = Math.round(((fx.foodStock ?? 0) + 500) * (1 + (fx.foodStockPct ?? 0) / 100));
   const foodStock = Math.max(0, Math.min(Number(record?.food ?? 0), foodCap));
   const perDay = population * rules.foodPerPerson;
@@ -193,7 +194,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const dice = incomeDice.map(d => {
     let mult = d.share ?? 1;
     if (d.id === "inn") mult *= fx.innMult ?? 1;
-    if (d.id === "mine" && gems) mult *= 2;
+    if (d.id === "mine" && gems) mult *= rules.gemsMult ?? 1.5;
     const { share, ...rest } = d;
     void share;
     return { ...rest, mult, average: Math.round(averageFormula(d.formula) * mult) };

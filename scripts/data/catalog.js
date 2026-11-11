@@ -143,27 +143,27 @@ export const EXPANSIONS = [
     ],
     summary: "Glass and braziers: food grown inside the walls all year, and through a siege." },
   { id: "orchard", group: "supplies", name: "Orchard", unit: "flat", cost: 1250, days: 180,
-    requires: { check: ["farmland"] }, effects: { foodOutside: 38, comfort: 1, income: 5 },
+    requires: { check: ["farmland"] }, effects: { foodFarm: 38, comfort: 1, income: 5 },
     tiers: [
-      { label: "Orchard", cost: 1250, days: 180, effects: { foodOutside: 38, comfort: 1, income: 5 } },
-      { label: "Fruit groves", cost: 2000, days: 120, effects: { foodOutside: 38, income: 5 } },
-      { label: "Cider estate", cost: 3500, days: 180, effects: { foodOutside: 45, income: 10 } }
+      { label: "Orchard", cost: 1250, days: 180, effects: { foodFarm: 38, comfort: 1, income: 5 } },
+      { label: "Fruit groves", cost: 2000, days: 120, effects: { foodFarm: 38, income: 5 } },
+      { label: "Cider estate", cost: 3500, days: 180, effects: { foodFarm: 45, income: 10 } }
     ],
     summary: "Fruit trees: +38 food a day, +5 GP a turn; upgrades plant more." },
   { id: "fields", group: "supplies", name: "Fields and Tenant Farms", unit: "flat", cost: 2500, days: 90,
-    requires: { check: ["farmland"] }, effects: { foodOutside: 150, income: 15 },
+    requires: { check: ["farmland"] }, effects: { foodFarm: 150, income: 15 },
     tiers: [
-      { label: "Tenant farms", cost: 2500, days: 90, effects: { foodOutside: 150, income: 15 } },
-      { label: "Estate farms", cost: 3750, days: 60, effects: { foodOutside: 75, income: 15 } },
-      { label: "Great estate", cost: 6250, days: 90, effects: { foodOutside: 150, income: 25 } }
+      { label: "Tenant farms", cost: 2500, days: 90, effects: { foodFarm: 150, income: 15 } },
+      { label: "Estate farms", cost: 3750, days: 60, effects: { foodFarm: 75, income: 15 } },
+      { label: "Great estate", cost: 6250, days: 90, effects: { foodFarm: 150, income: 25 } }
     ],
     summary: "Farmland worked by tenants. Upgrades grow food and rent." },
   { id: "livestock", group: "supplies", name: "Livestock Pens", unit: "flat", cost: 750, days: 20,
-    effects: { foodOutside: 30, income: 8 },
+    effects: { foodFarm: 30, income: 8 },
     tiers: [
-      { label: "Livestock pens", cost: 750, days: 20, effects: { foodOutside: 30, income: 8 } },
-      { label: "Dairy and piggery", cost: 1500, days: 30, effects: { foodOutside: 38, income: 8 } },
-      { label: "Cattle ranch", cost: 3000, days: 45, effects: { foodOutside: 60, income: 15 } }
+      { label: "Livestock pens", cost: 750, days: 20, effects: { foodFarm: 30, income: 8 } },
+      { label: "Dairy and piggery", cost: 1500, days: 30, effects: { foodFarm: 38, income: 8 } },
+      { label: "Cattle ranch", cost: 3000, days: 45, effects: { foodFarm: 60, income: 15 } }
     ],
     summary: "+30 food a day and animals to sell; upgrades raise bigger herds." },
   { id: "fishery", group: "supplies", name: "Fishery", unit: "flat", cost: 1000, days: 30,
@@ -202,6 +202,54 @@ export const EXPANSIONS = [
       { label: "Fungus caverns", cost: 3000, days: 45, effects: { foodPerDay: 27 } }
     ],
     summary: "Mushrooms on straw and logs under the keep: food inside the walls anywhere, even underground or in a siege." },
+  /* Food where farms fail: each needs the site that it makes up for. */
+  { id: "fungus-farms", group: "supplies", name: "Fungus Farms", unit: "flat", cost: 1500, days: 30,
+    requires: { check: ["underground"] }, effects: { foodPerDay: 60, income: 10, workers: 4 },
+    tiers: [
+      { label: "Fungus farms", cost: 1500, days: 30, effects: { foodPerDay: 60, income: 10, workers: 4 } },
+      { label: "Spore galleries", cost: 2500, days: 45, effects: { foodPerDay: 60, income: 15, workers: 3 } },
+      { label: "Deep fungus forest", cost: 4500, days: 60, effects: { foodPerDay: 90, income: 25, workers: 4 } }
+    ],
+    summary: "Great beds of edible fungus in the dark caverns: food inside the walls, even in a siege. Underground only." },
+  { id: "cavern-fish-pools", group: "supplies", name: "Cavern Fish Pools", unit: "flat", cost: 1250, days: 30,
+    requires: { check: ["underground"] }, effects: { foodPerDay: 30, income: 5 },
+    tiers: [
+      { label: "Cavern fish pools", cost: 1250, days: 30, effects: { foodPerDay: 30, income: 5 } },
+      { label: "Underground lake fishery", cost: 2500, days: 45, effects: { foodPerDay: 40, income: 10 } }
+    ],
+    summary: "Blind white fish bred in still underground pools: food inside the walls. Underground only." },
+  { id: "oasis-gardens", group: "supplies", name: "Oasis Gardens", unit: "flat", cost: 1500, days: 30,
+    requires: { check: ["dryLand", "anyWater"] }, effects: { foodPerDay: 45, income: 10, comfort: 1 },
+    tiers: [
+      { label: "Oasis gardens", cost: 1500, days: 30, effects: { foodPerDay: 45, income: 10, comfort: 1 } },
+      { label: "Date palm groves", cost: 2500, days: 45, effects: { foodPerDay: 45, income: 15 } },
+      { label: "Garden of the oasis", cost: 4500, days: 60, effects: { foodPerDay: 60, income: 25, renown: 1 } }
+    ],
+    summary: "Shade, channels and date palms round the Bastion's water: food inside the walls in desert or arid land." },
+  { id: "sealing-camp", group: "supplies", name: "Ice Fishers' and Sealers' Camp", unit: "flat", cost: 1250, days: 30,
+    requires: { check: ["frozen"] }, effects: { foodOutside: 45, income: 10, workers: 4 },
+    tiers: [
+      { label: "Ice fishers' camp", cost: 1250, days: 30, effects: { foodOutside: 45, income: 10, workers: 4 } },
+      { label: "Sealers' station", cost: 2250, days: 45, effects: { foodOutside: 45, income: 15, workers: 3 } },
+      { label: "Whalers' and sealers' haven", cost: 4000, days: 60, effects: { foodOutside: 60, income: 30, workers: 4 } }
+    ],
+    summary: "Holes in the ice, seal hunts and drying racks: food and oil in cold and arctic lands." },
+  { id: "eel-weirs", group: "supplies", name: "Eel Weirs and Rice Paddies", unit: "flat", cost: 1250, days: 30,
+    requires: { check: ["swampland"] }, effects: { foodOutside: 45, income: 10, workers: 4 },
+    tiers: [
+      { label: "Eel weirs", cost: 1250, days: 30, effects: { foodOutside: 45, income: 10, workers: 4 } },
+      { label: "Rice paddies", cost: 2250, days: 45, effects: { foodOutside: 45, income: 15, workers: 3 } },
+      { label: "Fen farms", cost: 4000, days: 60, effects: { foodOutside: 60, income: 30, workers: 4 } }
+    ],
+    summary: "Eel traps in the channels and rice in flooded paddies: food from the swamp where fields drown." },
+  { id: "foragers-lodge", group: "supplies", name: "Foragers' Lodge", unit: "flat", cost: 1000, days: 20,
+    requires: { check: ["hardLand", "notUnderground"] }, effects: { foodOutside: 40, income: 5, workers: 3 },
+    tiers: [
+      { label: "Foragers' lodge", cost: 1000, days: 20, effects: { foodOutside: 40, income: 5, workers: 3 } },
+      { label: "Gatherers' guild", cost: 2000, days: 30, effects: { foodOutside: 40, income: 10, workers: 2 } },
+      { label: "Wildlands provisioners", cost: 3500, days: 45, effects: { foodOutside: 50, income: 20, workers: 3 } }
+    ],
+    summary: "Foragers who know every root, nut, snail and bird's nest of poor land: food where fields give little." },
   { id: "workers-lodge", group: "supplies", name: "Workers' Lodge", unit: "flat", cost: 1500, days: 45,
     effects: { crews: 1, housing: 10 }, summary: "Houses a permanent building crew: +1 building crew, no upkeep." },
 
@@ -227,6 +275,27 @@ export const EXPANSIONS = [
     summary: "Sea or river trade. Exotic traders, income that grows with Accessibility." },
   { id: "waystation", group: "access", name: "Waystation", unit: "flat", cost: 1250, days: 40, upkeep: 2,
     requires: { check: ["roadRoad"] }, effects: { accessibility: 1, renown: 1, relay: true, income: 5 }, summary: "Relay riders, Accessibility +1." },
+  { id: "caravan-depot", group: "access", name: "Caravan Depot", unit: "flat", cost: 2000, days: 30,
+    requires: { check: ["landlocked"] }, effects: { accessibility: 2, merchant: 5, income: 40 },
+    tiers: [
+      { label: "Caravan depot", cost: 2000, days: 30, effects: { accessibility: 2, merchant: 5, income: 40 } },
+      { label: "Caravan town", cost: 4000, days: 45, effects: { accessibility: 1, merchant: 5, income: 80, exotic: true } }
+    ],
+    summary: "Stables, wagon sheds and a drovers' inn: overland trade for a Bastion with no river or coast. Accessibility +2; as a caravan town, exotic traders come." },
+  { id: "deep-road-gate", group: "access", name: "Deep Road Gate", unit: "flat", cost: 2500, days: 45,
+    requires: { check: ["underground"] }, effects: { accessibility: 2, merchant: 10, income: 20 },
+    tiers: [
+      { label: "Deep road gate", cost: 2500, days: 45, effects: { accessibility: 2, merchant: 10, income: 20 } },
+      { label: "Deep road market", cost: 5000, days: 60, effects: { accessibility: 1, merchant: 10, income: 40, exotic: true } }
+    ],
+    summary: "A guarded gate onto the old tunnels under the world: traders come by the deep roads. Accessibility +2. Underground only." },
+  { id: "mountain-pass-toll", group: "access", name: "Mountain Pass Toll", unit: "flat", cost: 2000, days: 40,
+    requires: { check: ["mountainPass"] }, effects: { accessibility: 1, income: 40 },
+    tiers: [
+      { label: "Pass toll", cost: 2000, days: 40, effects: { accessibility: 1, income: 40 } },
+      { label: "Pass fort and hostel", cost: 4000, days: 60, effects: { accessibility: 1, income: 60, renown: 1 } }
+    ],
+    summary: "The only good way through the hills or mountains, and the Bastion keeps it: tolls and a hostel. Accessibility +1." },
   { id: "coach-house", group: "access", name: "Coach House and Remounts", unit: "flat", cost: 1000, days: 20, upkeep: 1,
     effects: { mountedEnvoys: true }, summary: "Envoys ride at 40 miles a day (60 with a Waystation)." },
   { id: "hidden-approach", group: "access", name: "Hidden Approach", unit: "flat", cost: 1900, days: 30,
@@ -293,7 +362,71 @@ export const EXPANSIONS = [
       { label: "Deep mine", cost: 12500, days: 150, effects: { incomeDice: "3d6*10", workers: 8 } },
       { label: "Mining company", cost: 20000, days: 200, effects: { incomeDice: "4d6*10", upkeep: 5, workers: 10 } }
     ], { incomeDice: "1d6*10", workers: 8 }),
-    summary: "Ore or gems (gems pay double). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
+    summary: "Ore or gems (gems pay half as much again). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
+  { id: "caravanserai", group: "trade", name: "Caravanserai", unit: "flat", cost: 3000, days: 60,
+    requires: { check: ["dryLand"] }, effects: { accessibility: 1, merchant: 10, income: 40, visitors: 5 },
+    tiers: [
+      { label: "Caravanserai", cost: 3000, days: 60, effects: { accessibility: 1, merchant: 10, income: 40, visitors: 5 } },
+      { label: "Grand caravanserai", cost: 6000, days: 90, effects: { income: 60, renown: 1, exotic: true } }
+    ],
+    summary: "A walled inn for desert caravans, with wells, stalls and storerooms: tolls, trade and travellers. Desert or arid land." },
+  { id: "fur-trading-lodge", group: "trade", name: "Fur Trading Lodge", unit: "flat", cost: 2000, days: 40,
+    requires: { check: ["frozen"] }, effects: { income: 50, merchant: 5, workers: 3 },
+    tiers: [
+      { label: "Fur trading lodge", cost: 2000, days: 40, effects: { income: 50, merchant: 5, workers: 3 } },
+      { label: "Fur company", cost: 4500, days: 60, effects: { income: 70, workers: 3 } }
+    ],
+    summary: "Trappers bring their furs to be graded, baled and sold south: a cold land's trade. Cold or arctic." },
+  { id: "peat-cutters", group: "trade", name: "Peat Cutters", unit: "flat", cost: 1500, days: 30,
+    requires: { check: ["swampland"] }, effects: { income: 50, workers: 4 },
+    tiers: [
+      { label: "Peat cutters", cost: 1500, days: 30, effects: { income: 50, workers: 4 } },
+      { label: "Peat and reed works", cost: 3500, days: 45, effects: { income: 70, workers: 3 } }
+    ],
+    summary: "Peat cut and dried for fuel, reeds for thatch and baskets: the swamp's trade." },
+  { id: "crystal-galleries", group: "trade", name: "Crystal Galleries", unit: "flat", cost: 3000, days: 60,
+    requires: { check: ["underground"] }, effects: { income: 40, renown: 1, visitors: 5 },
+    tiers: [
+      { label: "Crystal galleries", cost: 3000, days: 60, effects: { income: 40, renown: 1, visitors: 5 } },
+      { label: "Hall of glowing stone", cost: 6000, days: 90, effects: { income: 60, comfort: 1 } }
+    ],
+    summary: "Caverns of crystal and glowing stone that visitors pay to see, and artists to work in. Underground only." },
+  { id: "horse-breeders", group: "trade", name: "Horse Breeders' Ranch", unit: "flat", cost: 2000, days: 40,
+    requires: { check: ["plainsLand"] }, effects: { income: 40, mountedEnvoys: true, workers: 3 },
+    tiers: [
+      { label: "Horse breeders' ranch", cost: 2000, days: 40, effects: { income: 40, mountedEnvoys: true, workers: 3 } },
+      { label: "Stud farm", cost: 4500, days: 60, effects: { income: 60, renown: 1, workers: 3 } }
+    ],
+    summary: "Horses bred and broken on the open plains, sold to riders, carters and knights. Plains only." },
+  { id: "townhouses", group: "trade", name: "Townhouses to Let", unit: "flat", cost: 2500, days: 45,
+    requires: { check: ["urbanSite"] }, effects: { income: 50 },
+    tiers: [
+      { label: "Townhouses to let", cost: 2500, days: 45, effects: { income: 50 } },
+      { label: "Rows of shops and houses", cost: 5000, days: 60, effects: { income: 70, accessibility: 1 } }
+    ],
+    summary: "Houses and shopfronts on the Bastion's street, let to townsfolk: rent every turn. In a town or city." },
+  { id: "saltworks", group: "trade", name: "Saltworks", unit: "flat", cost: 2000, days: 40,
+    requires: { check: ["seaside"] }, effects: { income: 40, foodStockPct: 10, workers: 3 },
+    tiers: [
+      { label: "Salt pans", cost: 2000, days: 40, effects: { income: 40, foodStockPct: 10, workers: 3 } },
+      { label: "Saltworks", cost: 4500, days: 60, effects: { income: 60, workers: 3 } }
+    ],
+    summary: "Sea water dried in shallow pans: salt to sell and to keep food longer. On the coast." },
+  { id: "charcoal-burners", group: "trade", name: "Charcoal Burners", unit: "flat", cost: 2000, days: 40,
+    requires: { check: ["forestLand"] }, effects: { income: 40, workers: 3 },
+    tiers: [
+      { label: "Charcoal burners", cost: 2000, days: 40, effects: { income: 40, workers: 3 } },
+      { label: "Woodcrafters' clearing", cost: 4500, days: 60, effects: { income: 60, workers: 3 } }
+    ],
+    summary: "Smoking clamps in the clearings, bark for tanners, bowls and staves for the market: the forest's trade. Forest only." },
+  { id: "brickworks", group: "trade", name: "Brickworks", unit: "flat", cost: 2000, days: 40, material: "stone",
+    requires: { check: ["noStone"] }, effects: { income: 40, stoneDiscount: 0.9, workers: 3 },
+    tiers: [
+      { label: "Clay pits and kilns", cost: 2000, days: 40, effects: { income: 40, stoneDiscount: 0.9, workers: 3 } },
+      { label: "Brickworks", cost: 3500, days: 45, effects: { income: 50, workers: 3 } },
+      { label: "Brick and tile works", cost: 6000, days: 60, effects: { income: 70, workers: 4 } }
+    ],
+    summary: "Where there is no stone to cut, clay is dug and fired: bricks and tiles to sell, and stone projects cost x0.9. Sells its surplus like a Quarry." },
   { id: "trading-post", group: "trade", name: "Trading Post", unit: "each", max: 5, cost: 2000, days: 45,
     effects: { tradeRoutes: 3, tradePosts: 1, income: 10, workers: 3 },
     summary: "A counting house and loading yard: trade routes need one; each handles 3 and earns 10 GP a turn in fees. Build several for more." },

@@ -17,3 +17,4 @@ export * as location from "../data/location.js";
 export * from "./coins.js";
 export * from "./grounds.js";
 export * from "./layout.js";
+export { fullBuild, RIVER_KEEP } from "./fullbuild.js";

@@ -352,6 +352,78 @@
   "highland-herds": {
    "node": "Y8owaf5RLuPnQh5312Mg",
    "gen": "d7qLoqdvszisdXC0RpoZ"
+  },
+  "fungus-farms": {
+   "node": "fQyM1Xz3gpYpLOTlSKba",
+   "gen": "6PBgDVV4EMSV3y16S5P1"
+  },
+  "cavern-fish-pools": {
+   "node": "dJEhenpg4vGNyoM0dTrw",
+   "gen": "FKbxX9pYm0q5cGnR3Ds9"
+  },
+  "oasis-gardens": {
+   "node": "Leyhc05tE32ZxTPvweJP",
+   "gen": "wMUyHwcQXKUh3CeQi4vf"
+  },
+  "sealing-camp": {
+   "node": "al9tBuG8oyqH1uyI3Kcd",
+   "gen": "8CQahV1LZSBbn8LUO25j"
+  },
+  "eel-weirs": {
+   "node": "UyKGvvx07sV2R2itBuhp",
+   "gen": "SKHDgrDKwMKNiHrxQONo"
+  },
+  "foragers-lodge": {
+   "node": "hKvUGWLPxwhn3pp0uQ4E",
+   "gen": "wVwL30e9e1zj4cJUb34F"
+  },
+  "caravan-depot": {
+   "node": "jrEj3HMN7zoCTAeNvKiU",
+   "gen": "iu1A0SkKHCbaWrg849fm"
+  },
+  "deep-road-gate": {
+   "node": "JvrSlRmzg7qbCec1MiBM",
+   "gen": "AVjfVYnT4xg0QYBMmVXE"
+  },
+  "mountain-pass-toll": {
+   "node": "XoDP1PTLtyz6n0r3RMLg",
+   "gen": "FvwKdyyn3q33p0qml09k"
+  },
+  "caravanserai": {
+   "node": "NZNpp93lHn6C6Jr4lr8v",
+   "gen": "wKPWWjPwdlonl4XOYLjy"
+  },
+  "fur-trading-lodge": {
+   "node": "zkLyUzwumkpWZ74nkafm",
+   "gen": "R842RfaOwPYbC5XIGJyz"
+  },
+  "peat-cutters": {
+   "node": "qkVIsKpkUWNJlpj1UJnJ",
+   "gen": "rvHXQMQ5m6usJaIyshIK"
+  },
+  "crystal-galleries": {
+   "node": "kRl02wgHBATL4dSQn00f",
+   "gen": "3le6WZQ4FN5k32bYNJs2"
+  },
+  "horse-breeders": {
+   "node": "HWMZOeRjqcOQ4Yy4LZ21",
+   "gen": "Zd9tmEIS8ycXlnFKgZXu"
+  },
+  "townhouses": {
+   "node": "dNd2oyADljZCaMUuyz0A",
+   "gen": "TAleOHQzNrx3A0Vp9wYe"
+  },
+  "saltworks": {
+   "node": "fjHs7QILfhtR2fLNmDds",
+   "gen": "LFyjvCHv2had2Bl4wEPO"
+  },
+  "charcoal-burners": {
+   "node": "UjaYndBXbnkIxolGSwXD",
+   "gen": "kvWyQswWaUuYFTeIxme0"
+  },
+  "brickworks": {
+   "node": "3cBEux8A4uI213eLWPI5",
+   "gen": "dXuoB2JpFvgN0f25ht54"
   }
  }
 }

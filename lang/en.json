@@ -314,6 +314,7 @@
       "foodStockPct": "Storage +{v}%",
       "foodPerDay": "Food +{v}/day inside",
       "foodOutside": "Food +{v}/day",
+      "foodFarm": "Farm food +{v}/day (by the land)",
       "income": "+{v} GP a turn",
       "farmMult": "Farms ×{v}",
       "crews": "+{v} crew",

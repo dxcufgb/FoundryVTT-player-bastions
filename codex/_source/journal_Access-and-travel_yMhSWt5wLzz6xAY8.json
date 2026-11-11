@@ -38,10 +38,43 @@
       "_key": "!journal.pages!yMhSWt5wLzz6xAY8.RTewETiWgU7B3XsK"
     },
     {
+      "_id": "ncoZOxx38ujB9shM",
+      "name": "Caravan Depot",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "caravan-depot",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/caravan-depot.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/caravan-depot.webp",
+        "description": "<p>Wagon sheds, stables, a drovers' inn and loading yards on the road: the Bastion's harbour on dry land.</p><p>A Bastion with no river or coast to trade by builds a depot instead: it brings the Bastion closer to the world (Accessibility +2), and more merchants. Grown into a caravan town it earns more still, and exotic traders come by caravan as they would by sea. It needs a Bastion with no river and no coast.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.ncoZOxx38ujB9shM"
+    },
+    {
       "_id": "8dZFWBfCZE58JcoA",
       "name": "Clear a Trail",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 200000,
+      "sort": 300000,
       "title": {
         "show": false,
         "level": 1
@@ -74,7 +107,7 @@
       "_id": "56eQqrOZSwnXlQqq",
       "name": "Coach House and Remounts",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 300000,
+      "sort": 400000,
       "title": {
         "show": false,
         "level": 1
@@ -104,10 +137,43 @@
       "_key": "!journal.pages!yMhSWt5wLzz6xAY8.56eQqrOZSwnXlQqq"
     },
     {
+      "_id": "5jnxqamPcOUY5MqW",
+      "name": "Deep Road Gate",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "deep-road-gate",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/deep-road-gate.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/deep-road-gate.webp",
+        "description": "<p>A great carved gate onto the ancient roads that run under the world, guarded day and night.</p><p>An underground Bastion is hard to reach from above; the deep roads bring traders from below (Accessibility +2, more merchants) and tolls. Grown into a deep road market, exotic traders come out of the dark to sell. Underground only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.5jnxqamPcOUY5MqW"
+    },
+    {
       "_id": "8wIXGVkzj16NlYQn",
       "name": "Harbor",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 400000,
+      "sort": 600000,
       "title": {
         "show": false,
         "level": 1
@@ -140,7 +206,7 @@
       "_id": "VYjAMM3PWef4xeHE",
       "name": "Hidden Approach",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 500000,
+      "sort": 700000,
       "title": {
         "show": false,
         "level": 1
@@ -170,10 +236,43 @@
       "_key": "!journal.pages!yMhSWt5wLzz6xAY8.VYjAMM3PWef4xeHE"
     },
     {
+      "_id": "F8D0a0iDsXtvPVAU",
+      "name": "Mountain Pass Toll",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "mountain-pass-toll",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/mountain-pass-toll.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mountain-pass-toll.webp",
+        "description": "<p>A tower and a barrier across the one good way through the hills or mountains, with a hostel for travellers.</p><p>Everyone who crosses pays, and the road the Bastion keeps makes it easier to reach (Accessibility +1). Grown into a pass fort and hostel it takes more in tolls and makes the Bastion's name known. Hills or mountains only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.F8D0a0iDsXtvPVAU"
+    },
+    {
       "_id": "tey7oe3lysep7vq7",
       "name": "Pave the Road",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 600000,
+      "sort": 900000,
       "title": {
         "show": false,
         "level": 1
@@ -206,7 +305,7 @@
       "_id": "c7m1ejde9NDbfJvH",
       "name": "Pier",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 700000,
+      "sort": 1000000,
       "title": {
         "show": false,
         "level": 1
@@ -239,7 +338,7 @@
       "_id": "Flfmkno3WTpfn3uK",
       "name": "Stone Bridge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 800000,
+      "sort": 1100000,
       "title": {
         "show": false,
         "level": 1
@@ -272,7 +371,7 @@
       "_id": "lEUbo47UQNexdU2d",
       "name": "Timber Bridge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 900000,
+      "sort": 1200000,
       "title": {
         "show": false,
         "level": 1
@@ -305,7 +404,7 @@
       "_id": "BTXkQN4JImwQtywc",
       "name": "Waystation",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1000000,
+      "sort": 1300000,
       "title": {
         "show": false,
         "level": 1

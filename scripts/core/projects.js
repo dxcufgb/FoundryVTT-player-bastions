@@ -156,7 +156,7 @@ export function quote(record, exp, opts, stats, rules) {
   if (stats?.materialFactor && stats.materialFactor !== 1) factors.push({ label: "Hauling (Accessibility)", mult: stats.materialFactor });
   const region = DANGERS[loc.danger]?.effects?.buildCost ?? 1;
   if (region !== 1) factors.push({ label: "Dangerous region", mult: region });
-  if (material === "stone" && stats?.fx?.stoneDiscount) factors.push({ label: "Quarry", mult: stats.fx.stoneDiscount });
+  if (material === "stone" && stats?.fx?.stoneDiscount) factors.push({ label: "Quarry or brickworks", mult: stats.fx.stoneDiscount });
   if (material === "timber" && stats?.fx?.timberDiscount) factors.push({ label: "Lumber camp", mult: stats.fx.timberDiscount });
   const wardCost = (loc.resources ?? []).reduce((m, r) => m * (RESOURCES[r]?.effects?.wardCost ?? 1), 1);
   if (material === "magic" && wardCost !== 1) factors.push({ label: "Magical site", mult: wardCost });

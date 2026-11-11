@@ -33,6 +33,8 @@ export const DEFAULT_RULES = {
   foodBuyGp: 0.2,
   /** The Quarry's and Lumber Camp's income while no project under way uses stone / timber: they sell it instead */
   surplusSaleMult: 2,
+  /** A Mine's rolled income on a site with gems */
+  gemsMult: 1.5,
   /** What each worker (industries, the Trading Post, the Hunters' Guild) is paid a turn, as upkeep */
   workerWage: 1,
   /** Share of the workers who moved away that come back each turn the Bastion is fed */

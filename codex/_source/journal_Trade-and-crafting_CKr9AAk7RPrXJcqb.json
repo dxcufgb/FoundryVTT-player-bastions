@@ -38,10 +38,109 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.QAfTmXTyjeuarX95"
     },
     {
+      "_id": "fiByIVsNU2SB7f19",
+      "name": "Brickworks",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "brickworks",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/brickworks.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/brickworks.webp",
+        "description": "<p>Clay pits, drying sheds full of bricks and a smoking kiln.</p><p>Where there is no stone to cut, clay is dug and fired: bricks and tiles sell, and the Bastion's stone projects cost less. Like a quarry, it sells all it makes while nothing stone is being built, and earns twice as much. Grown into brick and tile works, it sells more. The brickmakers live at the Bastion and draw wages.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.fiByIVsNU2SB7f19"
+    },
+    {
+      "_id": "iXBDgkVE108JrNRZ",
+      "name": "Caravanserai",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "caravanserai",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/caravanserai.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/caravanserai.webp",
+        "description": "<p>A walled inn for desert caravans round a courtyard with a well, arcades for the animals and storerooms for the goods.</p><p>Caravans stop here to rest and trade: tolls, rents and travellers, more merchants and an easier road (Accessibility +1). Grown into a grand caravanserai, exotic traders make it their stop. Desert or arid land only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.iXBDgkVE108JrNRZ"
+    },
+    {
+      "_id": "Ffue8ZrpUyMnzTTc",
+      "name": "Charcoal Burners",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "charcoal-burners",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/charcoal-burners.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/charcoal-burners.webp",
+        "description": "<p>Smoking clamps in the forest clearings, stacks of cut wood and a woodcrafter's lathe.</p><p>Charcoal for every forge, bark for the tanners, bowls and staves for the market: the forest's trade, sold every turn. Grown into a woodcrafters' clearing, it sells more. The burners live at the Bastion and draw wages. Forest only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.Ffue8ZrpUyMnzTTc"
+    },
+    {
       "_id": "LDCeiqSUAvTwpoZJ",
       "name": "Craftsmen's Row",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 200000,
+      "sort": 500000,
       "title": {
         "show": false,
         "level": 1
@@ -71,10 +170,109 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.LDCeiqSUAvTwpoZJ"
     },
     {
+      "_id": "pvNuo4T8QWcjxoXT",
+      "name": "Crystal Galleries",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "crystal-galleries",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/crystal-galleries.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/crystal-galleries.webp",
+        "description": "<p>Caverns of crystal and glowing stone below the Bastion, with walkways for visitors and corners for artists.</p><p>People come from far to see them and pay to do it; the galleries earn gold, renown and travellers. Grown into a hall of glowing stone, they earn more and make the Bastion a better place to live. Underground only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.pvNuo4T8QWcjxoXT"
+    },
+    {
+      "_id": "FgMp2NwUKGqH98GN",
+      "name": "Fur Trading Lodge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "fur-trading-lodge",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/fur-trading-lodge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/fur-trading-lodge.webp",
+        "description": "<p>A timber lodge where trappers bring their furs to be graded, baled and sent south.</p><p>In cold and arctic lands, furs are the trade: the lodge earns gold every turn and draws merchants. Grown into a fur company, it earns more. Its clerks and carters live at the Bastion and draw wages.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.FgMp2NwUKGqH98GN"
+    },
+    {
+      "_id": "YGn8UUwIbpehfTv2",
+      "name": "Horse Breeders' Ranch",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "horse-breeders",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/horse-breeders.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/horse-breeders.webp",
+        "description": "<p>Paddocks, stables and a breaking ring on the open plains, where fine horses are bred and sold.</p><p>Riders, carters and knights buy the horses; the ranch earns every turn, and its horses mount the Bastion's envoys. Grown into a stud farm, it earns more and the Bastion's horses become known. The grooms live at the Bastion and draw wages. Plains only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.YGn8UUwIbpehfTv2"
+    },
+    {
       "_id": "5mFuan9BiwNIDjxK",
       "name": "Inn",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 300000,
+      "sort": 900000,
       "title": {
         "show": false,
         "level": 1
@@ -107,7 +305,7 @@
       "_id": "5Gd6atKrWGC8brWk",
       "name": "Lumber Camp",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 400000,
+      "sort": 1000000,
       "title": {
         "show": false,
         "level": 1
@@ -140,7 +338,7 @@
       "_id": "oJwdOx6exAJ25ysC",
       "name": "Market Square",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 500000,
+      "sort": 1100000,
       "title": {
         "show": false,
         "level": 1
@@ -173,7 +371,7 @@
       "_id": "mB2qelen1MCItkk0",
       "name": "Merchant Charter",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 600000,
+      "sort": 1200000,
       "title": {
         "show": false,
         "level": 1
@@ -206,7 +404,7 @@
       "_id": "TTB4ID7ymgFQ1ih4",
       "name": "Mine",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 700000,
+      "sort": 1300000,
       "title": {
         "show": false,
         "level": 1
@@ -236,10 +434,43 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.TTB4ID7ymgFQ1ih4"
     },
     {
+      "_id": "1ehvGyNz8zEYtIOk",
+      "name": "Peat Cutters",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "peat-cutters",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/peat-cutters.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/peat-cutters.webp",
+        "description": "<p>Long black trenches in the fen, stacks of drying peat and bundles of reeds.</p><p>Peat for fuel and reeds for thatch and baskets are the swamp's trade, and sell every turn. Grown into peat and reed works, they sell more. The cutters live at the Bastion and draw wages.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.1ehvGyNz8zEYtIOk"
+    },
+    {
       "_id": "ErfcSfnznWu8Vkb4",
       "name": "Quarry",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 800000,
+      "sort": 1500000,
       "title": {
         "show": false,
         "level": 1
@@ -269,10 +500,43 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.ErfcSfnznWu8Vkb4"
     },
     {
+      "_id": "2f6jc4UEHos99Guz",
+      "name": "Saltworks",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "saltworks",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/saltworks.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/saltworks.webp",
+        "description": "<p>Shallow pans of sea water drying in the sun, white heaps of salt and a smoking boiling house.</p><p>Salt sells everywhere, and keeps the Bastion's food longer. Grown into proper saltworks, it sells more. The salt workers live at the Bastion and draw wages. On the coast.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.2f6jc4UEHos99Guz"
+    },
+    {
       "_id": "mY7UCFmmVVwyJ4GV",
       "name": "Strongroom",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 900000,
+      "sort": 1700000,
       "title": {
         "show": false,
         "level": 1
@@ -305,7 +569,7 @@
       "_id": "SD3AGxUHZqpRHLdk",
       "name": "Tollgate",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1000000,
+      "sort": 1800000,
       "title": {
         "show": false,
         "level": 1
@@ -335,10 +599,43 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.SD3AGxUHZqpRHLdk"
     },
     {
+      "_id": "NNWZoX4Nut1dRAI1",
+      "name": "Townhouses to Let",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "townhouses",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/townhouses.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/townhouses.webp",
+        "description": "<p>Tall houses and shopfronts along the Bastion's street, let to townsfolk.</p><p>In a town or city, the Bastion's own street pays rent every turn. Built out into rows of shops and houses, it pays more and brings more people to the Bastion's door.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.NNWZoX4Nut1dRAI1"
+    },
+    {
       "_id": "JqNnocpMEHS1npZr",
       "name": "Trading Company",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1100000,
+      "sort": 2000000,
       "title": {
         "show": false,
         "level": 1
@@ -371,7 +668,7 @@
       "_id": "ifgRKZxjD9wjXZKQ",
       "name": "Trading Post",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1200000,
+      "sort": 2100000,
       "title": {
         "show": false,
         "level": 1
@@ -404,7 +701,7 @@
       "_id": "VaGmCZTvY3bylEd1",
       "name": "Warehouse",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1300000,
+      "sort": 2200000,
       "title": {
         "show": false,
         "level": 1
