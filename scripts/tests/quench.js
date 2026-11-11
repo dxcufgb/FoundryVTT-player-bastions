@@ -544,8 +544,8 @@ export function registerQuench(quench) {
         res = await ACTIONS.hireCrews({ entryId, crews: 0 }, game.user);
         assert.isFalse(res.ok);
 
-        // The rookery finishes on a turn; the chapel goes on; nothing waits.
-        await patchRecord(entry(), { [`projects.${b}.progress`]: getRecord(entry()).projects[b].days - 1 });
+        // The rookery finishes on a turn; the chapel (made long here) goes on; nothing waits.
+        await patchRecord(entry(), { [`projects.${b}.progress`]: getRecord(entry()).projects[b].days - 1, [`projects.${a}.days`]: 1000 });
         await runTurn(entry(), { systemAdvance: false });
         const rec = getRecord(entry());
         assert.equal(rec.projects[b].state, "complete");

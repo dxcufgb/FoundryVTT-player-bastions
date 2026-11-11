@@ -156,6 +156,7 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* House rules and catalog window: the body scrolls, the Save button stays at the bottom */
 .dxpb-rules .window-content { display: flex; flex-direction: column; overflow: hidden; padding: 0.5rem; }
+.dxpb-rules .dxpb-rules-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .dxpb-rules .dxpb-rules-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 0.3rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .dxpb-rules .dxpb-rules-box { display: flex; flex-direction: column; gap: 0.3rem; }
 .dxpb-rules .dxpb-rules-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.4rem; }

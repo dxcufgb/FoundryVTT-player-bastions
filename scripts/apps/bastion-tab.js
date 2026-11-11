@@ -194,7 +194,11 @@ export function registerBastionTab() {
     syncNameField(tab, entry);
     panel.attach(tab);
   });
-  Hooks.on("closeCharacterActorSheet", app => BastionTabPanel.panels.get(app.id)?.close());
+  Hooks.on("closeCharacterActorSheet", app => {
+    const panel = BastionTabPanel.panels.get(app.id);
+    BastionTabPanel.panels.delete(app.id);
+    panel?.close();
+  });
 }
 
 /**
