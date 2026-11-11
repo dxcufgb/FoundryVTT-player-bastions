@@ -48,8 +48,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   facility made from a room (flag `featureId`) is that room's card; upgrade arrow from tiers / ENLARGE / next road step /
   `system.enlargeable`) and `systemFacilityCatalog` (special facilities in world items and compendiums whose loaded index
   has a facility; added by the `addSystemFacility` action). Pure parts in `core/sections.js` (`SYSTEM_SECTION` by dnd5e
-  subtype, `specialSlots`, `canTakeFacility`). Card partial `dxpbFacilityCard` (templates/facility-card.hbs). Card art goes
-  through `cssUrl` (a relative path in a CSS var resolves against the stylesheet).
+  subtype, `specialSlots`, `canTakeFacility`). Row partial `dxpbFacilityCard` (templates/facility-card.hbs): a building is a
+  row like a defender's (`.dxpb-def`: picture, name and subtitle, action buttons, count, chevron).
 - `scripts/system-rules.js` – the system's Bastion rules (`dnd5e.bastionConfiguration`): never switched on silently;
   `postSystemRulesNotice` (responsible GM, ready) whispers the GMs one card when they are off, hidden setting
   `systemRulesNotice` ("", posted, enabled, dismissed); its Turn on sets `enabled: true, button: false`.
