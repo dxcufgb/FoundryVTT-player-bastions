@@ -114,6 +114,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - Quench tests set the clock to "calendar" in `before()` and restore the GM's settings in `after()`.
 - Layout coordinates are squares from the centre of the grounds (every grounds side is even), so extending never moves
   a building. A stored placement is never moved; only a building that grew may relocate (`moved: true`).
+- A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
+  Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
 - Map art lives in `assets/map/tex` (tileable, 512 px, one tile = 4 squares unless `TILE_OVERRIDE`) and
   `assets/map/props` (transparent, cropped, back of the object at the top of the picture).
