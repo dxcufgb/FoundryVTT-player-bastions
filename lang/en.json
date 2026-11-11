@@ -849,6 +849,8 @@
       "Inhabitant": "Inhabitant",
       "Contributions": "Contributions",
       "PerTurn": "{v} a turn",
+      "FirstTier": "{v} (first tier)",
+      "NoRoom": "No room on the grounds",
       "Wages": "{v} a turn in wages ({n} workers at {each})",
       "PerTurnEach": "{v} a turn each",
       "Or": " or ",

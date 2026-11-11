@@ -51,7 +51,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/brickworks.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/brickworks.webp",
-        "description": "<p>Clay pits, drying sheds full of bricks and a smoking kiln.</p><p>Where there is no stone to cut, clay is dug and fired: bricks and tiles sell, and the Bastion's stone projects cost less. Like a quarry, it sells all it makes while nothing stone is being built, and earns twice as much. Grown into brick and tile works, it sells more. The brickmakers live at the Bastion and draw wages.</p>"
+        "description": "<p>Clay pits, drying sheds full of bricks and a smoking kiln.</p><p>Where there is no stone to cut, clay is dug and fired: bricks and tiles sell, and the Bastion's stone projects cost less. Like a quarry, it sells all it makes while nothing stone is being built, and earns more for it. Grown into brick and tile works, it sells more. The brickmakers live at the Bastion and draw wages.</p>"
       },
       "ownership": {
         "default": -1
@@ -315,7 +315,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/lumber-camp.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/lumber-camp.webp",
-        "description": "<p>Felled logs, a sawpit and woodcutters at the forest's edge.</p><p>Timber projects cost less, and once upgraded to a sawmill it sells planks. Whenever no timber project is under way, the camp sells what it fells instead, and earns twice as much.</p>"
+        "description": "<p>Felled logs, a sawpit and woodcutters at the forest's edge.</p><p>Timber projects cost less, and once upgraded to a sawmill it sells planks. Whenever no timber project is under way, the camp sells what it fells instead, and earns more for it.</p>"
       },
       "ownership": {
         "default": -1
@@ -414,7 +414,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/mine.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mine.webp",
-        "description": "<p>Timbered tunnels into the hill, ore carts and miners' lanterns.</p><p>A mine earns big income with some risk; gems pay double. It grows into a deep mine and a mining company.</p><p>Past the mining company the shafts can go deeper still, up to ten levels: each costs more than the last and digs out a little more, with more miners to house, feed and pay.</p>"
+        "description": "<p>Timbered tunnels into the hill, ore carts and miners' lanterns.</p><p>A mine earns big income with some risk, and more where there are gems. It grows into a deep mine and a mining company.</p><p>Past the mining company the shafts can go deeper still, up to ten levels: each costs more than the last and digs out a little more, with more miners to house, feed and pay.</p>"
       },
       "ownership": {
         "default": -1
@@ -480,7 +480,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/quarry.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/quarry.webp",
-        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less. Whenever no stone project is under way, the quarry sells what it cuts instead, and earns twice as much.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house, feed and pay. Once it is stoneworks it earns more than its quarrymen cost.</p>"
+        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less. Whenever no stone project is under way, the quarry sells what it cuts instead, and earns more for it.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house, feed and pay. Once it is stoneworks it earns more than its quarrymen cost.</p>"
       },
       "ownership": {
         "default": -1

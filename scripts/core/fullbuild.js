@@ -34,6 +34,8 @@ export function fullBuild(location, { rules, catalog, structure = "keep", owners
   for (const f of Object.values(rec.features)) {
     const e = catalog.get(f.id);
     if (e?.unit === "sized") f.size = "vast";
+    // The founding building at its most too (a first Watchtower becomes the four allowed).
+    if (e?.unit === "each") f.count = e.max ?? (Number(f.count) || 1);
     f.tier = top(e);
   }
   // Hidden Approach is left out: the road a fully built Bastion has ends it.

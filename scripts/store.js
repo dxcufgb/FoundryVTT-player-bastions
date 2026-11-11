@@ -25,9 +25,10 @@ export function getEntry(id) {
 }
 
 /** The Bastion this actor belongs to (as an owner or the group). */
-export function bastionForActor(actor) {
+export function bastionForActor(actor, { except = null } = {}) {
   if (!actor) return null;
   return allBastions().find(j => {
+    if (except && j.id === except) return false;
     const r = getRecord(j);
     if (r.groupUuid === actor.uuid || (r.ownerUuids ?? []).includes(actor.uuid)) return true;
     // The party's members own it too.

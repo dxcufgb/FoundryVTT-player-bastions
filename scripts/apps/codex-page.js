@@ -85,12 +85,18 @@ export function codexRows(type, ref) {
       add("cost", `${gp(priceGp(e.cost ?? 0, R.price))}${per ? ` ${per}` : ""}`);
       add("time", `${workText(paceDays(e.days ?? 0, R.pace))}${per ? ` ${per}` : ""}`);
       const fp = footprintOf(e, { count: 1, tier: 1 });
-      add("room", fp ? `${fp} ${t("Sq")}${e.unit === "each" ? ` ${t("Unit.each")}` : ""}` : t("OutsideWalls"));
+      add("room", fp ? `${fp} ${t("Sq")}${e.unit === "each" ? ` ${t("Unit.each")}` : ""}` : t("Codex.NoRoom"));
     }
-    // Upkeep: the building's own, and its workers' wages (rules.workerWage each a turn).
-    const workers = Number((e.tiers ? e.tiers[0].effects : e.effects)?.workers) || 0;
-    add("upkeep", [e.upkeep ? t("Codex.PerTurn", { v: gp(e.upkeep) }) : "",
-      workers ? t("Codex.Wages", { n: workers, v: gp(workers * (R.workerWage ?? 0)), each: gp(R.workerWage ?? 0) }) : ""].filter(Boolean).join(" + "));
+    // Upkeep: the building's own (as featureEffects counts it: exp.upkeep, else its effects' upkeep), and its workers'
+    // wages (rules.workerWage each a turn). With tiers, the first tier's; later tiers can need more workers.
+    const first = e.tiers ? e.tiers[0].effects : e.effects;
+    const upkeep = Number(first?.upkeep) || Number(e.upkeep) || 0;
+    const workers = Number(first?.workers) || 0;
+    const coins = v => { const n = Math.round((Number(v) || 0) * 100) / 100; return `${n.toLocaleString()} GP`; };
+    const moreLater = (e.tiers ?? []).slice(1).some(x => x?.effects?.workers || x?.effects?.upkeep);
+    const line = [upkeep ? t("Codex.PerTurn", { v: gp(upkeep) }) : "",
+      workers ? t("Codex.Wages", { n: workers, v: coins(workers * (R.workerWage ?? 0)), each: coins(R.workerWage ?? 0) }) : ""].filter(Boolean).join(" + ");
+    add("upkeep", line && moreLater ? t("Codex.FirstTier", { v: line }) : line);
     add("effects", perksText(e));
     if (e.tiers) add("tiers", tierLine(e.tiers));
     const needs = [...(e.requires?.features ?? []).map(id => catalog().get(id)?.name ?? id),
@@ -115,7 +121,7 @@ export function codexRows(type, ref) {
       add("chance", t("Codex.MerchantChance", { a: R.merchantPerAccess, r: R.merchantPerRenown, cap: R.merchantCap }));
       const g = R.merchantVisitGold ?? {}, m = R.merchantMarketMult ?? [];
       add("income", t("Codex.MerchantFees", { peddler: gp(g.peddler ?? 0), caravan: gp(g.caravan ?? 0), company: gp(g.company ?? 0),
-        exotic: gp(g.exotic ?? 0), square: m[0] ?? 1, hall: m[1] ?? 1, town: m[2] ?? 1 }));
+        exotic: gp(g.exotic ?? 0), square: m[0] ?? 1, hall: m[1] ?? m.at(-1) ?? 1, town: m[2] ?? m.at(-1) ?? 1 }));
     },
     guests: () => add("limit", t("Codex.GuestsLimit")),
     visitors: () => add("limit", t("Codex.VisitorsLimit")),

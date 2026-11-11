@@ -15,7 +15,7 @@ import { withBastionLock } from "./lock.js";
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
-  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes"];
+  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes", "tradeSizes"];
 
 /* One at a time per Bastion with its actions (lock.js). */
 export function runTurn(entry, opts) { return withBastionLock(entry?.id, () => runTurnNow(entry, opts)); }

@@ -74,7 +74,9 @@ export const SECTION_COLUMNS = {
     { key: "security", kind: "num", get: fx => num(fx.security) }
   ],
   supplies: [
-    { key: "food", kind: "num", get: fx => num((fx.foodPerDay ?? 0) + (fx.foodOutside ?? 0) + (fx.foodFarm ?? 0)) },
+    // Farm food as the stats count it: times the land, climate and Mill (stats.food.farmMult).
+    { key: "food", kind: "num", get: (fx, exp, f, c) => num(Math.round((fx.foodPerDay ?? 0) + (fx.foodOutside ?? 0)
+      + (fx.foodFarm ?? 0) * (c?.stats?.food?.farmMult ?? 1))) },
     { key: "stores", kind: "num", get: fx => num(fx.foodStock) },
     { key: "water", kind: "text", get: fx => fx.waterUnlimited ? "∞" : num(fx.cistern) },
     { key: "income", kind: "gp", get: (fx, exp, f, c) => num(incomeOf(fx, exp, c)) }

@@ -1585,6 +1585,25 @@ export function registerQuench(quench) {
         assert.notOk(BastionSheet.instances.get?.(id)?.rendered, "the page closed");
       });
 
+      it("deleting one of two Bastions with the same owners gives their sheets the other one's name", async () => {
+        const res = await ACTIONS.found({ answers: {
+          name: `${PREFIX} Second`, description: "Test", groupUuid: group.uuid, ownerUuids: [],
+          location: { terrain: "hills", site: "hilltop", settlement: { name: "Town", size: "village", distance: 20 }, road: "trail",
+            waterway: "river", waterOnSite: "table", climate: "temperate", land: "fertile", resources: ["stone"],
+            danger: "frontier", visibility: "ordinary", political: "freehold" },
+          structure: { type: "keep", acquisition: "reward" }, included: [], food: 100, treasury: 100, guards: 0, servants: 0
+        } }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        made.entries.push(res.entryId);
+        const main = getRecord(getEntry(entryId)).name;
+        // The sheet shows the Bastion about to go.
+        await hero.update({ "system.bastion.name": `${PREFIX} Second` });
+        const del = await ACTIONS.deleteBastion({ entryId: res.entryId, confirm: "DELETE" }, game.user);
+        assert.isTrue(del.ok, del.reason);
+        for (let i = 0; i < 60 && hero.system.bastion?.name !== main; i++) await new Promise(r => setTimeout(r, 50));
+        assert.equal(hero.system.bastion?.name, main, "the remaining Bastion's name");
+      });
+
       it("an open Bastion list shows a new Bastion as soon as it is founded and drops it as soon as it is deleted", async () => {
         const dash = new BastionDashboard();
         await dash.render({ force: true });

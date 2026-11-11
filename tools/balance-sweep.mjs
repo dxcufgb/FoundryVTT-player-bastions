@@ -27,5 +27,11 @@ for (const political of ["freehold", "grant"]) for (const structure of ["keep", 
 const gold = rows.map(r => r.gold), food = rows.map(r => r.food);
 console.log(`River Keep: ${river.gold} GP a turn, ${river.foodNet} food a day. Floor ${floor}.`);
 console.log(`${rows.length} sites: gold ${Math.min(...gold)}…${Math.max(...gold)}, food ${Math.min(...food)}…${Math.max(...food)}`);
-console.log(`Below the floor: ${rows.filter(r => r.gold < floor).length}; short of food: ${rows.filter(r => r.food < 0).length}`);
-console.table(rows.sort((a, b) => a.gold - b.gold).slice(0, 10));
+const below = rows.filter(r => r.gold < floor), hungry = rows.filter(r => r.food < 0);
+console.log(`Below the floor: ${below.length}; short of food: ${hungry.length}`);
+// Every site that fails a check, apart from the ten poorest.
+if (below.length) { console.log("Below the floor:"); console.table(below.sort((a, b) => a.gold - b.gold)); }
+if (hungry.length) { console.log("Short of food:"); console.table(hungry.sort((a, b) => a.food - b.food)); }
+console.log("The ten poorest:");
+console.table([...rows].sort((a, b) => a.gold - b.gold).slice(0, 10));
+process.exitCode = below.length || hungry.length ? 1 : 0;

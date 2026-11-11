@@ -22,7 +22,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility, mergeSameKind } from "../core/sections.js";
-import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity, routeCharge } from "../core/trade.js";
+import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity, routeCharge, rememberSize } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -1618,6 +1618,21 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(routeCharge({ ...grain }, 7), 40);
       assert.equal(routeCharge({ ...grain }, 14), 80, "a turn twice as long pays for twice the food");
       assert.equal(routeCharge({ kind: "coin", income: 30, cost: 99 }, 7), 0);
+    });
+    it("a map note keeps the size its first route rolled, after that route has ended", () => {
+      const rec = workedExampleRecord();
+      const note = { key: "note1", name: "Mill End", distance: 20 };
+      const route = { id: "r", key: "note1", size: "city", state: "requested" };
+      assert.deepEqual(rememberSize(rec, route), { "tradeSizes.note1": "city" });
+      assert.equal(rememberSize(rec, { ...route, size: "hamlet" }), null, "the first size stays");
+      rec.tradeRoutes = {};
+      assert.equal(settlementRoom(rec, note, rules).size, "city", "no routes left, the size is kept");
+      assert.equal(settlementList(rec, [{ id: "note1", name: "Mill End", distance: 20 }]).find(x => x.key === "note1").size, "city");
+    });
+    it("a full build takes the founding building to its most (four watchtowers)", () => {
+      const r = fullBuild(RIVER_KEEP, { rules, catalog });
+      const towers = Object.values(r.record.features).filter(f => f.id === "watchtower").reduce((n, f) => n + (Number(f.count) || 1), 0);
+      assert.equal(towers, catalog.get("watchtower").max ?? 4);
     });
     it("food caravans the treasury can't pay for keep their food back", () => {
       const rec = workedExampleRecord();

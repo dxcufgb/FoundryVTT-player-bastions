@@ -249,7 +249,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     lightHalve: !!flags.lightHalve,
     noSapping: !!flags.noSapping,
     siegeFood: siegeFoodMult,
-    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays,
+    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, farmMult, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays,
       buyPrice: Math.round((rules.foodBuyGp ?? 0.2) * (accessRow.material ?? 1) * 100) / 100 },
     water: { unlimited: waterUnlimited, cistern, days: waterDays },
     economy: { incomeFlat, dice, incomeAverage, tax, upkeep, net, accessFactor,

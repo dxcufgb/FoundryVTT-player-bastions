@@ -1,4 +1,4 @@
-import { advanceTrade, rollTradeRequest, routeTotals } from "./trade.js";
+import { advanceTrade, rollTradeRequest, routeTotals, rememberSize } from "./trade.js";
 import { rollFormula } from "./stats.js";
 import { advanceProjects, applyCompletion, fund, cancelHiddenApproach, mergeCancelled, ROADS_END_HIDDEN } from "./projects.js";
 import { syncLayout } from "./layout.js";
@@ -83,6 +83,7 @@ export function advanceTurn(recordIn, opts) {
   const request = rollTradeRequest(record, stats, rules, opts.settlements, { rng, turn: report.turn, id: newId() });
   if (request) {
     record.tradeRoutes[request.id] = request;
+    rememberSize(record, request);
     report.tradeRequest = request;
     report.lines.push(`${request.name} asks for a trade route (${request.kind === "food" ? `${request.food} food a day` : `${request.income} GP a turn`}). Answer by turn ${request.deadline}.`);
   }

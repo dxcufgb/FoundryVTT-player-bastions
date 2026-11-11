@@ -13,7 +13,7 @@ import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
 import { resolveEventChoice } from "./events.js";
 import { canTakeFacility } from "./core/sections.js";
-import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates, cleanSettlement } from "./core/trade.js";
+import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates, cleanSettlement, rememberSize } from "./core/trade.js";
 import { tradeSettlements, createRouteQuest, closeRouteQuest } from "./trade.js";
 
 /**
@@ -141,12 +141,16 @@ export const ACTIONS = {
     const named = await forgetBastionNames(entry.id, record.name);
     const actors = new Map(ownerActors(record).map(a => [a.id, a]));
     for (const id of named.actors) if (!actors.has(id) && game.actors.get(id)) actors.set(id, game.actors.get(id));
+    // Another Bastion of theirs (not this one) gets its name back on their sheets once this one is gone.
+    const others = new Map();
     for (const actor of actors.values()) {
-      const other = bastionForActor(actor);
-      if (other && other.id !== entry.id) continue;
+      const other = bastionForActor(actor, { except: entry.id });
+      if (other) { others.set(other.id, other); continue; }
       if (actor.type === "character" && actor.system?.bastion?.name === record.name) await actor.update({ "system.bastion.name": "" });
     }
     await entry.delete();
+    const { syncBastionNames } = await import("./apps/bastion-tab.js");
+    for (const other of others.values()) await syncBastionNames(other);
     return { ok: true };
   },
 
@@ -347,7 +351,7 @@ export const ACTIONS = {
     const offer = makeRequest(settlement, stats, rules(), { turn, id, goods });
     const route = { ...transitionRoute(offer, "accept", { turn }).route, proposed: true };
     route.questId = await createRouteQuest(record, route);
-    await patchRecord(entry, { [`tradeRoutes.${id}`]: route });
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route, ...rememberSize(structuredClone(record), route) });
     Hooks.callAll(`${MODULE_ID}.tradeRouteAccepted`, entry, route);
     return { ok: true, routeId: id, questId: route.questId };
   },
@@ -410,7 +414,7 @@ export const ACTIONS = {
     if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
     const id = randomId();
     const route = makeRequest(settlement, stats, rules(), { turn: record.turn?.number ?? 0, id, goods });
-    await patchRecord(entry, { [`tradeRoutes.${id}`]: route });
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route, ...rememberSize(structuredClone(record), route) });
     Hooks.callAll(`${MODULE_ID}.tradeRouteRequested`, entry, route);
     return { ok: true, routeId: id };
   },

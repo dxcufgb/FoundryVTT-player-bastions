@@ -48,11 +48,13 @@ export function routesWith(record, key) {
 
 /**
  * Room for more routes with a settlement: { size, max, used, free }. A map note has no size until a route to it
- * rolls one; later routes keep that size (a note never asked counts as a village).
+ * rolls one; that size is kept in record.tradeSizes (rememberSize), even after its routes end (a note never asked
+ * counts as a village).
  */
 export function settlementRoom(record, settlement, rules) {
   const used = routesWith(record, settlement?.key);
-  const size = TRADE_SIZES[settlement?.size] ? settlement.size : (used.find(r => TRADE_SIZES[r.size])?.size ?? null);
+  const kept = record?.tradeSizes?.[settlement?.key];
+  const size = TRADE_SIZES[settlement?.size] ? settlement.size : TRADE_SIZES[kept] ? kept : (used.find(r => TRADE_SIZES[r.size])?.size ?? null);
   const table = rules?.tradeRoutesPerSettlement ?? ROUTES_PER_SETTLEMENT;
   const max = Math.max(1, Math.floor(Number(table[size ?? "village"] ?? ROUTES_PER_SETTLEMENT[size ?? "village"]) || 1));
   return { size, max, used: used.length, free: Math.max(0, max - used.length) };
@@ -108,7 +110,9 @@ export function settlementList(record, notes = []) {
   for (const n of notes) {
     if (!n?.name || seen.has(norm(n.name))) continue;
     seen.add(norm(n.name));
-    out.push({ key: n.id, name: n.name, distance: Math.round(Number(n.distance) || 0), source: "map" });
+    // A map note has no size of its own: the one its first route rolled is kept (record.tradeSizes).
+    const size = TRADE_SIZES[record?.tradeSizes?.[n.id]] ? record.tradeSizes[n.id] : undefined;
+    out.push({ key: n.id, name: n.name, distance: Math.round(Number(n.distance) || 0), ...(size ? { size } : {}), source: "map" });
   }
   return out;
 }
@@ -135,6 +139,13 @@ export function tradeCandidates(record, settlements, rules) {
     if (room.free > 0) out.push(room.size && !s.size ? { ...s, size: room.size } : s);
   }
   return out;
+}
+
+/** Keeps the size a route rolled for its settlement (record.tradeSizes.<key>), in place. Returns the dot-path change or null. */
+export function rememberSize(record, route) {
+  if (!route?.key || !TRADE_SIZES[route.size] || TRADE_SIZES[record?.tradeSizes?.[route.key]]) return null;
+  record.tradeSizes = { ...(record.tradeSizes ?? {}), [route.key]: route.size };
+  return { [`tradeSizes.${route.key}`]: route.size };
 }
 
 /** The chance (%) a settlement asks for a route this turn. */
