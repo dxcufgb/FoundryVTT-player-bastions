@@ -1,8 +1,11 @@
 /**
  * Trade routes: contracts with other settlements that pay gold or deliver food every turn. Pure (no Foundry globals).
  *
+ * Every route goes both ways: on a "coin" route the Bastion sends its goods and is paid in gold (income a turn); on a
+ * "food" route the settlement sends food (food a day) and the Bastion pays for it in gold (cost a turn, below the price
+ * of food bought in a hurry).
  * A route lives in record.tradeRoutes.<id>:
- *   { id, key, name, distance, size, goods, kind: "coin" | "food", income, food, setup,
+ *   { id, key, name, distance, size, goods, kind: "coin" | "food", income, food, cost, setup,
  *     state: "requested" | "accepted" | "active", requestedTurn, deadline, signedTurn, questId, raidedTurn }
  * A settlement asks (rollTradeRequest, in the turn), the owners accept or decline, the party travels there and the GM
  * signs (setup paid from the treasury), and from then on the route pays every turn until it is cancelled. A request
@@ -40,13 +43,16 @@ export function quoteRoute({ size = "village", distance = 0, goods = "cloth" }, 
   const turnDays = rules?.turnDays ?? 7;
   if (g.kind === "food") {
     const food = Math.max(1, Math.round((rules?.tradeFood ?? 12) * sizeMult * g.mult));
-    return { kind: "food", income: 0, food, setup: round25(food * turnDays * foodPrice * (rules?.tradeSetupTurns ?? 6)) };
+    const value = food * turnDays * foodPrice;
+    // The Bastion pays for the food: a contract price, below what food bought when the stores run dry costs.
+    const cost = round5(value * (rules?.tradeFoodPrice ?? 0.6));
+    return { kind: "food", income: 0, food, cost, setup: round25(value * (rules?.tradeSetupTurns ?? 6)) };
   }
   // Farther settlements trade goods the Bastion's market lacks: worth more, up to double.
   const distF = Math.min(2, Math.max(0.6, 0.6 + (Number(distance) || 0) / 100));
   const accessF = 1 + 0.05 * (Number(accessibility) || 0);
   const income = round5((rules?.tradeIncome ?? 25) * sizeMult * g.mult * distF * accessF);
-  return { kind: "coin", income, food: 0, setup: round25(income * (rules?.tradeSetupTurns ?? 6)) };
+  return { kind: "coin", income, food: 0, cost: 0, setup: round25(income * (rules?.tradeSetupTurns ?? 6)) };
 }
 
 /**
@@ -155,12 +161,13 @@ export function canAcceptRoute(record, capacity) {
   return routesOf(record, ["accepted", "active"]).length < capacity;
 }
 
-/** What the active routes bring: gold a turn and food a day. */
+/** What the active routes bring and cost: gold in a turn, gold paid a turn (for food), food a day. */
 export function routeTotals(record) {
   const active = routesOf(record, ["active"]);
   return {
     active: active.length,
     income: active.reduce((n, r) => n + (r.kind === "coin" ? Number(r.income) || 0 : 0), 0),
+    cost: active.reduce((n, r) => n + (r.kind === "food" ? Number(r.cost) || 0 : 0), 0),
     food: active.reduce((n, r) => n + (r.kind === "food" ? Number(r.food) || 0 : 0), 0)
   };
 }
@@ -168,10 +175,11 @@ export function routeTotals(record) {
 /**
  * A turn's trade (mutates the record): requests and accepted routes past their deadline lapse; each active route may
  * be raided (rules.tradeRaid by the land's danger): it pays nothing this turn. A siege stops every caravan.
- * Returns { lapsed: [route], raided: [route], lostIncome, lostFood (a day), lines }.
+ * A raided food delivery isn't paid for. Returns { lapsed: [route], raided: [route], lostIncome, lostFood (a day),
+ * savedCost, lines }.
  */
 export function advanceTrade(record, rules, { rng = Math.random, turn = 0, danger = "frontier", siege = false } = {}) {
-  const out = { lapsed: [], raided: [], lostIncome: 0, lostFood: 0, lines: [] };
+  const out = { lapsed: [], raided: [], lostIncome: 0, lostFood: 0, savedCost: 0, lines: [] };
   record.tradeRoutes ??= {};
   for (const r of Object.values(record.tradeRoutes)) {
     if (!r) continue;
@@ -187,7 +195,7 @@ export function advanceTrade(record, rules, { rng = Math.random, turn = 0, dange
       record.tradeRoutes[r.id] = { ...r, raidedTurn: turn };
       out.raided.push(r);
       if (r.kind === "coin") out.lostIncome += Number(r.income) || 0;
-      else out.lostFood += Number(r.food) || 0;
+      else { out.lostFood += Number(r.food) || 0; out.savedCost += Number(r.cost) || 0; }
       out.lines.push(siege ? `No caravan from ${r.name} got through the siege.` : `The caravan from ${r.name} was raided: nothing arrived this turn.`);
     }
   }

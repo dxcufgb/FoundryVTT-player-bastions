@@ -374,10 +374,12 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
   const turn = record.turn?.number ?? 0;
   const order = { requested: 0, accepted: 1, active: 2 };
   const routes = routesOf(record).sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name));
-  const columns = [{ key: "income", kind: "gp" }, { key: "food", kind: "num" }, { key: "miles", kind: "num" }, { key: "setup", kind: "gp" }];
+  // Gold both ways: + paid for the Bastion's goods, − paid for the food it gets.
+  const columns = [{ key: "gold", kind: "gp" }, { key: "food", kind: "num" }, { key: "miles", kind: "num" }, { key: "setup", kind: "gp" }];
   const free = Math.max(0, trade.capacity - routes.filter(r => r.state !== "requested").length);
   const rows = routes.map(r => {
-    const parts = [t(`Trade.Goods.${r.goods}`), SIZE_NAMES[r.size] ?? r.size];
+    const goods = t(`Trade.Goods.${r.goods}`);
+    const parts = [r.kind === "food" ? t("Trade.FlowFood", { goods }) : t("Trade.FlowCoin", { goods }), SIZE_NAMES[r.size] ?? r.size];
     if (r.state === "requested") parts.push(t("Trade.State.requested", { turn: r.deadline }));
     else if (r.state === "accepted") parts.push(t("Trade.State.accepted", { turn: r.deadline }));
     else parts.push(r.raidedTurn === turn ? t("Trade.State.raided") : t("Trade.State.active"));
@@ -392,7 +394,7 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
       if (mine) b("tradeRoute", "withdraw", "fa-xmark", "Trade.Withdraw");
     }
     if (r.state === "active" && mine) b("tradeRoute", "cancel", "fa-ban", "Trade.Cancel");
-    const raw = [r.kind === "coin" ? r.income : null, r.kind === "food" ? r.food : null, r.distance, r.setup];
+    const raw = [r.kind === "coin" ? r.income : -(Number(r.cost) || 0), r.kind === "food" ? r.food : null, r.distance, r.setup];
     return { id: r.id, state: r.state, name: r.name, subtitle: parts.filter(Boolean).join(" · "), buttons, raw,
       cells: raw.map((v, i) => ({ value: fmtValue(columns[i].kind, v) })) };
   });
@@ -411,7 +413,7 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
     codex: codexUuid(MODULE_ID, "inhabitant", "caravans"),
     columns: columns.map(c => ({ key: c.key, label: t(`Trade.Col.${c.key}`) })),
     totals: columns.map((c, i) => ({ value: c.key === "miles" || c.key === "setup" ? "" : totalOf(c.kind, active.map(r => r.raw[i])) })),
-    summary: [t("Trade.Sum", { active: trade.active, capacity: trade.capacity, income: gp(trade.income), food: trade.food }),
+    summary: [t("Trade.Sum", { active: trade.active, capacity: trade.capacity, income: gp(trade.income), cost: gp(trade.cost ?? 0), food: trade.food }),
       trade.waiting ? t("Trade.SumWaiting", { n: trade.waiting }) : ""].filter(Boolean),
     limit: t("Trade.Limit", { free, per: (R?.tradeBaseRoutes ?? 1) })
   };

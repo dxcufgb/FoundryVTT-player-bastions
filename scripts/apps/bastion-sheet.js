@@ -769,7 +769,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!ok) return;
     }
     const res = await BastionSheet.#run("tradeRoute", { entryId: this.entryId, routeId, op });
-    if (res?.ok && op === "accept") ui.notifications.info(t(res.questId ? "Trade.AcceptedQuest" : "Trade.Accepted", { name: route?.name ?? "" }));
+    if (res?.ok && op === "accept") announceRoute(res, route?.name ?? "");
   }
 
   /** The GM signs an accepted route: the setup from the treasury, or waived. */
@@ -797,7 +797,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onTradeSeek(event, target) {
     const key = target.closest("[data-key]")?.dataset.key;
     const record = getRecord(getEntry(this.entryId));
-    const { tradeSettlements } = await import("../trade.js");
+    const { tradeSettlements, routeWorth } = await import("../trade.js");
     const { quoteRoute } = await import("../core/trade.js");
     const { TRADE_GOODS } = await import("../data/tables.js");
     const place = tradeSettlements(record).find(s => s.key === key);
@@ -806,7 +806,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const worth = g => {
       const q = quoteRoute({ size: place.size ?? "village", distance: place.distance, goods: g }, rules(),
         { accessibility: stats.accessibility, foodPrice: stats.food.buyPrice });
-      return q.kind === "food" ? t("Trade.FoodWorth", { n: q.food }) : t("Trade.CoinWorth", { gold: gp(q.income) });
+      return routeWorth({ ...q, goods: g });
     };
     const content = `<div class="dxpb-plan"><p>${t("Trade.SeekText", { name: escapeHTML(place.name), miles: place.distance })}</p>
       <label>${t("Trade.GoodsLabel")}<select name="goods">${Object.keys(TRADE_GOODS)
@@ -818,7 +818,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     }).catch(() => null);
     if (!result?.goods) return;
     const res = await BastionSheet.#run("proposeTradeRoute", { entryId: this.entryId, key, goods: result.goods });
-    if (res?.ok) ui.notifications.info(t(res.questId ? "Trade.AcceptedQuest" : "Trade.Accepted", { name: place.name }));
+    if (res?.ok) announceRoute(res, place.name);
   }
 
   /** The GM adds a settlement to trade with, or edits one: name, distance in miles, size. */
@@ -1009,4 +1009,11 @@ async function confirmHiddenApproach(record, expansionId) {
   const warn = hiddenApproachWarning(record, expansionId);
   if (!warn) return true;
   return foundry.applications.api.DialogV2.confirm({ window: { title: t("Hidden.Title") }, content: `<p>${warn}</p>` });
+}
+
+/** After accepting or seeking a route: where the quest is, or why there isn't one. */
+function announceRoute(res, name) {
+  if (res.questId) return ui.notifications.info(t("Trade.AcceptedQuest", { name }));
+  if (game.modules.get("dxcufgbs-quest-log")?.active) return ui.notifications.warn(t("Trade.QuestFailed", { name }));
+  ui.notifications.info(t("Trade.Accepted", { name }));
 }

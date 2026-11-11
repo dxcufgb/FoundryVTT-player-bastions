@@ -33,7 +33,10 @@ export function questLog() {
   return mod?.active && mod.api?.createQuest ? mod.api : null;
 }
 
-const worth = r => (r.kind === "food" ? t("Trade.FoodWorth", { n: r.food }) : t("Trade.CoinWorth", { gold: gp(r.income) }));
+/** Both ways: "120 GP a turn for its wool and cloth" / "19 food a day for 15 GP a turn". */
+export const routeWorth = r => (r.kind === "food" ? t("Trade.FoodWorth", { n: r.food, gold: gp(r.cost ?? 0) })
+  : t("Trade.CoinWorth", { gold: gp(r.income), goods: t(`Trade.Goods.${r.goods}`).toLowerCase() }));
+const worth = routeWorth;
 
 /** A side quest for an accepted route (GM side). Returns the quest id or null. */
 export async function createRouteQuest(record, route) {
@@ -53,7 +56,7 @@ export async function createRouteQuest(record, route) {
         t("Trade.QuestSign", { setup: gp(route.setup) })]
     });
   } catch (err) {
-    console.warn(`${MODULE_ID} | Quest Log`, err);
+    console.warn(`${MODULE_ID} | Quest Log: the trade route's quest couldn't be made`, err);
     return null;
   }
 }

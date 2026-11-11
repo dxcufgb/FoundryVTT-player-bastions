@@ -255,9 +255,11 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-def-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; color: inherit; cursor: pointer; }
 .dxpb-def-name .title, .dxpb-def-name .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Collapsible sections: the heading stays, the rest folds away (remembered per browser). */
-.dxpb-fac-toggle { flex: none; width: 18px; color: var(--dxpb-gold); text-align: center; }
-.dxpb-fac-toggle i { transition: transform 0.15s ease; }
-.dxpb-fac-section.dxpb-collapsed .dxpb-fac-toggle i { transform: rotate(-90deg); }
+.dxpb-root button.dxpb-fac-toggle { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; color: inherit;
+  font: inherit; text-transform: inherit; letter-spacing: inherit; }
+.dxpb-fac-toggle .dxpb-fac-chevron { width: 12px; color: var(--dxpb-gold); transition: transform 0.15s ease; }
+.dxpb-fac-section.dxpb-collapsed .dxpb-fac-chevron { transform: rotate(-90deg); }
+.dxpb-root button.dxpb-fac-toggle:hover .roboto-upper { text-decoration: underline; }
 .dxpb-fac-section.dxpb-collapsed > :not(h3) { display: none; }
 .dxpb-fac-titleline { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .dxpb-fac-many { flex: none; font-size: 11px; font-weight: bold; padding: 0 5px; border-radius: 8px; color: var(--dxpb-gold);

@@ -132,7 +132,7 @@
       {{#each page.slots}}<span class="{{#if mine}}dxpb-strong{{/if}}"><i class="fa-solid fa-building-columns" inert></i> {{text}}</span>{{/each}}</p>
 
     <section class="dxpb-fac-section {{#if @root.collapsed.defenders}}dxpb-collapsed{{/if}}" data-section="defenders">
-      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-label="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if @root.collapsed.defenders}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down" inert></i></button> <i class="fa-solid fa-shield" inert></i> <span class="roboto-upper">{{localize "DXPB.Fac.Defenders"}}</span></h3>
+      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if @root.collapsed.defenders}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down dxpb-fac-chevron" inert></i> <i class="fa-solid fa-shield" inert></i> <span class="roboto-upper">{{localize "DXPB.Fac.Defenders"}}</span></button></h3>
       <p class="dxpb-fac-summary"><span>{{page.defenders.summary}}</span></p>
       <ul class="dxpb-def-list" style="--cols: {{page.defenders.cols}}">
         <li class="dxpb-def dxpb-def-head"><span></span><span></span>{{#each page.defenders.columns}}<span class="dxpb-cell">{{label}}</span>{{/each}}<span></span></li>
@@ -156,7 +156,7 @@
 
     {{#each page.sections}}
     <section class="dxpb-fac-section {{#if (lookup @root.collapsed key)}}dxpb-collapsed{{/if}}" data-section="{{key}}">
-      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-label="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if (lookup @root.collapsed key)}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down" inert></i></button> <i class="fa-solid {{icon}}" inert></i> <span class="roboto-upper">{{label}}</span>{{#if count}} <span class="dxpb-fac-count">{{count}}</span>{{/if}}
+      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if (lookup @root.collapsed key)}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down dxpb-fac-chevron" inert></i> <i class="fa-solid {{icon}}" inert></i> <span class="roboto-upper">{{label}}</span>{{#if count}} <span class="dxpb-fac-count">{{count}}</span>{{/if}}</button>
         {{#if @root.mine}}<button type="button" class="dxpb-fac-plan" data-action="planSection" data-group="{{key}}"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Fac.Plan"}}</button>{{/if}}</h3>
       <p class="dxpb-fac-summary">{{#each summary}}<span>{{this}}</span>{{/each}}</p>
       <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{limit}}</p>
@@ -169,7 +169,7 @@
     </section>
     {{#if (eq key "trade")}}{{#with @root.page.routes as |routes|}}
     <section class="dxpb-fac-section dxpb-routes {{#if @root.collapsed.routes}}dxpb-collapsed{{/if}}" data-section="routes">
-      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-label="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if @root.collapsed.routes}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down" inert></i></button> <i class="fa-solid fa-route" inert></i> <span class="roboto-upper">{{localize "DXPB.Trade.Title"}}</span>{{#if routes.count}} <span class="dxpb-fac-count">{{routes.count}}</span>{{/if}}
+      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if @root.collapsed.routes}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down dxpb-fac-chevron" inert></i> <i class="fa-solid fa-route" inert></i> <span class="roboto-upper">{{localize "DXPB.Trade.Title"}}</span>{{#if routes.count}} <span class="dxpb-fac-count">{{routes.count}}</span>{{/if}}</button>
         {{#if @root.isGM}}<button type="button" class="dxpb-fac-plan" data-action="tradeRequest"><i class="fa-solid fa-envelope-open-text" inert></i> {{localize "DXPB.Trade.NewRequest"}}</button>{{/if}}</h3>
       <p class="dxpb-fac-summary">{{#each routes.summary}}<span>{{this}}</span>{{/each}}</p>
       <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{routes.limit}}</p>

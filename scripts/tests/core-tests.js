@@ -1449,6 +1449,8 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(grain.kind, "food");
       assert.equal(grain.food, 19);
       assert.equal(grain.income, 0);
+      assert.equal(grain.cost, 15, "the Bastion pays for its grain: 19 a day × 7 × 0.2 GP × 0.6, to the nearest 5");
+      assert.ok(grain.cost < grain.food * 7 * 0.2, "less than food bought in a hurry");
     });
     it("settlements ask now and then; never twice at once, never beyond reach, never in a siege", () => {
       const rec = workedExampleRecord();
@@ -1495,17 +1497,19 @@ export function registerCoreTests({ describe, it, assert }) {
       const before = stats(rec);
       rec.tradeRoutes = {
         c: { id: "c", key: "a", name: "A", state: "active", kind: "coin", income: 40, food: 0 },
-        f: { id: "f", key: "b", name: "B", state: "active", kind: "food", income: 0, food: 20 },
+        f: { id: "f", key: "b", name: "B", state: "active", kind: "food", income: 0, food: 20, cost: 15 },
         w: { id: "w", key: "x", name: "X", state: "requested", kind: "coin", income: 99, food: 0, deadline: 99 }
       };
-      assert.deepEqual(routeTotals(rec), { active: 2, income: 40, food: 20 });
+      assert.deepEqual(routeTotals(rec), { active: 2, income: 40, cost: 15, food: 20 });
       const s = stats(rec);
       assert.equal(s.economy.incomeFlat - before.economy.incomeFlat, 40);
       assert.equal(s.food.outside - before.food.outside, 20);
+      assert.equal(s.economy.upkeep - before.economy.upkeep, 15, "the Bastion pays for its food deliveries");
       const raid = advanceTrade(structuredClone(rec), { ...rules, tradeRaid: { frontier: 100 } }, { rng: () => 0, turn: 5, danger: "frontier" });
       assert.equal(raid.raided.length, 2);
       assert.equal(raid.lostIncome, 40);
       assert.equal(raid.lostFood, 20);
+      assert.equal(raid.savedCost, 15, "a raided delivery isn't paid for");
       const quiet = advanceTrade(structuredClone(rec), rules, { rng: () => 0.99, turn: 5, danger: "frontier" });
       assert.equal(quiet.raided.length, 0);
     });

@@ -92,6 +92,8 @@ export const DEFAULT_RULES = {
   tradeBaseRoutes: 1,
   tradeIncome: 25,
   tradeFood: 12,
+  /** What the Bastion pays for a food route's deliveries: this share of the price of food bought when the stores run dry */
+  tradeFoodPrice: 0.6,
   tradeSetupTurns: 6,
   tradeRequestBase: 10,
   tradeRequestMax: 40,

@@ -149,7 +149,7 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.
 - Trade routes: pure rules in `core/trade.js` (`quoteRoute`, `rollTradeRequest`, `transitionRoute`, `advanceTrade`,
   `routeCapacity` = `rules.tradeBaseRoutes` + fx.tradeRoutes); `record.tradeRoutes.<id>` (requested → accepted → active;
-  ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat` and food to `food.outside`; a turn
+  ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat`, food to `food.outside` and food routes' `cost` (the Bastion pays for its food, `rules.tradeFoodPrice` × the buy price) to `economy.upkeep`; a turn
   lapses offers past `deadline`, rolls raids (lost gold / food that turn) and maybe a request from `opts.settlements`
   (`tradeSettlements`, scripts/trade.js → core `settlementList`: "home", the GM's `record.settlements.<id>` as key `gm:<id>`
   (any distance), then map notes near the marker; a name once). GM actions `saveSettlement` / `removeSettlement`; owners'

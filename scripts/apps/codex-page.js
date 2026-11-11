@@ -113,7 +113,7 @@ export function codexRows(type, ref) {
     visitors: () => add("limit", t("Codex.VisitorsLimit")),
     caravans: () => {
       add("income", t("Codex.RouteIncome", { v: gp(R.tradeIncome ?? 25) }));
-      add("food", t("Codex.RouteFood", { n: R.tradeFood ?? 12 }));
+      add("food", t("Codex.RouteFood", { n: R.tradeFood ?? 12, pct: Math.round(100 * (R.tradeFoodPrice ?? 0.6)) }));
       add("setup", t("Codex.RouteSetup", { n: R.tradeSetupTurns ?? 6 }));
       add("risk", t("Codex.RouteRaid", { safe: R.tradeRaid?.safe ?? 0, frontier: R.tradeRaid?.frontier ?? 0, wild: R.tradeRaid?.wild ?? 0, hostile: R.tradeRaid?.hostile ?? 0 }));
       add("limit", t("Codex.RouteLimit", { n: R.tradeBaseRoutes ?? 1 }));

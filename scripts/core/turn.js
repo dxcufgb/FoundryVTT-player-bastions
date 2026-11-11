@@ -92,7 +92,7 @@ export function advanceTurn(recordIn, opts) {
   for (const dce of econ.dice) income += Math.round(rollFormula(dce.formula, rng) * (dce.mult ?? 1));
   if (siege) income = 0;
   const tax = econ.tax ? Math.round(income * (econ.tax / Math.max(1, econ.incomeAverage))) : 0;
-  const upkeep = econ.upkeep;
+  const upkeep = econ.upkeep - trade.savedCost;
   let net = income - tax - upkeep;
   record.treasury = (record.treasury ?? 0) + net;
   record.unpaidUpkeep = record.treasury < 0;
