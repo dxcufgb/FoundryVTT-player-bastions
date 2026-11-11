@@ -1,5 +1,6 @@
 import { MODULE_ID, rules, catalog, randomId, now, setting, t, SECONDS_PER_DAY, gp, escapeHTML, bastionNow } from "./util.js";
 import { payFromPurse } from "./core/coins.js";
+import { withActorLock } from "./lock.js";
 import { getEntry, getRecord, patchRecord, createBastionEntry, canAct, ownerActors, ownershipFor, bastionForActor } from "./store.js";
 import { statsFor } from "./context.js";
 import { createRecord } from "./core/record.js";
@@ -50,7 +51,11 @@ function ownerOnly(record, user) {
 }
 
 /** Takes gold from a character, using the system's currency manager when there is one (makes change from other coins). */
-async function takeGold(actor, amount) {
+function takeGold(actor, amount) {
+  return withActorLock(actor, () => takeGoldNow(actor, amount));
+}
+
+async function takeGoldNow(actor, amount) {
   // Prices below 1 GP are real (a sack is 1 CP): work in copper so nothing rounds down to free.
   const copper = Math.max(0, Math.round((Number(amount) || 0) * 100));
   if (!copper) return true;
@@ -70,7 +75,7 @@ async function takeGold(actor, amount) {
 export async function giveGold(actor, amount) {
   amount = Math.max(0, Math.floor(Number(amount) || 0));
   if (!amount || !actor) return;
-  await actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + amount });
+  await withActorLock(actor, () => actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + amount }));
 }
 
 function actorFor(record, actorId, user) {

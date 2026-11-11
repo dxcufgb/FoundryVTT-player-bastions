@@ -403,8 +403,8 @@ function registerDebugCrumbs() {
 
 /**
  * Unfinished projects follow the build pace: re-time any planned at another pace. Old saves also get their separate
- * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers, and battle maps outside any folder go into
- * the Bastions scene folder. Responsible GM.
+ * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers, battle maps outside any folder go into
+ * the Bastions scene folder, and refunds still owed are paid. Responsible GM.
  */
 async function repaceAll() {
   if (!isResponsibleGM()) return;
@@ -413,6 +413,13 @@ async function repaceAll() {
     await fileMaps();
   } catch (err) {
     console.error(`${MODULE_ID} | Could not file the Bastion maps`, err);
+  }
+  // Refunds a finished road left owed (a payment that failed last time) are paid now.
+  try {
+    const { settleAllRefunds } = await import("./turn-runner.js");
+    await settleAllRefunds();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Could not pay the refunds still owed`, err);
   }
   const { patchRecord, writeRecordKeys } = await import("./store.js");
   for (const entry of allBastions()) {

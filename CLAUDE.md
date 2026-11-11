@@ -133,6 +133,14 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
   Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
+- One change at a time (`scripts/lock.js`): `request()` (socket.js) sends every action to the responsible GM (other GMs
+  relay too); `runAction` takes `withBastionLock(entryId)` except for RUNS_ITSELF actions, whose turn-runner entry
+  points (`runTurn`, `runRest`, `runFinish`, `runSiegeDay`) take it themselves. Not reentrant. Coins: `takeGold` /
+  `giveGold` take `withActorLock`.
+- A finished road cancels an open Hidden Approach (`cancelHiddenApproach`, core/projects.js): cancel refund; the
+  characters' shares are owed in `record.refundsDue` and paid by `settleRefunds` (turn-runner.js), each cleared once paid;
+  `settleAllRefunds` runs on ready.
+- Map notes keep the size their first route rolled: `record.tradeSizes.<key>` (`rememberSize`, core/trade.js).
 - Hidden Approach: `ROADS_END_HIDDEN` (core/projects.js) road steps remove it in `applyCompletion` (`removed`); its
   `roadBelowRoad` check (`ROAD_PASSED_CHECKS`) keeps it off the catalog once there's a road. `hiddenApproachWarning`
   (bastion-sheet.js) warns in the catalog and on the road arrow; `confirmHiddenApproach` asks before planning.

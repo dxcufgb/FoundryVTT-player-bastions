@@ -1486,6 +1486,7 @@ export function registerCoreTests({ describe, it, assert }) {
       const refund = cancelRefund(rec.projects.ha, rules);
       assert.equal(rec.treasury + (done.refunds?.hero ?? 0), refund.total, "the payers get the cancel refund");
       assert.ok(done.refunds.hero > 0, "a character's share is returned for the GM side to pay");
+      assert.equal(rec.refundsDue.hero, done.refunds.hero, "and kept owed in the record until it is paid");
       assert.equal(done.cancelled.length, 1);
       assert.ok(done.lines.some(l => l.startsWith("Cancelled: Hidden Approach")));
       // Finishing the road at once does the same to a Hidden Approach that wasn't in view.

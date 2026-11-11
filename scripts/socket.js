@@ -64,9 +64,12 @@ export function registerSocket(actionHandlers) {
   });
 }
 
-/** Runs an action as the GM: locally for a GM, over the socket for a player. Resolves to the action's result. */
+/**
+ * Runs an action on the responsible GM: locally there, over the socket from a player or another GM, so every change to
+ * a Bastion goes through the one GM that holds its lock (lock.js). Resolves to the action's result.
+ */
 export async function request(action, data = {}) {
-  if (game.user.isGM) return runAction(action, data, game.user, false);
+  if (isResponsibleGM() || (game.user.isGM && !game.users.activeGM)) return runAction(action, data, game.user, false);
   if (!game.users.activeGM) {
     crumb("socket.noGM", { action: ownId(action, handlers) });
     ui.notifications.warn(t("Notify.NoGM"));
@@ -83,6 +86,7 @@ export async function request(action, data = {}) {
         noteError("socket.timeout");
         resolve({ ok: false, reason: "timeout" });
       }
-    }, 15000);
+    // A GM's request may be a whole turn: it gets longer before it counts as lost.
+    }, game.user.isGM ? 120000 : 15000);
   });
 }

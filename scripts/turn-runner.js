@@ -1,6 +1,6 @@
 import { tradeSettlements, closeRouteQuest } from "./trade.js";
-import { MODULE_ID, rules, catalog, randomId, now, setting, t, gp, escapeHTML, formatGameTime, SECONDS_PER_DAY, clockMode } from "./util.js";
-import { getRecord, patchRecord, writeRecordKeys, ownerActors } from "./store.js";
+import { MODULE_ID, rules, catalog, randomId, now, setting, t, gp, escapeHTML, formatGameTime, SECONDS_PER_DAY, clockMode, isResponsibleGM } from "./util.js";
+import { getRecord, patchRecord, writeRecordKeys, ownerActors, allBastions } from "./store.js";
 import { statsFor } from "./context.js";
 import { advanceTurn, workDays, finishProject, finishAllProjects } from "./core/turn.js";
 import { countRest } from "./core/rests.js";
@@ -15,7 +15,7 @@ import { withBastionLock } from "./lock.js";
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
-  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes", "tradeSizes"];
+  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes", "tradeSizes", "refundsDue"];
 
 /* One at a time per Bastion with its actions (lock.js). */
 export function runTurn(entry, opts) { return withBastionLock(entry?.id, () => runTurnNow(entry, opts)); }
@@ -54,7 +54,7 @@ async function runTurnNow(entry, { systemAdvance = true } = {}) {
 
     // Rooms finished: add the dnd5e basic facility to an owner's sheet; enlarged rooms grow there too.
     for (const c of report.completed) await syncRoom(entry, c);
-    await payRefunds(report.refunds);
+    await settleRefunds(entry);
 
     // A new merchant: roll the stock from compendium items.
     if (report.merchant) {
@@ -125,9 +125,9 @@ async function runRestNow(entry, actorUuid, { force = false } = {}) {
   next.rests = rests;
   const done = workDays(next, 1, { rules: rules(), catalog: catalog(), now: now(), newId: randomId,
     payAsYouBuild: !!setting("payAsYouBuild"), crews: statsFor(next).stats.crews });
-  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout", "treasury"]);
+  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout", "treasury", "refundsDue"]);
   for (const c of done.completed) await syncRoom(entry, c);
-  await payRefunds(done.refunds);
+  await settleRefunds(entry);
   // Only the lines that aren't already a finished / started row (a Hidden Approach ended, a cancelled project).
   const extra = done.lines.filter(l => !/^(Finished|Started|Waiting for a crew):/.test(l));
   if (done.completed.length || done.started.length || extra.length) {
@@ -164,9 +164,9 @@ async function runFinishNow(entry, projectId) {
   // The crews it freed (and any a finished Workers' Lodge brings) pick up queued projects.
   const crewed = assignCrews(next.projects, statsFor(next).stats.crews, { payAsYouBuild: !!setting("payAsYouBuild"), now: now() });
   next.projects = crewed.projects;
-  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout", "treasury"]);
+  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout", "treasury", "refundsDue"]);
   for (const c of res.completed) await syncRoom(entry, c);
-  await payRefunds(res.refunds);
+  await settleRefunds(entry);
   const fresh = getRecord(entry);
   for (const c of res.completed) {
     const p = fresh.projects[c.projectId];
@@ -184,9 +184,33 @@ export function runFinishAll(entry) {
   return runFinish(entry, null);
 }
 
-/** Pays characters back for projects a finished road cancelled ({ actorId: gp }, core cancelHiddenApproach). */
-async function payRefunds(refunds) {
-  for (const [id, gold] of Object.entries(refunds ?? {})) await giveGold(game.actors.get(id), gold);
+/**
+ * Pays the characters what the Bastion owes them (record.refundsDue, written with the record before any payment: a
+ * project a finished road cancelled). Each debt is cleared only once its character has been paid, so a failed payment
+ * is tried again on the next turn, rest, finish or world load. A character that no longer exists: its share goes to
+ * the treasury. Responsible GM; call it holding the Bastion's lock (or from settleAllRefunds).
+ */
+async function settleRefunds(entry) {
+  const due = Object.entries(getRecord(entry)?.refundsDue ?? {}).filter(([, gold]) => Number(gold) > 0);
+  for (const [id, gold] of due) {
+    const actor = game.actors.get(id);
+    try {
+      if (actor) await giveGold(actor, gold);
+      const changes = { [`refundsDue.${id}`]: undefined };
+      if (!actor) changes.treasury = (Number(getRecord(entry).treasury) || 0) + Math.floor(Number(gold) || 0);
+      await patchRecord(entry, changes);
+    } catch (err) {
+      console.warn(`${MODULE_ID} | a refund couldn't be paid yet; it stays owed`, err);
+    }
+  }
+}
+
+/** On world load: pays any refunds still owed (responsible GM). */
+export async function settleAllRefunds() {
+  if (!isResponsibleGM()) return;
+  for (const entry of allBastions()) {
+    if (Object.keys(getRecord(entry)?.refundsDue ?? {}).length) await withBastionLock(entry.id, () => settleRefunds(entry));
+  }
 }
 
 /** Creates or updates the dnd5e basic facility item for a finished room project. */
