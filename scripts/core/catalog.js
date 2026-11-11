@@ -119,6 +119,7 @@ export const CHECKS = {
   ore: r => (r?.location?.resources ?? []).some(x => x === "ore" || x === "gems"),
   roadBelowTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 1,
   roadTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 1,
+  roadBelowRoad: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 2,
   roadRoad: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) >= 2,
   roadUnpaved: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 2,
   riverRoute: r => ["river", "lake"].includes(r?.location?.waterway) || !!r?.location?.riverOnRoute,
@@ -139,7 +140,7 @@ export const CHECK_LABELS = {
   anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", fishing: "a stream, river, lake or coast", highland: "hills, mountains or barren land", wellSite: "water on site (spring or high water table)",
   rockSite: "a rock site without water", notUnderground: "open sky (not underground)", farmland: "farmland (fertile or poor land)",
   millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby", stone: "stone nearby",
-  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",
+  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadBelowRoad: "no road to the Bastion (a trail is fine)", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",
   pierWater: "a river, lake or coast", harborWater: "a coast or large river", access3: "Accessibility 3+", access4: "Accessibility 4+",
   access5: "Accessibility 5+", marketTier2: "a Market Hall (Market Square upgraded once)", courtyardRoomy: "a Roomy or Vast Courtyard",
   anyWater: "a water source"
@@ -149,6 +150,9 @@ export const CHECK_LABELS = {
  * Checks fixed by where the Bastion stands (terrain, land, water, resources): building something can't change them.
  * The others (a wall, the road, Accessibility, a Market Hall, water from a well) can change.
  */
+/** Checks that stay failed once the road has passed them (roads are never torn up): not "later". */
+export const ROAD_PASSED_CHECKS = ["roadBelowTrail", "roadBelowRoad"];
+
 export const SITE_CHECKS = ["moatWater", "fishing", "highland", "wellSite", "rockSite", "notUnderground", "farmland", "millSite", "game",
   "timber", "stone", "ore", "riverRoute", "pierWater", "harborWater"];
 

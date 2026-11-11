@@ -19,7 +19,7 @@ import { footprintOf, groundsOf, extendGroundsBase, spaceUsed } from "../core/gr
 import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
-import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility } from "../core/sections.js";
+import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility, mergeSameKind } from "../core/sections.js";
 import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
@@ -1385,6 +1385,31 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.ok(report.foodCost > 0);
       assert.equal(record.food, 0);
       assert.equal(report.dividend, 0, "no dividend while food is bought at a loss");
+    });
+    it("a road to the Bastion ends the Hidden Approach; a trail keeps it; it can't be planned once the road is built", () => {
+      const rec = workedExampleRecord();
+      rec.features.ha = { id: "hidden-approach", tier: 1 };
+      const trail = applyCompletion(rec.features, { kind: "build", expansionId: "clear-trail", count: 5 }, "t1");
+      assert.ok(trail.features.ha, "a trail keeps it");
+      const road = applyCompletion(trail.features, { kind: "build", expansionId: "build-road", count: 5 }, "r1");
+      assert.equal(road.features.ha, undefined, "a road ends it");
+      assert.deepEqual(road.removed, ["ha"]);
+      const r2 = { ...workedExampleRecord(), location: { ...workedExampleRecord().location, settlement: { name: "X", distance: 5 } } };
+      r2.features = { r: { id: "build-road", count: 5, tier: 1 } };
+      assert.isFalse(prerequisites(r2, catalog.get("hidden-approach"), catalog, stats(r2)).ok);
+    });
+    it("the Facilities page gives buildings of one kind a single row with their stats added up", () => {
+      const cols = [{ key: "defense", kind: "pct" }, { key: "upkeep", kind: "gp" }];
+      const rows = mergeSameKind([
+        { group: "exp:watchtower", name: "Watchtower", fid: "a", raw: [2, 0], subtitle: "" },
+        { group: "exp:watchtower", name: "Watchtower", fid: "b", raw: [2, 0], subtitle: "", upgrade: { kind: "upgrade" } },
+        { group: "exp:wall", name: "Wall", fid: "w", raw: [10, 5] },
+        { group: "exp:watchtower", name: "Watchtower", building: true }
+      ], cols);
+      assert.equal(rows.length, 3);
+      assert.equal(rows[0].many, 2);
+      assert.deepEqual(rows[0].raw, [4, 0]);
+      assert.equal(rows[0].fid, "b", "the row acts on the one that can be upgraded");
     });
     it("what the site rules out for good: no ore, no water, no farmland; and what needs a building that can't be built", () => {
       const rec = workedExampleRecord();

@@ -373,6 +373,9 @@ export function foldLegacyWalls(featuresIn, projectsIn) {
   return { features, projects, changed };
 }
 
+/** Road steps that end a Hidden Approach: a road leads anyone straight to the Bastion. */
+export const ROADS_END_HIDDEN = ["build-road", "pave-road"];
+
 export function applyCompletion(featuresIn, project, newId) {
   const features = structuredClone(featuresIn ?? {});
   if (project.kind === "grounds") {
@@ -397,6 +400,11 @@ export function applyCompletion(featuresIn, project, newId) {
     return { features, featureId: newId };
   }
   if (project.kind === "build") {
+    // A road to the Bastion ends the Hidden Approach.
+    const removed = [];
+    if (ROADS_END_HIDDEN.includes(project.expansionId)) {
+      for (const [fid, x] of Object.entries(features)) if (x?.id === "hidden-approach") { delete features[fid]; removed.push(fid); }
+    }
     const f = { id: project.expansionId, builtAt: project.completedAt };
     if (project.size) f.size = project.size;
     if (project.count && project.count > 1) f.count = project.count;
@@ -404,7 +412,7 @@ export function applyCompletion(featuresIn, project, newId) {
     f.tier = 1;
     if (project.enclosed === false) f.enclosed = false;
     features[newId] = f;
-    return { features, featureId: newId };
+    return { features, featureId: newId, removed };
   }
   const f = features[project.featureId];
   if (!f) return { features, featureId: null };

@@ -8,6 +8,8 @@ import { featureEffects } from "../core/catalog.js";
 import { footprintOf } from "../core/grounds.js";
 import { codexUuid, codexArt } from "../core/codex.js";
 import { routesOf } from "../core/trade.js";
+import { mergeSameKind } from "../core/sections.js";
+import { hiddenApproachWarning } from "./bastion-sheet.js";
 import { tradeSettlements } from "../trade.js";
 import { averageFormula } from "../core/stats.js";
 import { methodAvailable } from "../core/dispatch.js";
@@ -237,7 +239,9 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
         const step = roadDone ? [...C.values()].find(x => !x.legacy && roadRank(x) === roadRank(e) + 1) : e;
         if (step && planProject(record, C, stats, R, { expansionId: step.id, count: miles(record) }, { id: "probe", now: 0 }).ok) {
           const q = quote(record, step, { count: miles(record) }, stats, R);
-          upgrade = { tip: t("Fac.Up.Road", { name: step.name, cost: gp(q.cost ?? 0) }), id: step.id, kind: "road", count: miles(record) };
+          const warn = hiddenApproachWarning(record, step.id);
+          upgrade = { tip: [t("Fac.Up.Road", { name: step.name, cost: gp(q.cost ?? 0) }), warn].filter(Boolean).join(" "), id: step.id,
+            kind: "road", count: miles(record) };
         }
       }
     }
@@ -248,7 +252,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     cards[sectionOfExpansion(e)].push({ name: title, subtitle: parts.filter(Boolean).join(" · "), icon: SECTION_ICONS[sectionOfExpansion(e)],
       img: codexArt(MODULE_ID, e.id, true), fid, damaged: !!f.damaged, upgrade,
       repair: mine && f.damaged && !open, count: e.unit === "each" && f.count > 1 ? f.count : 0,
-      codex: codex("facility", e.id), fx: fxv, exp: e, feature: f,
+      codex: codex("facility", e.id), fx: fxv, exp: e, feature: f, group: `exp:${e.id}`,
       open: { action: "openCodex", tip: t("Codex.Open") }, sort: title });
   }
   // New buildings under way: greyed, with their progress.
@@ -281,7 +285,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       icon: f.type === "special" ? "fa-building-columns" : "fa-chess-rook", orderIcon: running ? orders[order]?.icon ?? "" : "",
       orderLabel: running ? game.i18n.localize(orders[order]?.label ?? order) : "",
       progress: running ? { pct: Math.round(100 * Math.min(1, (f.progress.value ?? 0) / f.progress.max)) } : null,
-      use: canUse && f.type === "special" && !f.disabled ? t("Fac.Use") : "", upgrade,
+      use: canUse && f.type === "special" && !f.disabled ? t("Fac.Use") : "", upgrade, group: `sys:${f.type}:${f.name}`,
       open: { action: "openFacility", tip: t("Fac.OpenFacility") }, sort: f.name });
   }
 
@@ -350,10 +354,11 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       delete card.fx; delete card.exp; delete card.feature;
     }
     const built = list.filter(c => !c.building);
+    const rowsOf = mergeSameKind(list, columns, fmtValue);
     return {
       key, label: t(`Fac.Section.${key}`), icon: SECTION_ICONS[key], group: GROUPS[key],
       summary: summaries[key].summary.filter(Boolean), limit: summaries[key].limit,
-      count: built.length, cards: list,
+      count: built.length, cards: rowsOf,
       columns: columns.map(c => ({ key: c.key, label: t(`Fac.Col.${c.key}`) })), cols: columns.length,
       totals: columns.map((c, i) => ({ value: totalOf(c.kind, built.map(card => card.raw?.[i])) }))
     };

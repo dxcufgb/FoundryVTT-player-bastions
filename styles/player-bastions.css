@@ -254,6 +254,14 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-root button.dxpb-popout { color: var(--color-text-tertiary, inherit); }
 .dxpb-def-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; color: inherit; cursor: pointer; }
 .dxpb-def-name .title, .dxpb-def-name .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Collapsible sections: the heading stays, the rest folds away (remembered per browser). */
+.dxpb-fac-toggle { flex: none; width: 18px; color: var(--dxpb-gold); text-align: center; }
+.dxpb-fac-toggle i { transition: transform 0.15s ease; }
+.dxpb-fac-section.dxpb-collapsed .dxpb-fac-toggle i { transform: rotate(-90deg); }
+.dxpb-fac-section.dxpb-collapsed > :not(h3) { display: none; }
+.dxpb-fac-titleline { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.dxpb-fac-many { flex: none; font-size: 11px; font-weight: bold; padding: 0 5px; border-radius: 8px; color: var(--dxpb-gold);
+  border: 1px solid var(--dxpb-gold); line-height: 15px; }
 .dxpb-def-portrait { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
 .dxpb-def-go { color: var(--dxpb-gold); cursor: pointer; text-align: center; }
 

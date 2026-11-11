@@ -228,6 +228,10 @@ export function workDays(record, days, opts = {}) {
       if (res.grounds) record.grounds = res.grounds;
       out.completed.push({ projectId: p.id, featureId: res.featureId, label: p.label, kind: p.kind, expansionId: p.expansionId });
       out.lines.push(`Finished: ${p.label}.`);
+      if (res.removed?.length) {
+        out.lines.push("The Hidden Approach is gone: the new road leads anyone straight to the Bastion.");
+        out.removedFeatures = [...(out.removedFeatures ?? []), ...res.removed];
+      }
     }
     finished += completed.length;
     if (completed.length && left > 0) assign();

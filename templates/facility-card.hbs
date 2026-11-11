@@ -4,7 +4,7 @@
   {{#if img}}<img class="dxpb-def-img" src="{{img}}" alt="">{{else}}<span class="dxpb-def-img dxpb-def-icon"><i class="fa-solid {{icon}}" inert></i></span>{{/if}}
   <span class="dxpb-def-main">
     <button type="button" class="dxpb-linkbtn dxpb-def-name dxpb-fac-name" data-action="{{open.action}}" {{#if uuid}}data-uuid="{{uuid}}"{{/if}} {{#if codex}}data-codex="{{codex}}"{{/if}} data-tooltip="{{open.tip}}">
-      <strong class="title">{{name}}</strong>{{#if subtitle}}<span class="subtitle dxpb-muted">{{subtitle}}</span>{{/if}}
+      <span class="dxpb-fac-titleline"><strong class="title">{{name}}</strong>{{#if many}}<span class="dxpb-fac-many">× {{many}}</span>{{/if}}</span>{{#if subtitle}}<span class="subtitle dxpb-muted">{{subtitle}}</span>{{/if}}
     </button>
     <span class="dxpb-fac-slots">
       {{#if upgrade}}{{#if upgrade.action}}<button type="button" class="dxpb-fac-up" data-action="{{upgrade.action}}" {{#if fid}}data-fid="{{fid}}"{{/if}} {{#if upgrade.id}}data-id="{{upgrade.id}}"{{/if}} {{#if upgrade.kind}}data-kind="{{upgrade.kind}}"{{/if}} {{#if upgrade.count}}data-count="{{upgrade.count}}"{{/if}}

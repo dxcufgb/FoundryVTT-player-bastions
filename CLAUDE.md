@@ -131,6 +131,12 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
   Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
+- Hidden Approach: `ROADS_END_HIDDEN` (core/projects.js) road steps remove it in `applyCompletion` (`removed`); its
+  `roadBelowRoad` check (`ROAD_PASSED_CHECKS`) keeps it off the catalog once there's a road. `hiddenApproachWarning`
+  (bastion-sheet.js) warns in the catalog and on the road arrow; `confirmHiddenApproach` asks before planning.
+- Facilities rows: `mergeSameKind` (core/sections.js) folds cards of one kind (`group`: `exp:<id>` or `sys:<type>:<name>`)
+  into one row (`many`, summed stats; acts on a damaged one, else an upgradable one). Sections fold
+  (`toggleSection`, localStorage `<module>.collapsedSections`, `c.collapsed`).
 - Catalog (Projects): an expansion is listed when it can be planned now, or locked when `possibleHere` (core/catalog.js:
   `SITE_CHECKS` — terrain, land, water, resources — and, recursively, the buildings it needs) says it can be built here
   later; one-ofs built or planned, maxed "each", road steps and walls aren't listed locked. `c.impossible` lists what the

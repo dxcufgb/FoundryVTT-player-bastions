@@ -53,3 +53,35 @@ export function canTakeFacility(who, item, advancement = {}) {
   if (!item.free && used >= max) return { ok: false, reason: "slots", ...base };
   return { ok: true, ...base };
 }
+
+/**
+ * One row per kind of building: buildings of the same kind (three watchtowers, two kitchens) share a row with their
+ * number (`many`), their stats added up, and the subtitles that differ joined. The row acts on one of them: a damaged
+ * one first (repair), else one that can be upgraded. Buildings under way keep their own rows.
+ */
+export function mergeSameKind(cards, columns, format = v => v) {
+  const out = [];
+  const byKey = new Map();
+  for (const card of cards) {
+    if (!card.group || card.building) { out.push(card); continue; }
+    const list = byKey.get(card.group);
+    if (list) list.push(card);
+    else { const l = [card]; byKey.set(card.group, l); out.push(l); }
+  }
+  return out.map(x => {
+    if (!Array.isArray(x)) return x;
+    if (x.length === 1) return x[0];
+    const rep = x.find(c => c.repair || c.damaged) ?? x.find(c => c.upgrade) ?? x[0];
+    const raw = columns.map((c, i) => {
+      const vals = x.map(card => card.raw?.[i]);
+      if (["num", "gp", "pct"].includes(c.kind) && vals.some(v => typeof v === "number")) {
+        return vals.reduce((n, v) => n + (typeof v === "number" ? v : 0), 0);
+      }
+      return vals.find(v => v !== null && v !== undefined && v !== "") ?? null;
+    });
+    const subtitles = [...new Set(x.map(c => c.subtitle).filter(Boolean))];
+    return { ...rep, many: x.length, raw, cells: raw.map((v, i) => ({ value: format(columns[i].kind, v) })),
+      subtitle: subtitles.length === 1 ? subtitles[0] : subtitles.join(" / "),
+      damaged: x.some(c => c.damaged) };
+  });
+}

@@ -814,7 +814,8 @@
         "workers": "Workers"
       },
       "RoadPartial": "unfinished: {n} of {of} miles",
-      "Planned": "Planned: {name}. It is in the constructions list on the Projects page."
+      "Planned": "Planned: {name}. It is in the constructions list on the Projects page.",
+      "Toggle": "Fold or open this section"
     },
     "SystemRules": {
       "Title": "The system's Bastion rules are off",
@@ -965,6 +966,11 @@
     "Save": "Save",
     "Impossible": "Can't be built here ({n})",
     "NeedsSite": "needs {why}",
-    "NotNow": "not now (planned already, or no room)"
+    "NotNow": "not now (planned already, or no room)",
+    "Hidden": {
+      "Title": "Road and Hidden Approach",
+      "RoadEnds": "Building a road to the Bastion ends the Hidden Approach: once the road is finished it is gone (Concealment −3, Accessibility +1 back). A trail keeps it.",
+      "RoadPlanned": "A road to the Bastion is planned: when it is finished, the Hidden Approach is gone again."
+    }
   }
 }

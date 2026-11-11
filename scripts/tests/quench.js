@@ -244,6 +244,26 @@ export function registerQuench(quench) {
             }
             assert.ok(list.querySelector(".dxpb-def-total"), "a total row");
           }
+          // One row per kind of building in every table (three watchtowers are one row "× 3").
+          for (const sec of el().querySelectorAll(".dxpb-facpage .dxpb-fac-section")) {
+            const titles = [...sec.querySelectorAll(".dxpb-fac:not(.building) .title")].map(x => x.textContent.trim());
+            assert.equal(new Set(titles).size, titles.length, `${sec.dataset.section}: one row per kind`);
+          }
+          // Sections fold away and stay folded across a redraw.
+          {
+            const sec = () => el().querySelector('.dxpb-fac-section[data-section="arcane"]');
+            const before = localStorage.getItem(`${MODULE_ID}.collapsedSections`);
+            sec().querySelector('[data-action="toggleSection"]').click();
+            assert.isTrue(sec().classList.contains("dxpb-collapsed"), "folded");
+            assert.equal(getComputedStyle(sec().querySelector(".dxpb-fac-summary")).display, "none", "its contents hidden");
+            await reopen();
+            await wait(() => el()?.querySelector(".dxpb-facpage"));
+            assert.isTrue(sec().classList.contains("dxpb-collapsed"), "still folded after a redraw");
+            sec().querySelector('[data-action="toggleSection"]').click();
+            assert.isFalse(sec().classList.contains("dxpb-collapsed"), "open again");
+            if (before === null) localStorage.removeItem(`${MODULE_ID}.collapsedSections`);
+            else localStorage.setItem(`${MODULE_ID}.collapsedSections`, before);
+          }
           // Every row of this module's own has its Codex page and icon.
           for (const row of el().querySelectorAll(".dxpb-facpage [data-defenders], .dxpb-facpage .dxpb-fac:not(.dxpb-fac-system)")) {
             assert.ok(row.dataset.codex?.startsWith(`Compendium.${MODULE_ID}.codex.`), "a Codex page");

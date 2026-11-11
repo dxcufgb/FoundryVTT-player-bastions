@@ -9,7 +9,8 @@ import { GROUPS, SIZES, SIZE_LABELS, ENLARGE } from "../data/catalog.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { STRUCTURES } from "../data/structures.js";
 import { FORCES, QUALITY, ENGINES, DISPATCH_METHODS, BEACON_SIGNALS } from "../data/tables.js";
-import { prerequisites, possibleHere } from "../core/catalog.js";
+import { prerequisites, possibleHere, CHECKS, ROAD_PASSED_CHECKS } from "../core/catalog.js";
+import { ROADS_END_HIDDEN } from "../core/projects.js";
 import { quote, planProject, GROUNDS_PROJECT } from "../core/projects.js";
 import { footprintOf, extendGroundsBase, groundsInfo } from "../core/grounds.js";
 import { SIZE_FOOTPRINT } from "../data/grounds.js";
@@ -117,6 +118,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       openCodex: BastionSheet.#onOpenCodex,
       upgradeAt: BastionSheet.#onUpgradeAt,
       tradeRoute: BastionSheet.#onTradeRoute,
+      toggleSection: BastionSheet.#onToggleSection,
       tradeSign: BastionSheet.#onTradeSign,
       tradeRequest: BastionSheet.#onTradeRequest,
       tradeSeek: BastionSheet.#onTradeSeek,
@@ -223,7 +225,10 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       force: record.siege.force?.label ?? t("Siege.Custom") };
 
     /* Facilities: defenders and a section per kind of building */
-    if (this.tab === "facilities") c.page = facilitiesPage({ record, stats, ctx, C, R, mine, actorId: this.embedded ? this.actorId : null });
+    if (this.tab === "facilities") {
+      c.page = facilitiesPage({ record, stats, ctx, C, R, mine, actorId: this.embedded ? this.actorId : null });
+      c.collapsed = Object.fromEntries([...collapsedSections()].map(k => [k, true]));
+    }
 
     /* Projects */
     const crew = crewStatus(record, stats);
@@ -317,6 +322,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       // Done or waiting already: a one-of that is built or planned, an "each" at its most, a road step (the road
       // shows its next step when it can be planned).
       if (e.effects?.roadTier || e.unit === "square") return false;
+      // Past the road it needed (a Hidden Approach once the road is built): never again.
+      if ((e.requires?.check ?? []).some(k => ROAD_PASSED_CHECKS.includes(k) && !CHECKS[k](record, C, stats))) return false;
       if ((e.unit === "flat" || e.once) && (hasFeatureId(record, e.id) || openIds.has(e.id))) return false;
       return !prerequisites(record, e, C, stats).missing.some(m => m.startsWith("at most") || m === "already built");
     };
@@ -340,6 +347,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
         const sizedQ = sized ? SIZES.map(sz => quote(record, e, { size: sz, count: 1 }, stats, R)) : [];
         const sizedDays = sizedQ.map(x => x.days);
         return { id: e.id, name: e.name, summary: e.summary ?? "", ok: pre.ok, missing: pre.missing.join(", "), dmg: !!e.dmg, space,
+          warn: hiddenApproachWarning(record, e.id),
           cost: sized ? sizedQ.map(x => (x.cost ?? 0).toLocaleString()).join(" / ") + " GP" : `${gp(q.cost)}${unit ? ` ${unit}` : ""}`,
           days: sized ? `${sizedDays.join(" / ")} ${workUnit()}` : `${workText(q.days)}${unit ? ` ${unit}` : ""}`,
           upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: tierLine(e.tiers),
@@ -549,6 +557,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: { label: t("Plan.Add"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
     }).catch(() => null);
     if (!result) return;
+    if (!(await confirmHiddenApproach(record, exp.id))) return;
     await BastionSheet.#run("planProject", { entryId: this.entryId, opts: { expansionId: exp.id, size: result.size, count: result.count,
       rush: !!result.rush, enclosed: exp.effects?.wall ? !!result.enclosed : true } });
   }
@@ -727,12 +736,25 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
   /** The upgrade arrow: plans the upgrade (a tier, a bigger room, the next road step) in the constructions list. */
   static async #onUpgradeAt(event, target) {
     const { kind, fid, id, count } = target.dataset;
+    if (kind === "road" && !(await confirmHiddenApproach(getRecord(getEntry(this.entryId)), id))) return;
     const opts = kind === "road" ? { expansionId: id, count: Number(count) || 1 } : { kind, featureId: fid };
     const res = await BastionSheet.#run("planProject", { entryId: this.entryId, opts });
     if (res?.ok) {
       const name = kind === "road" ? catalog().get(id)?.name : target.closest("[data-fid]")?.querySelector(".title")?.textContent.trim();
       ui.notifications.info(t("Fac.Planned", { name: name ?? "" }));
     }
+  }
+
+  /** Folds a Facilities section away or opens it again, without redrawing the page; remembered in this browser. */
+  static #onToggleSection(event, target) {
+    const section = target.closest("[data-section]");
+    const key = section?.dataset.section;
+    if (!key) return;
+    const folded = section.classList.toggle("dxpb-collapsed");
+    target.setAttribute("aria-expanded", folded ? "false" : "true");
+    const set = collapsedSections();
+    if (folded) set.add(key); else set.delete(key);
+    try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...set])); } catch { /* storage off: this page only */ }
   }
 
   /** Trade routes: accept or decline a request, withdraw an accepted route, cancel an active one (owners). */
@@ -961,4 +983,30 @@ export function tierLine(tiers) {
 
 function hasFeatureId(record, id) {
   return Object.values(record?.features ?? {}).some(f => f?.id === id);
+}
+
+/** The Facilities page sections this browser keeps folded. */
+const COLLAPSE_KEY = `${MODULE_ID}.collapsedSections`;
+function collapsedSections() {
+  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) ?? "[]")); } catch { return new Set(); }
+}
+
+/**
+ * The Hidden Approach and the road don't go together: a road step that ends it (built or planned), or a Hidden Approach
+ * while such a road is planned, gets a warning. Empty when there's nothing to say.
+ */
+export function hiddenApproachWarning(record, expansionId) {
+  const has = id => Object.values(record?.features ?? {}).some(f => f?.id === id);
+  const planned = ids => Object.values(record?.projects ?? {})
+    .some(p => ids.includes(p?.expansionId) && !["complete", "cancelled"].includes(p.state));
+  if (ROADS_END_HIDDEN.includes(expansionId) && (has("hidden-approach") || planned(["hidden-approach"]))) return t("Hidden.RoadEnds");
+  if (expansionId === "hidden-approach" && planned(ROADS_END_HIDDEN)) return t("Hidden.RoadPlanned");
+  return "";
+}
+
+/** Asks before planning a road that ends the Hidden Approach (or the other way round). True to go on. */
+async function confirmHiddenApproach(record, expansionId) {
+  const warn = hiddenApproachWarning(record, expansionId);
+  if (!warn) return true;
+  return foundry.applications.api.DialogV2.confirm({ window: { title: t("Hidden.Title") }, content: `<p>${warn}</p>` });
 }

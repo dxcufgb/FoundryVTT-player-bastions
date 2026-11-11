@@ -230,7 +230,8 @@ export const EXPANSIONS = [
   { id: "coach-house", group: "access", name: "Coach House and Remounts", unit: "flat", cost: 1000, days: 20, upkeep: 1,
     effects: { mountedEnvoys: true }, summary: "Envoys ride at 40 miles a day (60 with a Waystation)." },
   { id: "hidden-approach", group: "access", name: "Hidden Approach", unit: "flat", cost: 1900, days: 30,
-    effects: { concealment: 3, accessibility: -1 }, summary: "Harder to find: Concealment +3, Accessibility -1." },
+    requires: { check: ["roadBelowRoad"] }, effects: { concealment: 3, accessibility: -1 },
+    summary: "Harder to find: Concealment +3, Accessibility -1. A road to the Bastion ends it (a trail doesn't)." },
 
   /* ---------------- Trade and income ---------------- */
   { id: "market-square", group: "trade", name: "Market Square", unit: "flat", cost: 3100, days: 60,
