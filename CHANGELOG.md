@@ -2,6 +2,9 @@
 
 ## 0.2.0 (unreleased)
 - Character sheets: the Bastion lives in the dnd5e character sheet's own Bastion tab, as if it were part of the system. Under the Bastion's name, a row of sub-tabs (Overview, Stats, Defense, Facilities, Projects, Dispatches, Trade, History) holds the whole Bastion page; Facilities is the system's own defenders, basic and special facilities and description, plus the other owners' facilities. A button pops the page out into its own window. Owners get the tab at any level and even with the system's Bastion rules off. The system's name field shows the Bastion's name (the GM can rename it there). The extra rook button in the character sheet's header is gone; the group sheet keeps one.
+- Fix: the House rules and catalog window opens again (its template had two root elements).
+- Fix: planned projects are re-priced when the Prices or Build pace setting changes and when the world loads (it failed on a missing import).
+- Deleting a Bastion clears the Bastion name it had put on the owners' sheets.
 - Players no longer get the Bastions scene-control group or the journal sidebar button: their character sheet is the way in. The GM keeps both, to found Bastions and see them all.
 
 ## 0.1.0
