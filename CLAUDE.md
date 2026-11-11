@@ -35,16 +35,21 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
 - `scripts/apps/` – `BastionSheet` (8 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
   `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab
-  (under the system's name field; sub-tab "facilities" shows the system's `.contents`/`.description`, the others hide
-  them through the tab's `dxpb-has-bastion` / `dxpb-sub-facilities` classes). Its element is moved back in on every
-  `renderCharacterActorSheet`; `decorateSystemSections` adds `.dxpb-virtual` cards to the system's lists (`exp.room` → basic, unless
-  the owner already has its facility item; else special; road only at its highest step), guards to `.roster`, and turns
-  `findItem` slots into links to Projects; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
+  (under the system's name field; the system's `.contents` (defenders, facility lists) is always hidden, the Facilities
+  page replaces it; `.description` shows on sub-tab "facilities" only, through the tab's `dxpb-has-bastion` /
+  `dxpb-sub-facilities` classes). Its element is moved back in on every `renderCharacterActorSheet`; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
   and its controls get `form="dxpb-none"`. `showTabForOwners` wraps `CharacterActorSheet#_prepareTabsContext` so an
   owner gets the tab at any level and with the system's Bastion setting off. The system name field shows the record's
   name (players read-only; the GM's edit renames the Bastion); `syncBastionNames` (responsible GM) writes
   `system.bastion.name` on the owners. Players have no scene-control group or journal button: the sheet is their way
   in; the group sheet keeps a header rook.
+- `scripts/apps/facilities-page.js` – the Facilities page context (window and sheet alike): `facilitiesPage` (defenders by kind,
+  SECTIONS with summary + limit, cards for features, building projects and the owners' dnd5e facilities; a dnd5e basic
+  facility made from a room (flag `featureId`) is that room's card; upgrade arrow from tiers / ENLARGE / next road step /
+  `system.enlargeable`) and `systemFacilityCatalog` (special facilities in world items and compendiums whose loaded index
+  has a facility; added by the `addSystemFacility` action). Pure parts in `core/sections.js` (`SYSTEM_SECTION` by dnd5e
+  subtype, `specialSlots`, `canTakeFacility`). Card partial `dxpbFacilityCard` (templates/facility-card.hbs). Card art goes
+  through `cssUrl` (a relative path in a CSS var resolves against the stylesheet).
 - `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a
   dependency): `registerDebugRecorder` (init and ready; also listens for `dxcufgbs-debug-recorder.ready` from import
   time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action
