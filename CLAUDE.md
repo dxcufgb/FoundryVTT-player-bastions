@@ -12,7 +12,7 @@ The README stays short (intro, installation, links); the user guide, settings, A
 fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
-- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (72 expansions plus legacy wall entries,
+- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (75 expansions plus legacy wall entries,
   tiers, `levels()` / `MAX_LEVELS` for industries, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
   `rules.js` (every number, `mergeRules`), `grounds.js` (grounds sizes, footprint per expansion, wall layers),
   `map-style.js` (textures by terrain, floors and furnishings by building, wall-band crops).
@@ -131,6 +131,10 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
   Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
+- Catalog (Projects): an expansion is listed when it can be planned now, or locked when `possibleHere` (core/catalog.js:
+  `SITE_CHECKS` — terrain, land, water, resources — and, recursively, the buildings it needs) says it can be built here
+  later; one-ofs built or planned, maxed "each", road steps and walls aren't listed locked. `c.impossible` lists what the
+  site rules out, with the reason; the "everything" estimate skips those.
 - Workers: an expansion's `workers` effect (industries, per level) counts in `stats.population` (beds, food).
   `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
   dice of every building with workers by the share still there (`workforce` in stats.js).

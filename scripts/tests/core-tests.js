@@ -4,7 +4,7 @@ import { EXPANSIONS, GROUPS, MAX_LEVELS, levels } from "../data/catalog.js";
 import { STRUCTURES, FIRST_BUILDINGS } from "../data/structures.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { payFromPurse } from "../core/coins.js";
-import { buildCatalog, prerequisites, featureEffects, roadTier } from "../core/catalog.js";
+import { buildCatalog, prerequisites, possibleHere, featureEffects, roadTier } from "../core/catalog.js";
 import { computeStats, averageFormula, rollFormula } from "../core/stats.js";
 import { holdout, attackStrength, engineDamage, siegeDay } from "../core/siege.js";
 import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
@@ -70,8 +70,8 @@ export function registerCoreTests({ describe, it, assert }) {
   const stats = (rec, ctx = WORKED_CTX) => computeStats(rec, { rules, catalog, ctx });
 
   describe("Data", () => {
-    it("ships 76 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
-      assert.equal(EXPANSIONS.length, 76);
+    it("ships 79 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
+      assert.equal(EXPANSIONS.length, 79);
       assert.equal(EXPANSIONS.filter(e => e.legacy).length, 4);
       for (const e of EXPANSIONS) {
         assert.ok(e.name, `${e.id} has a name`);
@@ -1385,6 +1385,23 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.ok(report.foodCost > 0);
       assert.equal(record.food, 0);
       assert.equal(report.dividend, 0, "no dividend while food is bought at a loss");
+    });
+    it("what the site rules out for good: no ore, no water, no farmland; and what needs a building that can't be built", () => {
+      const rec = workedExampleRecord();
+      rec.location = { ...rec.location, terrain: "mountains", land: "barren", waterway: "none", waterOnSite: "rock", resources: ["stone", "ore"] };
+      const C = catalog;
+      const exp = id => C.get(id);
+      assert.isFalse(possibleHere(rec, exp("fishery"), C).ok, "no water");
+      assert.isFalse(possibleHere(rec, exp("fields"), C).ok, "barren");
+      assert.isFalse(possibleHere(rec, exp("hunting-lodge"), C).ok, "no game");
+      assert.isTrue(possibleHere(rec, exp("mine"), C).ok, "ore");
+      assert.isTrue(possibleHere(rec, exp("trading-company"), C).ok, "needs only buildings and Accessibility: later");
+      for (const id of ["hunters-guild", "highland-herds", "mushroom-cellars", "kitchen-garden", "greenhouse", "livestock"]) {
+        assert.isTrue(possibleHere(rec, exp(id), C).ok, `${id}: food in barren mountains`);
+      }
+      rec.location.terrain = "underground";
+      assert.isTrue(possibleHere(rec, exp("mushroom-cellars"), C).ok, "mushrooms grow underground");
+      assert.isFalse(possibleHere(rec, exp("hunters-guild"), C).ok);
     });
     it("new food buildings: fishery needs a waterway; greenhouse food counts in a siege", () => {
       const rec = workedExampleRecord();

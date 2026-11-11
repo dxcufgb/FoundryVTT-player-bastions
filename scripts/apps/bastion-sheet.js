@@ -9,7 +9,7 @@ import { GROUPS, SIZES, SIZE_LABELS, ENLARGE } from "../data/catalog.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { STRUCTURES } from "../data/structures.js";
 import { FORCES, QUALITY, ENGINES, DISPATCH_METHODS, BEACON_SIGNALS } from "../data/tables.js";
-import { prerequisites } from "../core/catalog.js";
+import { prerequisites, possibleHere } from "../core/catalog.js";
 import { quote, planProject, GROUNDS_PROJECT } from "../core/projects.js";
 import { footprintOf, extendGroundsBase, groundsInfo } from "../core/grounds.js";
 import { SIZE_FOOTPRINT } from "../data/grounds.js";
@@ -288,7 +288,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       const groups = Object.entries(GROUPS).map(([g, label]) => {
         let gold = 0, work = 0, n = 0;
         for (const e of C.values()) {
-          if (e.group !== g || e.legacy || have.has(e.id)) continue;
+          if (e.group !== g || e.legacy || have.has(e.id) || !possibleHere(record, e, C).ok) continue;
           const count = e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1;
           const q = quote(record, e, { size: "cramped", count }, stats, R);
           if (!q.ok) continue;
@@ -304,13 +304,28 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     c.catalogGroup = this.catalogGroup && GROUPS[this.catalogGroup] ? { key: this.catalogGroup, label: t(`Fac.Section.${this.catalogGroup}`) } : null;
     // The system's special facilities defined in this world, each under its section.
     const systemItems = this.tab === "projects" ? await systemFacilityCatalog({ record, isGM, actorId: this.embedded ? this.actorId : null, filter }) : [];
+    // What can be planned now, and what can be built here later (locked, with what it still needs). Buildings the site
+    // rules out for good (no ore, no water, no farmland…) are left out, and listed apart at the end.
+    const openIds = new Set(Object.values(record.projects ?? {}).filter(p => !["complete", "cancelled"].includes(p.state)).map(p => p.expansionId));
+    const plannable = e => planProject(record, C, stats, R, { expansionId: e.id, size: "cramped",
+      count: e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1 },
+      { id: "probe", now: 0 }).ok;
+    const listed = e => {
+      if (e.legacy || (filter && !e.name.toLowerCase().includes(filter))) return false;
+      if (plannable(e)) return true;
+      if (!possibleHere(record, e, C).ok) return false;
+      // Done or waiting already: a one-of that is built or planned, an "each" at its most, a road step (the road
+      // shows its next step when it can be planned).
+      if (e.effects?.roadTier || e.unit === "square") return false;
+      if ((e.unit === "flat" || e.once) && (hasFeatureId(record, e.id) || openIds.has(e.id))) return false;
+      return !prerequisites(record, e, C, stats).missing.some(m => m.startsWith("at most") || m === "already built");
+    };
+    c.impossible = this.tab === "projects" ? [...C.values()].filter(e => !e.legacy && !hasFeatureId(record, e.id))
+      .map(e => ({ e, why: possibleHere(record, e, C) })).filter(x => !x.why.ok)
+      .map(x => ({ name: x.e.name, why: x.why.missing.join(", ") })).sort((a, b) => a.name.localeCompare(b.name)) : [];
     c.catalog = Object.entries(GROUPS).filter(([g]) => !c.catalogGroup || g === c.catalogGroup.key).map(([g, label]) => ({
       label,
-      // Only what can be planned right now (the same checks as planning it: prerequisites, room, once-only, planned).
-      items: [...C.values()].filter(e => e.group === g && !e.legacy && (!filter || e.name.toLowerCase().includes(filter))
-        && planProject(record, C, stats, R, { expansionId: e.id, size: "cramped",
-          count: e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1 },
-          { id: "probe", now: 0 }).ok).map(e => {
+      items: [...C.values()].filter(e => e.group === g && listed(e)).map(e => {
         const pre = prerequisites(record, e, C, stats);
         const q = quote(record, e, { size: "cramped", count: 1 }, stats, R);
         // Room it needs (the smallest size for rooms); locked when even that doesn't fit.
@@ -318,6 +333,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
         const space = e.unit === "sized" ? `${SIZES.map(s => (e.footprint ?? SIZE_FOOTPRINT[s])).join(" / ")} ${t("Sq")}`
           : fp ? `${fp} ${t("Sq")}${e.unit === "each" ? ` ${t("Unit.each")}` : ""}` : t("OutsideWalls");
         if (pre.ok && fp > g.free) pre.missing.push(t("NoRoom", { need: fp, free: g.free }));
+        if (!pre.missing.length && !plannable(e)) pre.missing.push(t("NotNow"));
         pre.ok = pre.missing.length === 0;
         const unit = e.unit === "square" ? t("Unit.square") : e.unit === "mile" ? t("Unit.mile") : e.unit === "each" ? t("Unit.each") : "";
         const sized = e.unit === "sized";
@@ -941,4 +957,8 @@ export function tierLine(tiers) {
   const labels = (tiers ?? []).map(x => x.label);
   if (labels.length <= 4) return labels.join(" → ");
   return `${labels.slice(0, 3).join(" → ")} → … → ${labels.at(-1)} (${t("Levels", { n: labels.length })})`;
+}
+
+function hasFeatureId(record, id) {
+  return Object.values(record?.features ?? {}).some(f => f?.id === id);
 }

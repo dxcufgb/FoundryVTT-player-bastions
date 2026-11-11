@@ -340,6 +340,18 @@
   "caravans": {
    "node": "ADfnGk1aaC1p2RY8fdVO",
    "gen": "8SWiVaLdCc2hzHVUcgMp"
+  },
+  "hunters-guild": {
+   "node": "bELer62pUDSh6u6I1I45",
+   "gen": "ETiiVaEXNZBsEwYDrhCY"
+  },
+  "mushroom-cellars": {
+   "node": "5eJ8RLVZsjQQmdjp1Sp6",
+   "gen": "PTv6CQOuQufg113fyLsO"
+  },
+  "highland-herds": {
+   "node": "Y8owaf5RLuPnQh5312Mg",
+   "gen": "d7qLoqdvszisdXC0RpoZ"
   }
  }
 }

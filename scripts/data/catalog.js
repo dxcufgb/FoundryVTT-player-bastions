@@ -178,6 +178,30 @@ export const EXPANSIONS = [
     requires: { features: ["fields"], check: ["millSite"] }, effects: { farmMult: 1.5, income: 15 }, summary: "Field output x1.5, +15 GP a turn." },
   { id: "hunting-lodge", group: "supplies", name: "Hunting Lodge", unit: "flat", cost: 875, days: 25,
     requires: { check: ["game"] }, effects: { foodOutside: 20, renown: 1 }, summary: "+20 food a day, Renown +1." },
+  { id: "hunters-guild", group: "supplies", name: "Hunters' Guild", unit: "flat", cost: 1500, days: 30,
+    requires: { check: ["notUnderground"] }, effects: { foodOutside: 25, workers: 6 },
+    tiers: [
+      { label: "Hunters' guild", cost: 1500, days: 30, effects: { foodOutside: 25, workers: 6 } },
+      { label: "Trappers' and rangers' lodge", cost: 2500, days: 45, effects: { foodOutside: 25, income: 5, workers: 4 } },
+      { label: "Great hunt", cost: 4500, days: 60, effects: { foodOutside: 40, income: 10, renown: 1, workers: 6 } }
+    ],
+    summary: "Hunters and trappers who range far into the wilds, game or not: +25 food a day, much more upgraded." },
+  { id: "highland-herds", group: "supplies", name: "Highland Herds", unit: "flat", cost: 1250, days: 30,
+    requires: { check: ["highland"] }, effects: { foodOutside: 20, income: 6 },
+    tiers: [
+      { label: "Goat and sheep herds", cost: 1250, days: 30, effects: { foodOutside: 20, income: 6 } },
+      { label: "Summer pastures", cost: 2000, days: 30, effects: { foodOutside: 20, income: 6 } },
+      { label: "Drovers' station", cost: 3500, days: 45, effects: { foodOutside: 30, income: 10 } }
+    ],
+    summary: "Goats and hardy sheep on the slopes: milk, cheese and meat where nothing grows. Hills, mountains or barren land." },
+  { id: "mushroom-cellars", group: "supplies", name: "Mushroom Cellars", unit: "flat", cost: 1000, days: 30,
+    effects: { foodPerDay: 12 },
+    tiers: [
+      { label: "Mushroom cellars", cost: 1000, days: 30, effects: { foodPerDay: 12 } },
+      { label: "Deep cellars", cost: 1750, days: 30, effects: { foodPerDay: 12 } },
+      { label: "Fungus caverns", cost: 3000, days: 45, effects: { foodPerDay: 18 } }
+    ],
+    summary: "Mushrooms on straw and logs under the keep: food inside the walls anywhere, even underground or in a siege." },
   { id: "workers-lodge", group: "supplies", name: "Workers' Lodge", unit: "flat", cost: 1500, days: 45,
     effects: { crews: 1, housing: 10 }, summary: "Houses a permanent building crew: +1 building crew, no upkeep." },
 

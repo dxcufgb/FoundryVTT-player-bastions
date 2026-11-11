@@ -660,7 +660,7 @@
     "DueOneRest": "after 1 long rest",
     "DueRests": "after {n} long rests",
     "NothingToPlan": "Nothing can be planned right now: more becomes available as the Bastion grows (or extend the grounds).",
-    "Everything": "One of every building still missing ({n}): {gold} and {work}",
+    "Everything": "One of every building still missing that can be built here ({n}): {gold} and {work}",
     "EverythingHint": "The smallest size of each room, one of everything else, the wall all the way round as a palisade and a road to the settlement, at today's prices and times with one crew, built one after another. Prerequisites and room aside.",
     "Total": "Total",
     "Buildings": "Buildings",
@@ -962,6 +962,9 @@
       "SeekText": "The party will travel to {name} ({miles} miles) to negotiate. What should the route carry?",
       "SeekSizeHint": "This settlement is only a map note: its size is rolled. The GM can add it to the list with a size."
     },
-    "Save": "Save"
+    "Save": "Save",
+    "Impossible": "Can't be built here ({n})",
+    "NeedsSite": "needs {why}",
+    "NotNow": "not now (planned already, or no room)"
   }
 }

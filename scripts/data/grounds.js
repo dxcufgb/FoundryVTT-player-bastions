@@ -36,7 +36,7 @@ export const FOOTPRINTS = {
   watchtower: 4, "dry-ditch": 0, "wet-moat": 0, ballista: 4, postern: 1, "lesser-wards": 0, "greater-wards": 0,
   // Supplies
   granary: "sized", well: 1, "deep-well": 1, cistern: 9, smokehouse: 9, "kitchen-garden": [16, 25, 36], orchard: [36, 49, 64], greenhouse: [25, 36, 49],
-  fields: 0, livestock: 0, fishery: 0, mill: 0, "hunting-lodge": 0, "workers-lodge": 16,
+  fields: 0, livestock: 0, fishery: 0, "highland-herds": 0, "mushroom-cellars": 0, "hunters-guild": 0, mill: 0, "hunting-lodge": 0, "workers-lodge": 16,
   // Access and travel: all of it is out on the route, except the coach house
   "clear-trail": 0, "build-road": 0, "pave-road": 0, "timber-bridge": 0, "stone-bridge": 0, pier: 0, harbor: 0,
   waystation: 0, "coach-house": 16, "hidden-approach": 0,
