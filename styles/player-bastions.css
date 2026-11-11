@@ -251,9 +251,9 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
   box-shadow: 0 0 4px var(--dnd5e-shadow-15, rgba(0, 0, 0, 0.1));
 }
 .dxpb-fac::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.22;
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
   background: var(--underlay, none) right center / 60% auto no-repeat;
-  mask-image: linear-gradient(to left, #000 15%, transparent 75%);
+  mask-image: linear-gradient(to left, #000 10%, transparent 70%);
 }
 .dxpb-fac.building { opacity: 0.6; filter: grayscale(0.7); border-style: dashed; }
 .dxpb-fac.damaged { border-color: var(--dxpb-bad); }

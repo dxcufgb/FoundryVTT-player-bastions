@@ -130,9 +130,11 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       }
     }
     if (upgrade && !mine) upgrade.action = "";
-    cards[sectionOfExpansion(e)].push({ name: e.name, subtitle: parts.filter(Boolean).join(" · "), icon: SECTION_ICONS[sectionOfExpansion(e)],
+    // The road reads as what it is now (a trail, a road, a highway), not as the last step built.
+    const title = e.effects?.roadTier ? ROADS[e.effects.roadTier]?.label ?? e.name : e.name;
+    cards[sectionOfExpansion(e)].push({ name: title, subtitle: parts.filter(Boolean).join(" · "), icon: SECTION_ICONS[sectionOfExpansion(e)],
       img: item?.img && !item.img.includes("/facilities/build.svg") ? item.img : "", fid, damaged: !!f.damaged, upgrade,
-      repair: mine && f.damaged && !open, open: { action: "dxpbTab", tab: "projects" }, sort: e.name });
+      repair: mine && f.damaged && !open, open: { action: "dxpbTab", tab: "projects" }, sort: title });
   }
   // New buildings under way: greyed, with their progress.
   for (const p of Object.values(record.projects ?? {})) {
