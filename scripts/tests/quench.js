@@ -221,7 +221,7 @@ export function registerQuench(quench) {
           assert.equal(el().querySelector('[data-defenders="system"] [data-count]').dataset.count, "2", "the Barrack's defenders");
           assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portrait').length, 2, "with their portraits");
           const sections = [...el().querySelectorAll(".dxpb-fac-section[data-section]")].map(x => x.dataset.section);
-          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "staff", "arcane"]);
+          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "routes", "staff", "arcane"]);
           for (const sec of el().querySelectorAll('.dxpb-fac-section:not([data-section="defenders"])')) {
             assert.ok(sec.querySelector(".dxpb-fac-summary span")?.textContent.trim(), `${sec.dataset.section}: a summary`);
             assert.ok(sec.querySelector(".dxpb-fac-limit")?.textContent.trim(), `${sec.dataset.section}: a limit`);
@@ -308,6 +308,60 @@ export function registerQuench(quench) {
         const missing = [];
         for (const f of files) if (!(await fetch(foundry.utils.getRoute(f), { method: "HEAD" })).ok) missing.push(f);
         assert.deepEqual(missing, [], "every painting and icon is in the module");
+      });
+
+      it("trade routes: a settlement asks, the owners accept (a Quest Log quest), the GM signs, the route pays, then is cancelled", async () => {
+        const { patchRecord } = await import("../store.js");
+        const { tradeSettlements, questLog } = await import("../trade.js");
+        const entry = () => getEntry(entryId);
+        const gold = getRecord(entry()).treasury ?? 0;
+        const home = tradeSettlements(getRecord(entry())).find(s => s.key === "home");
+        assert.ok(home, "the Bastion's own settlement can ask");
+        let res = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        const id = res.routeId;
+        const route = () => getRecord(entry()).tradeRoutes?.[id];
+        let questId = null;
+        try {
+          assert.equal(route().state, "requested");
+          assert.equal(route().kind, "coin");
+          const app = BastionSheet.open(entryId, { tab: "facilities" });
+          await app.render({ force: true });
+          const row = () => app.element.querySelector(`[data-section="routes"] [data-route="${id}"]`);
+          assert.ok(row(), "the request on the Facilities page");
+          assert.ok(row().querySelector('[data-action="tradeRoute"][data-op="accept"]'), "an Accept button");
+          await app.close();
+          res = await ACTIONS.tradeRoute({ entryId, routeId: id, op: "accept" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.equal(route().state, "accepted");
+          questId = route().questId;
+          if (questLog()) {
+            assert.ok(questId, "a quest in Dxcufgb's Quest Log");
+            assert.equal(questLog().getQuest(questId)?.status, "active");
+          }
+          res = await ACTIONS.signTradeRoute({ entryId, routeId: id, from: "treasury" }, game.user);
+          if ((gold ?? 0) < route().setup) assert.isFalse(res.ok, "not enough gold in the treasury");
+          await patchRecord(entry(), { treasury: Math.max(gold, route().setup) });
+          res = await ACTIONS.signTradeRoute({ entryId, routeId: id, from: "treasury" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.equal(route().state, "active");
+          assert.equal(getRecord(entry()).treasury, Math.max(gold, route().setup ?? 0) - route().setup, "the setup is paid");
+          if (questId) assert.equal(questLog().getQuest(questId)?.status, "completed");
+          const { stats } = statsFor(getRecord(entry()));
+          assert.equal(stats.trade.active, 1);
+          assert.equal(stats.trade.income, route().income);
+          res = await ACTIONS.tradeRoute({ entryId, routeId: id, op: "cancel" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.notOk(route(), "a cancelled route is gone");
+        } finally {
+          if (route()) await patchRecord(entry(), { [`tradeRoutes.${id}`]: undefined });
+          await patchRecord(entry(), { treasury: gold });
+          // The quest this test made in the Quest Log's store.
+          if (questId) {
+            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${questId}`));
+            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${questId}`]: null });
+          }
+        }
       });
 
       it("the Bastion window has the same Facilities page", async () => {

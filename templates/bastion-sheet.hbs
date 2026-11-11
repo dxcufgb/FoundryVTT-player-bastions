@@ -167,6 +167,30 @@
       </ul>
       {{else}}<p class="dxpb-muted">{{localize "DXPB.Fac.None"}}</p>{{/if}}
     </section>
+    {{#if (eq key "trade")}}{{#with @root.page.routes as |routes|}}
+    <section class="dxpb-fac-section dxpb-routes" data-section="routes">
+      <h3 class="icon"><i class="fa-solid fa-route" inert></i> <span class="roboto-upper">{{localize "DXPB.Trade.Title"}}</span>{{#if routes.count}} <span class="dxpb-fac-count">{{routes.count}}</span>{{/if}}
+        {{#if @root.isGM}}<button type="button" class="dxpb-fac-plan" data-action="tradeRequest"><i class="fa-solid fa-envelope-open-text" inert></i> {{localize "DXPB.Trade.NewRequest"}}</button>{{/if}}</h3>
+      <p class="dxpb-fac-summary">{{#each routes.summary}}<span>{{this}}</span>{{/each}}</p>
+      <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{routes.limit}}</p>
+      {{#if routes.rows.length}}<ul class="dxpb-def-list dxpb-fac-list" style="--cols: {{routes.cols}}">
+        <li class="dxpb-def dxpb-def-head"><span></span><span></span>{{#each routes.columns}}<span class="dxpb-cell">{{label}}</span>{{/each}}<span></span></li>
+        {{#each routes.rows}}
+        <li class="dxpb-def dxpb-fac dxpb-route dxpb-route-{{state}}" data-route="{{id}}" data-codex="{{../routes.codex}}">
+          <img class="dxpb-def-img" src="{{../routes.img}}" alt="">
+          <span class="dxpb-def-main">
+            <button type="button" class="dxpb-linkbtn dxpb-def-name" data-action="openCodex" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{name}}</strong><span class="subtitle dxpb-muted">{{subtitle}}</span></button>
+            <span class="dxpb-fac-slots">{{#each buttons}}<button type="button" class="dxpb-route-op {{cls}}" data-action="{{action}}" {{#if op}}data-op="{{op}}"{{/if}} data-tooltip="{{tip}}" aria-label="{{tip}}"><i class="fa-solid {{icon}}" inert></i></button>{{/each}}</span>
+          </span>
+          {{#each cells}}<span class="dxpb-cell">{{value}}</span>{{/each}}
+          <button type="button" class="dxpb-linkbtn dxpb-def-go" data-action="openCodex" data-tooltip="{{localize 'DXPB.Codex.Open'}}" aria-label="{{localize 'DXPB.Codex.Open'}}"><i class="fa-solid fa-chevron-right" inert></i></button>
+        </li>
+        {{/each}}
+        <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each routes.totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>
+      </ul>
+      {{else}}<p class="dxpb-muted">{{localize "DXPB.Trade.None"}}</p>{{/if}}
+    </section>
+    {{/with}}{{/if}}
     {{/each}}
   </div>
   {{/if}}

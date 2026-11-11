@@ -5,6 +5,7 @@ import {
 import { STRUCTURES } from "../data/structures.js";
 import { MERCHANT_TIERS } from "../data/tables.js";
 import { features, featureEffects, roadTier, MULT_KEYS } from "./catalog.js";
+import { routeCapacity, routeTotals, routesOf } from "./trade.js";
 import { groundsOf } from "./grounds.js";
 
 /**
@@ -159,7 +160,9 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const farmMult = (LANDS[loc.land]?.farm ?? 1) * (climate.farm ?? 1) * (fx.farmMult ?? 1);
   const resourceFood = (loc.resources ?? []).reduce((n, r) => n + (RESOURCES[r]?.effects?.food ?? 0), 0);
   const foodInside = fx.foodPerDay ?? 0;
-  const foodOutside = Math.round((fx.foodOutside ?? 0) * farmMult) + resourceFood;
+  const trade = { ...routeTotals(record), capacity: routeCapacity(fx, rules), waiting: routesOf(record, ["requested", "accepted"]).length,
+    accepted: routesOf(record, ["accepted"]).length };
+  const foodOutside = Math.round((fx.foodOutside ?? 0) * farmMult) + resourceFood + trade.food;
   const foodCap = Math.round(((fx.foodStock ?? 0) + 500) * (1 + (fx.foodStockPct ?? 0) / 100));
   const foodStock = Math.max(0, Math.min(Number(record?.food ?? 0), foodCap));
   const perDay = population * rules.foodPerPerson;
@@ -177,6 +180,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const accessFactor = rules.incomeAccessBase + rules.incomeAccessPer * accessibility;
   let incomeFlat = (fx.income ?? 0) - accessIncome + Math.round(accessIncome * accessFactor);
   incomeFlat += (fx.tollPerAccess ?? 0) * accessibility;
+  incomeFlat += trade.income;
   const gems = (loc.resources ?? []).includes("gems");
   const dice = incomeDice.map(d => {
     let mult = d.share ?? 1;
@@ -237,6 +241,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
       stockMult: fx.merchantStock ?? 1 },
     visitors: { chanceBonus: fx.visitors ?? 0, payMult: fx.visitorPay ?? 1 },
     travel: { distance, milesPerDay: accessRow.milesPerDay, days: travelDays, roadTier: tier },
+    trade,
     materialFactor: accessRow.material,
     crews: 1 + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) + (fx.crews ?? 0),
     grounds: groundsOf(record, catalog, rules),

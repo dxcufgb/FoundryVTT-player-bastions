@@ -35,7 +35,8 @@ export const INHABITANTS = {
   refugees: { journal: "household", name: "Refugees" },
   merchants: { journal: "visitors", name: "Merchants" },
   guests: { journal: "visitors", name: "Guests" },
-  visitors: { journal: "visitors", name: "Travellers" }
+  visitors: { journal: "visitors", name: "Travellers" },
+  caravans: { journal: "visitors", name: "Trade caravans" }
 };
 
 /** The page types the module registers (module.json documentTypes). */

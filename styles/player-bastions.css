@@ -271,6 +271,10 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-fac-slots .dxpb-fac-up { color: #4fae55; border-color: #4fae55; font-size: 12px; }
 span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-fac-slots .dxpb-fac-repair { color: var(--dxpb-bad); border-color: var(--dxpb-bad); }
+/* Trade routes: requests and routes waiting to be signed stand out; their accept / sign buttons are green. */
+.dxpb-fac-slots .dxpb-route-op.dxpb-ok { color: #4fae55; border-color: #4fae55; }
+.dxpb-route-requested, .dxpb-route-accepted { background: rgba(201, 162, 39, 0.10); }
+.dxpb-route-requested .dxpb-def-img, .dxpb-route-accepted .dxpb-def-img { border-style: dashed; }
 .dxpb-fac-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--dxpb-good); }
 .dxpb-embedded .dxpb-def { grid-template-columns: 30px minmax(0, 1fr) repeat(var(--cols), 3.4rem) 14px; gap: 0.35rem; }
 .dxpb-embedded .dxpb-def-img { width: 30px; height: 30px; }

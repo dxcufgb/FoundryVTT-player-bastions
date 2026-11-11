@@ -332,6 +332,14 @@
   "greenhouse": {
    "node": "xSm0vOM3RlfxvNA2B3Oo",
    "gen": "31rbGUve9WTQp9Mzu2H8"
+  },
+  "trading-post": {
+   "node": "n4ImS4v86WpsFkpLRMRx",
+   "gen": "s5cLywrcaq0kWFlVkzDy"
+  },
+  "caravans": {
+   "node": "ADfnGk1aaC1p2RY8fdVO",
+   "gen": "8SWiVaLdCc2hzHVUcgMp"
   }
  }
 }

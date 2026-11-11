@@ -1,3 +1,4 @@
+import { advanceTrade, rollTradeRequest } from "./trade.js";
 import { rollFormula } from "./stats.js";
 import { advanceProjects, applyCompletion, fund } from "./projects.js";
 import { syncLayout } from "./layout.js";
@@ -74,9 +75,20 @@ export function advanceTurn(recordIn, opts) {
     if (done.layoutChanged) report.layoutChanged = true;
   }
 
+  /* 3b. Trade routes: lapsed offers, raided caravans, a new request from a settlement (opts.settlements) */
+  const trade = advanceTrade(record, rules, { rng, turn: report.turn, danger: record.location?.danger, siege });
+  report.lines.push(...trade.lines);
+  report.tradeLapsed = trade.lapsed;
+  const request = rollTradeRequest(record, stats, rules, opts.settlements, { rng, turn: report.turn, id: newId() });
+  if (request) {
+    record.tradeRoutes[request.id] = request;
+    report.tradeRequest = request;
+    report.lines.push(`${request.name} asks for a trade route (${request.kind === "food" ? `${request.food} food a day` : `${request.income} GP a turn`}). Answer by turn ${request.deadline}.`);
+  }
+
   /* 4. Economy */
   const econ = stats.economy;
-  let income = econ.incomeFlat;
+  let income = econ.incomeFlat - trade.lostIncome;
   for (const dce of econ.dice) income += Math.round(rollFormula(dce.formula, rng) * (dce.mult ?? 1));
   if (siege) income = 0;
   const tax = econ.tax ? Math.round(income * (econ.tax / Math.max(1, econ.incomeAverage))) : 0;
@@ -90,7 +102,7 @@ export function advanceTurn(recordIn, opts) {
   }
 
   /* 5. Food: what the stores can't cover is bought with the treasury; who can't be fed moves away. */
-  const food = feedBastion(record, stats, rules, { days, siege });
+  const food = feedBastion(record, stats, rules, { days, siege, lostFood: trade.lostFood });
   Object.assign(report, { foodDelta: food.delta, foodBought: food.bought, foodCost: food.cost, left: food.left, returned: food.returned });
   report.lines.push(...food.lines);
   net -= food.cost;
@@ -240,9 +252,9 @@ export const LEAVE_ORDER = [["people", "refugees"], ["people", "guests"], ["garr
  * stats.food.buyPrice a person-day; what the treasury can't buy leaves people unfed, and that many move away
  * (LEAVE_ORDER; workers who leave are counted in record.people.workersAway and come back on fed turns).
  */
-export function feedBastion(record, stats, rules, { days, siege = false } = {}) {
+export function feedBastion(record, stats, rules, { days, siege = false, lostFood = 0 } = {}) {
   const out = { delta: 0, bought: 0, cost: 0, left: [], returned: 0, lines: [] };
-  const daily = stats.food.inside + (siege ? 0 : stats.food.outside) - stats.food.perDay;
+  const daily = stats.food.inside + (siege ? 0 : stats.food.outside - lostFood) - stats.food.perDay;
   const before = Number(record.food) || 0;
   let after = before + daily * days;
   record.hungry = false;

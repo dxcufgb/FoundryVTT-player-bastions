@@ -13,6 +13,8 @@ import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
 import { resolveEventChoice } from "./events.js";
 import { canTakeFacility } from "./core/sections.js";
+import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates } from "./core/trade.js";
+import { tradeSettlements, createRouteQuest, closeRouteQuest } from "./trade.js";
 
 /**
  * GM-side actions. Every handler gets (data, user) and re-checks the user's rights, because players reach them over
@@ -304,6 +306,69 @@ export const ACTIONS = {
     foundry.utils.setProperty(data, `flags.${MODULE_ID}.entryId`, entryId);
     const [created] = await actor.createEmbeddedDocuments("Item", [data]);
     return { ok: !!created, name: item.name, actor: actor.name };
+  },
+
+  /* ---------------- Trade routes ---------------- */
+
+  /** Owners answer a settlement's request (accept / decline), withdraw an accepted one, or cancel an active route. */
+  async tradeRoute({ entryId, routeId, op }, user) {
+    const { entry, record } = load(entryId);
+    ownerOnly(record, user);
+    if (!["accept", "decline", "withdraw", "cancel"].includes(op)) return { ok: false, reason: "Unknown trade-route operation" };
+    const route = record.tradeRoutes?.[routeId];
+    if (!route) return { ok: false, reason: t("Trade.Gone") };
+    const turn = record.turn?.number ?? 0;
+    if (op === "accept") {
+      const { stats } = statsFor(record);
+      if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
+    }
+    const res = transitionRoute(route, op, { turn });
+    if (!res.ok) return { ok: false, reason: t("Trade.WrongState") };
+    if (res.ended) {
+      await patchRecord(entry, { [`tradeRoutes.${routeId}`]: undefined });
+      if (op === "withdraw") await closeRouteQuest(route, "failed");
+      Hooks.callAll(`${MODULE_ID}.tradeRouteEnded`, entry, { ...route, ended: res.route.ended });
+      return { ok: true };
+    }
+    // Accepted: the party travels there to sign, followed by a quest in Dxcufgb's Quest Log when it is active.
+    const next = res.route;
+    next.questId = await createRouteQuest(record, next);
+    await patchRecord(entry, { [`tradeRoutes.${routeId}`]: next });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteAccepted`, entry, next);
+    return { ok: true, questId: next.questId };
+  },
+
+  /** The GM signs an accepted route once the party has been there: the setup is paid from the treasury (or waived). */
+  async signTradeRoute({ entryId, routeId, from = "treasury" }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    const route = record.tradeRoutes?.[routeId];
+    if (!route) return { ok: false, reason: t("Trade.Gone") };
+    const res = transitionRoute(route, "sign", { turn: record.turn?.number ?? 0 });
+    if (!res.ok) return { ok: false, reason: t("Trade.WrongState") };
+    const changes = { [`tradeRoutes.${routeId}`]: res.route };
+    if (from !== "free") {
+      if ((record.treasury ?? 0) < (route.setup ?? 0)) return { ok: false, reason: t("Notify.TreasuryShort") };
+      changes.treasury = (record.treasury ?? 0) - (route.setup ?? 0);
+    }
+    await patchRecord(entry, changes);
+    await closeRouteQuest(route, "completed");
+    Hooks.callAll(`${MODULE_ID}.tradeRouteSigned`, entry, res.route);
+    return { ok: true };
+  },
+
+  /** The GM makes a settlement ask for a route now (key from tradeSettlements; goods optional, else rolled). */
+  async requestTradeRoute({ entryId, key, goods }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
+    if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
+    const { stats } = statsFor(record);
+    const id = randomId();
+    const route = makeRequest(settlement, stats, rules(), { turn: record.turn?.number ?? 0, id, goods });
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteRequested`, entry, route);
+    return { ok: true, routeId: id };
   },
 
   async queueProject({ entryId, projectId, op }, user) {

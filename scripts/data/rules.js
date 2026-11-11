@@ -86,6 +86,19 @@ export const DEFAULT_RULES = {
   roadRouteFactor: 1.0,
   envoyMounted: 40,
   envoyRelay: 60,
+  /** Trade routes: routes without a trading building, gold and food per route (scaled by the settlement and goods),
+   *  setup cost in turns of the route's value, request chance (%, per turn), open requests at once, turns to sign,
+   *  how far away a settlement can be, and the chance (%) a caravan is raided each turn by the land's danger */
+  tradeBaseRoutes: 1,
+  tradeIncome: 25,
+  tradeFood: 12,
+  tradeSetupTurns: 6,
+  tradeRequestBase: 10,
+  tradeRequestMax: 40,
+  tradeMaxOpen: 2,
+  tradeRequestTurns: 3,
+  tradeMaxMiles: 150,
+  tradeRaid: { safe: 0, frontier: 5, wild: 10, hostile: 20 },
   /** Neglect (DMG): turns without orders equal to the owners' level */
   neglect: true
 };

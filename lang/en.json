@@ -348,7 +348,8 @@
       "sendingStation": "Daily Sending",
       "scrying": "Live view",
       "upkeep": "Upkeep {v} GP a turn",
-      "workers": "{v} workers (beds and food)"
+      "workers": "{v} workers (beds and food)",
+      "tradeRoutes": "handles {v} trade routes"
     },
     "Advance": {
       "Title": "Bastion turn",
@@ -863,11 +864,77 @@
         "bonus": "Bonus",
         "hire": "Hire",
         "chance": "Chance",
-        "food": "Food"
+        "food": "Food",
+        "income": "Income",
+        "risk": "Risk",
+        "setup": "Setup"
       },
       "Missing": "The Bastion Codex isn't loaded. Restart the Foundry server after installing or updating the module (the compendium and its page types are read at start).",
-      "NoPage": "This has no Bastion Codex page yet."
+      "NoPage": "This has no Bastion Codex page yet.",
+      "RouteIncome": "About {v} a turn for a village trading cloth; more for bigger and farther settlements and rarer goods",
+      "RouteFood": "About {n} food a day for a village sending grain; more from bigger settlements",
+      "RouteSetup": "{n} turns of the route's worth, paid when the contract is signed",
+      "RouteRaid": "Raided {safe}% / {frontier}% / {wild}% / {hostile}% of turns (safe / frontier / wild / hostile land); nothing gets through a siege",
+      "RouteLimit": "{n} route without a trading building; each Trading Post handles 3, a Trading Company 2 more",
+      "UpTo": "Up to {n}"
     },
-    "Levels": "{n} levels"
+    "Levels": "{n} levels",
+    "Trade": {
+      "Title": "Trade routes",
+      "NewRequest": "New request",
+      "NewRequestHint": "The settlement asks for a trade route now; the owners accept or decline it on this page.",
+      "None": "No trade routes yet. Settlements ask from time to time; a Trading Post lets the Bastion take more.",
+      "Sum": "Routes {active} of {capacity} · {income} a turn · {food} food a day",
+      "SumWaiting": "{n} waiting for an answer or a signature",
+      "Limit": "Room for {free} more. Without a trading building the Bastion holds one route; each Trading Post handles 3, a Trading Company 2 more.",
+      "Col": {
+        "income": "Gold",
+        "food": "Food",
+        "miles": "Miles",
+        "setup": "Setup"
+      },
+      "Goods": {
+        "grain": "Grain",
+        "livestock": "Livestock and salt meat",
+        "timber": "Timber",
+        "cloth": "Wool and cloth",
+        "wine": "Wine and ale",
+        "ore": "Ore and metalwork",
+        "spices": "Spices and silk"
+      },
+      "State": {
+        "requested": "asks for a route: answer by turn {turn}",
+        "accepted": "accepted: sign there by turn {turn}",
+        "active": "active",
+        "raided": "raided this turn"
+      },
+      "Accept": "Accept: the party travels there to sign",
+      "Decline": "Decline",
+      "Withdraw": "Withdraw",
+      "Cancel": "Cancel the route",
+      "CancelConfirm": "Cancel the trade route with {name}? The setup is not refunded.",
+      "Sign": "Sign the contract",
+      "SignText": "The party has been to {name} and the terms are agreed. The setup costs {setup} (treasury: {treasury}).",
+      "SignTreasury": "Pay from the treasury",
+      "SignFree": "Signed at no cost",
+      "Signed": "The trade route with {name} is signed.",
+      "Accepted": "Accepted. The party has to travel to {name}, and the GM signs the contract there.",
+      "AcceptedQuest": "Accepted. A quest to travel to {name} and sign the contract is in the Quest Log.",
+      "Gone": "That trade route offer is gone.",
+      "Full": "The Bastion can't take another route (it holds {n}): build a Trading Post.",
+      "WrongState": "That can't be done with the route as it is now.",
+      "NoSettlement": "No settlement can ask: put map notes for the places near the Bastion's marker, or set its nearest settlement.",
+      "Settlement": "Settlement",
+      "GoodsLabel": "Goods",
+      "GoodsRandom": "Roll for it",
+      "FoodWorth": "{n} food a day",
+      "CoinWorth": "{gold} a turn",
+      "QuestTitle": "Trade contract: {name}",
+      "QuestTag": "Trade route",
+      "QuestText": "{name} wants a trade route with {bastion} ({goods}, worth {worth}). Travel there, agree the terms and sign the contract before turn {deadline}. Setting it up costs {setup}.",
+      "QuestTravel": "Travel to {name} ({miles} miles)",
+      "QuestTerms": "Agree the terms with the town's council or guild",
+      "QuestSign": "Sign the contract and pay the setup ({setup})"
+    }
   }
 }

@@ -20,6 +20,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility } from "../core/sections.js";
+import { quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -69,8 +70,8 @@ export function registerCoreTests({ describe, it, assert }) {
   const stats = (rec, ctx = WORKED_CTX) => computeStats(rec, { rules, catalog, ctx });
 
   describe("Data", () => {
-    it("ships 75 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
-      assert.equal(EXPANSIONS.length, 75);
+    it("ships 76 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
+      assert.equal(EXPANSIONS.length, 76);
       assert.equal(EXPANSIONS.filter(e => e.legacy).length, 4);
       for (const e of EXPANSIONS) {
         assert.ok(e.name, `${e.id} has a name`);
@@ -1390,6 +1391,88 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.isFalse(prerequisites(rec, exp("fishery"), catalog, stats(rec)).ok);
       rec.features.gh = { id: "greenhouse", tier: 3 };
       assert.equal(stats(rec).food.inside - stats(workedExampleRecord()).food.inside, 65);
+    });
+  });
+  describe("Trade routes", () => {
+    const towns = [{ key: "a", name: "Ashford", distance: 30, size: "town" }, { key: "b", name: "Brook", distance: 80 },
+      { key: "far", name: "Farhold", distance: 400 }];
+    it("a route's worth: gold for goods, food for grain and livestock; bigger and farther pays more", () => {
+      const cloth = quoteRoute({ size: "village", distance: 40, goods: "cloth" }, rules);
+      assert.equal(cloth.kind, "coin");
+      assert.equal(cloth.income, 25);
+      assert.equal(cloth.setup, 150);
+      assert.ok(quoteRoute({ size: "city", distance: 40, goods: "cloth" }, rules).income > cloth.income);
+      assert.ok(quoteRoute({ size: "village", distance: 120, goods: "cloth" }, rules).income > cloth.income);
+      const grain = quoteRoute({ size: "town", distance: 40, goods: "grain" }, rules);
+      assert.equal(grain.kind, "food");
+      assert.equal(grain.food, 19);
+      assert.equal(grain.income, 0);
+    });
+    it("settlements ask now and then; never twice at once, never beyond reach, never in a siege", () => {
+      const rec = workedExampleRecord();
+      const s = stats(rec);
+      assert.deepEqual(tradeCandidates(rec, towns, rules).map(x => x.key), ["a", "b"]);
+      const chance = requestChance(s, rules);
+      assert.ok(chance > 0 && chance <= rules.tradeRequestMax);
+      const req = rollTradeRequest(rec, s, rules, towns, { rng: () => 0, turn: 4, id: "r1" });
+      assert.equal(req.key, "a");
+      assert.equal(req.state, "requested");
+      assert.equal(req.deadline, 4 + rules.tradeRequestTurns);
+      assert.equal(rollTradeRequest(rec, s, rules, towns, { rng: () => 0.99, turn: 4, id: "r2" }), null, "the roll failed");
+      rec.tradeRoutes = { r1: req };
+      assert.deepEqual(tradeCandidates(rec, towns, rules).map(x => x.key), ["b"], "one route per settlement");
+      rec.tradeRoutes.r2 = { ...req, id: "r2", key: "b" };
+      assert.equal(rollTradeRequest(rec, s, rules, towns, { rng: () => 0, turn: 4, id: "r3" }), null, "two waiting already");
+      assert.equal(rollTradeRequest({ ...workedExampleRecord(), siege: { day: 1 } }, s, rules, towns, { rng: () => 0, id: "r4" }), null);
+    });
+    it("accept, sign, cancel; a request nobody signs lapses", () => {
+      const req = makeRequest(towns[0], null, rules, { rng: () => 0, turn: 1, id: "r1", goods: "wine" });
+      assert.isFalse(transitionRoute(req, "sign").ok, "sign only after accepting");
+      const acc = transitionRoute(req, "accept", { turn: 2 }).route;
+      assert.equal(acc.state, "accepted");
+      const act = transitionRoute(acc, "sign", { turn: 3 }).route;
+      assert.equal(act.state, "active");
+      assert.isTrue(transitionRoute(act, "cancel").ended);
+      const rec = { tradeRoutes: { r1: acc } };
+      const out = advanceTrade(rec, rules, { turn: acc.deadline + 1, danger: "safe" });
+      assert.equal(out.lapsed.length, 1);
+      assert.deepEqual(rec.tradeRoutes, {});
+    });
+    it("the Bastion holds one route, three more per Trading Post and two with a Trading Company", () => {
+      const rec = workedExampleRecord();
+      assert.equal(stats(rec).trade.capacity, 1);
+      rec.features.tp = { id: "trading-post", count: 2 };
+      const s = stats(rec);
+      assert.equal(s.trade.capacity, 7);
+      assert.equal(s.people.workers, 6, "the posts' clerks and carters");
+      rec.tradeRoutes = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`r${i}`, { id: `r${i}`, key: `k${i}`, state: "active", kind: "coin", income: 10 }]));
+      assert.isFalse(canAcceptRoute(rec, s.trade.capacity));
+    });
+    it("active routes pay gold or food every turn; a raided caravan brings nothing that turn", () => {
+      const rec = workedExampleRecord();
+      const before = stats(rec);
+      rec.tradeRoutes = {
+        c: { id: "c", key: "a", name: "A", state: "active", kind: "coin", income: 40, food: 0 },
+        f: { id: "f", key: "b", name: "B", state: "active", kind: "food", income: 0, food: 20 },
+        w: { id: "w", key: "x", name: "X", state: "requested", kind: "coin", income: 99, food: 0, deadline: 99 }
+      };
+      assert.deepEqual(routeTotals(rec), { active: 2, income: 40, food: 20 });
+      const s = stats(rec);
+      assert.equal(s.economy.incomeFlat - before.economy.incomeFlat, 40);
+      assert.equal(s.food.outside - before.food.outside, 20);
+      const raid = advanceTrade(structuredClone(rec), { ...rules, tradeRaid: { frontier: 100 } }, { rng: () => 0, turn: 5, danger: "frontier" });
+      assert.equal(raid.raided.length, 2);
+      assert.equal(raid.lostIncome, 40);
+      assert.equal(raid.lostFood, 20);
+      const quiet = advanceTrade(structuredClone(rec), rules, { rng: () => 0.99, turn: 5, danger: "frontier" });
+      assert.equal(quiet.raided.length, 0);
+    });
+    it("a turn can bring a request from a nearby settlement", () => {
+      const rec = workedExampleRecord();
+      const { report, record } = advanceTurn(rec, { stats: stats(rec), rules: { ...rules, tradeRequestBase: 100, tradeRequestMax: 100 }, now: 604800,
+        rng: seeded(5), newId, settlements: towns });
+      assert.ok(report.tradeRequest, "a request");
+      assert.equal(record.tradeRoutes[report.tradeRequest.id].state, "requested");
     });
   });
 }

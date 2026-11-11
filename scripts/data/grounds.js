@@ -42,7 +42,7 @@ export const FOOTPRINTS = {
   waystation: 0, "coach-house": 16, "hidden-approach": 0,
   // Trade and income
   "market-square": [36, 49, 64], inn: 25, brewery: [16, 16, 16, 25, 25, 25, 36, 36, 36, 49], "craftsmens-row": 36, warehouse: 25, "merchant-charter": 0,
-  tollgate: 0, "lumber-camp": 0, quarry: 0, mine: 0, "trading-company": 16, strongroom: 4,
+  tollgate: 0, "lumber-camp": 0, quarry: 0, mine: 0, "trading-company": 16, "trading-post": 16, strongroom: 4,
   // Staff and prestige
   "servants-quarters": 16, bathhouse: 16, chapel: 16, infirmary: 16, "training-yard": 36, "garrison-hall": [36, 49, 64, 100],
   "great-hall": 64, "guest-wing": 25, "stewards-office": 4, "pleasure-gardens": 36,

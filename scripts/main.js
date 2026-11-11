@@ -395,6 +395,9 @@ function registerDebugCrumbs() {
   on("siegeStarted", entry => ({ docId: id(entry) }));
   on("siegeEnded", entry => ({ docId: id(entry) }));
   on("bastionDeleted", ({ entryId } = {}) => ({ docId: entryId }));
+  const routeCrumb = (entry, r) => ({ docId: id(entry), kind: r?.kind ?? null, state: r?.state ?? null, ended: r?.ended ?? null,
+    quest: !!r?.questId });
+  for (const name of ["tradeRouteRequested", "tradeRouteAccepted", "tradeRouteSigned", "tradeRouteEnded"]) on(name, routeCrumb);
   Hooks.once("ready", () => crumb("module.ready", { responsibleGM: isResponsibleGM(), bastions: allBastions().length, clock: clockMode() }));
 }
 

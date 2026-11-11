@@ -116,6 +116,9 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       useFacility: BastionSheet.#onUseFacility,
       openCodex: BastionSheet.#onOpenCodex,
       upgradeAt: BastionSheet.#onUpgradeAt,
+      tradeRoute: BastionSheet.#onTradeRoute,
+      tradeSign: BastionSheet.#onTradeSign,
+      tradeRequest: BastionSheet.#onTradeRequest,
       addFacility: BastionSheet.#onAddFacility
     }
   };
@@ -711,6 +714,64 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       const name = kind === "road" ? catalog().get(id)?.name : target.closest("[data-fid]")?.querySelector(".title")?.textContent.trim();
       ui.notifications.info(t("Fac.Planned", { name: name ?? "" }));
     }
+  }
+
+  /** Trade routes: accept or decline a request, withdraw an accepted route, cancel an active one (owners). */
+  static async #onTradeRoute(event, target) {
+    const routeId = target.closest("[data-route]")?.dataset.route;
+    const op = target.dataset.op;
+    if (!routeId || !op) return;
+    const route = getRecord(getEntry(this.entryId))?.tradeRoutes?.[routeId];
+    if (op === "cancel" && route) {
+      const ok = await DialogV2.confirm({ window: { title: t("Trade.Cancel") },
+        content: `<p>${t("Trade.CancelConfirm", { name: escapeHTML(route.name) })}</p>` });
+      if (!ok) return;
+    }
+    const res = await BastionSheet.#run("tradeRoute", { entryId: this.entryId, routeId, op });
+    if (res?.ok && op === "accept") ui.notifications.info(t(res.questId ? "Trade.AcceptedQuest" : "Trade.Accepted", { name: route?.name ?? "" }));
+  }
+
+  /** The GM signs an accepted route: the setup from the treasury, or waived. */
+  static async #onTradeSign(event, target) {
+    if (!game.user.isGM) return;
+    const routeId = target.closest("[data-route]")?.dataset.route;
+    const record = getRecord(getEntry(this.entryId));
+    const route = record?.tradeRoutes?.[routeId];
+    if (!route) return;
+    const from = await DialogV2.wait({
+      window: { title: t("Trade.Sign") },
+      content: `<p>${t("Trade.SignText", { name: escapeHTML(route.name), setup: gp(route.setup), treasury: gp(record.treasury ?? 0) })}</p>`,
+      buttons: [
+        { action: "treasury", label: t("Trade.SignTreasury"), icon: "fa-solid fa-coins", default: true },
+        { action: "free", label: t("Trade.SignFree"), icon: "fa-solid fa-gift" }
+      ],
+      rejectClose: false
+    });
+    if (!from) return;
+    const res = await BastionSheet.#run("signTradeRoute", { entryId: this.entryId, routeId, from });
+    if (res?.ok) ui.notifications.info(t("Trade.Signed", { name: route.name }));
+  }
+
+  /** The GM has a settlement ask for a route now. */
+  static async #onTradeRequest() {
+    if (!game.user.isGM) return;
+    const record = getRecord(getEntry(this.entryId));
+    const { tradeSettlements } = await import("../trade.js");
+    const { tradeCandidates } = await import("../core/trade.js");
+    const { TRADE_GOODS } = await import("../data/tables.js");
+    const list = tradeCandidates(record, tradeSettlements(record), { tradeMaxMiles: Infinity });
+    if (!list.length) return ui.notifications.warn(t("Trade.NoSettlement"));
+    const content = `<div class="dxpb-plan">
+      <label>${t("Trade.Settlement")}<select name="key">${list.map(s => `<option value="${escapeHTML(s.key)}">${escapeHTML(s.name)} (${s.distance} mi)</option>`).join("")}</select></label>
+      <label>${t("Trade.GoodsLabel")}<select name="goods"><option value="">${t("Trade.GoodsRandom")}</option>${Object.keys(TRADE_GOODS)
+        .map(k => `<option value="${k}">${t(`Trade.Goods.${k}`)}</option>`).join("")}</select></label>
+      <p class="dxpb-muted">${t("Trade.NewRequestHint")}</p></div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t("Trade.NewRequest") }, content,
+      ok: { label: t("Trade.NewRequest"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result?.key) return;
+    await BastionSheet.#run("requestTradeRoute", { entryId: this.entryId, key: result.key, goods: result.goods || undefined });
   }
 
   /** Gives one of the system's facilities an order (the system's own dialog). */

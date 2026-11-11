@@ -368,10 +368,43 @@
       "_key": "!journal.pages!CKr9AAk7RPrXJcqb.JqNnocpMEHS1npZr"
     },
     {
+      "_id": "ifgRKZxjD9wjXZKQ",
+      "name": "Trading Post",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "trading-post",
+        "category": "trade",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/trading-post.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/trading-post.webp",
+        "description": "<p>A counting house with a loading yard: clerks with ledgers, carters, and a wall map of every road the Bastion trades along.</p><p>A Trading Post handles three trade routes. A Bastion can build several, so the number of routes it keeps grows with them. Its clerks and carters live at the Bastion and need beds and food.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!CKr9AAk7RPrXJcqb.ifgRKZxjD9wjXZKQ"
+    },
+    {
       "_id": "VaGmCZTvY3bylEd1",
       "name": "Warehouse",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1200000,
+      "sort": 1300000,
       "title": {
         "show": false,
         "level": 1

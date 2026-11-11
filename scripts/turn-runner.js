@@ -1,3 +1,4 @@
+import { tradeSettlements, closeRouteQuest } from "./trade.js";
 import { MODULE_ID, rules, catalog, randomId, now, setting, t, gp, escapeHTML, formatGameTime, SECONDS_PER_DAY, clockMode } from "./util.js";
 import { getRecord, patchRecord, writeRecordKeys, ownerActors } from "./store.js";
 import { statsFor } from "./context.js";
@@ -13,7 +14,7 @@ import { describeOrder } from "./actions.js";
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
-  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison"];
+  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes"];
 
 /** When a Bastion's next turn is due, in game seconds. */
 export function turnDueTime(record) {
@@ -38,7 +39,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
     const { record: next, report } = advanceTurn(record, {
       stats, rules: rules(), catalog: catalog(), now: turnTime, days, rng: Math.random, newId: randomId,
       partyLevel: ctx.partyLevel, payAsYouBuild: !!setting("payAsYouBuild"), standingRule: setting("standingOrders") !== false,
-      skipProjects: restClock
+      skipProjects: restClock, settlements: tradeSettlements(record)
     });
     // With the long-rest clock the building work moved on with each rest; the turn starts the next count of rests.
     if (restClock) next.rests = { ...(next.rests ?? {}), sinceTurn: 0 };
@@ -54,6 +55,13 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
       Hooks.callAll(`${MODULE_ID}.merchantArrived`, entry, { ...report.merchant, stock });
     }
     if (report.visitor && report.visitor.key !== "nobody") Hooks.callAll(`${MODULE_ID}.visitorArrived`, entry, report.visitor);
+
+    // Trade routes: a settlement's new request; offers nobody came to sign lapse (their quest fails).
+    if (report.tradeRequest) Hooks.callAll(`${MODULE_ID}.tradeRouteRequested`, entry, report.tradeRequest);
+    for (const r of report.tradeLapsed ?? []) {
+      await closeRouteQuest(r, "failed");
+      Hooks.callAll(`${MODULE_ID}.tradeRouteEnded`, entry, { ...r, ended: "lapsed" });
+    }
 
     // The system's own facility advance (orders progress, crafted items, trade gold), with its own summary cards.
     const bastion = globalThis.dnd5e?.bastion;

@@ -12,7 +12,7 @@ The README stays short (intro, installation, links); the user guide, settings, A
 fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
-- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (71 expansions plus legacy wall entries,
+- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (72 expansions plus legacy wall entries,
   tiers, `levels()` / `MAX_LEVELS` for industries, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
   `rules.js` (every number, `mergeRules`), `grounds.js` (grounds sizes, footprint per expansion, wall layers),
   `map-style.js` (textures by terrain, floors and furnishings by building, wall-band crops).
@@ -137,6 +137,14 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - Food in a turn: `feedBastion` (core/turn.js) after upkeep and before the dividend: the shortfall is bought at
   `stats.food.buyPrice` (`rules.foodBuyGp` × the access's material factor); unfed people leave in `LEAVE_ORDER`
   (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.
+- Trade routes: pure rules in `core/trade.js` (`quoteRoute`, `rollTradeRequest`, `transitionRoute`, `advanceTrade`,
+  `routeCapacity` = `rules.tradeBaseRoutes` + fx.tradeRoutes); `record.tradeRoutes.<id>` (requested → accepted → active;
+  ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat` and food to `food.outside`; a turn
+  lapses offers past `deadline`, rolls raids (lost gold / food that turn) and maybe a request from `opts.settlements`
+  (`tradeSettlements`, scripts/trade.js: "home" + map notes near the marker). Actions `tradeRoute` (owners: accept,
+  decline, withdraw, cancel), `signTradeRoute` / `requestTradeRoute` (GM). Quest Log (`dxcufgbs-quest-log`, optional):
+  `createRouteQuest` on accept, `closeRouteQuest` completed on sign, failed on lapse / withdraw. Facilities page block
+  `page.routes` (`tradeRoutesPage`), rendered after the trade section (`data-section="routes"`).
 - Map art lives in `assets/map/tex` (tileable, 512 px, one tile = 4 squares unless `TILE_OVERRIDE`) and
   `assets/map/props` (transparent, cropped, back of the object at the top of the picture).
 

@@ -94,6 +94,7 @@ export function codexRows(type, ref) {
       ...(e.requires?.anyFeature?.length ? [e.requires.anyFeature.map(id => catalog().get(id)?.name ?? id).join(t("Codex.Or"))] : [])];
     if (needs.length) add("needs", needs.join(", "));
     if (e.once || e.unit === "flat") add("limit", t("Codex.OnlyOne"));
+    else if (e.unit === "each" && e.max) add("limit", t("Codex.UpTo", { n: e.max }));
     return rows;
   }
   const people = {
@@ -109,10 +110,17 @@ export function codexRows(type, ref) {
     refugees: () => add("limit", t("Codex.RefugeesLimit")),
     merchants: () => add("chance", t("Codex.MerchantChance", { a: R.merchantPerAccess, r: R.merchantPerRenown, cap: R.merchantCap })),
     guests: () => add("limit", t("Codex.GuestsLimit")),
-    visitors: () => add("limit", t("Codex.VisitorsLimit"))
+    visitors: () => add("limit", t("Codex.VisitorsLimit")),
+    caravans: () => {
+      add("income", t("Codex.RouteIncome", { v: gp(R.tradeIncome ?? 25) }));
+      add("food", t("Codex.RouteFood", { n: R.tradeFood ?? 12 }));
+      add("setup", t("Codex.RouteSetup", { n: R.tradeSetupTurns ?? 6 }));
+      add("risk", t("Codex.RouteRaid", { safe: R.tradeRaid?.safe ?? 0, frontier: R.tradeRaid?.frontier ?? 0, wild: R.tradeRaid?.wild ?? 0, hostile: R.tradeRaid?.hostile ?? 0 }));
+      add("limit", t("Codex.RouteLimit", { n: R.tradeBaseRoutes ?? 1 }));
+    }
   };
   people[ref]?.();
-  if (INHABITANTS[ref] && !["merchants", "guests", "visitors", "lieutenants"].includes(ref)) {
+  if (INHABITANTS[ref] && !["merchants", "guests", "visitors", "lieutenants", "caravans"].includes(ref)) {
     add("food", t("Codex.FoodEach", { n: R.foodPerPerson }));
   }
   return rows;

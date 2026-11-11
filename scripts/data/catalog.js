@@ -269,10 +269,12 @@ export const EXPANSIONS = [
       { label: "Mining company", cost: 20000, days: 200, effects: { incomeDice: "4d6*10", upkeep: 5, workers: 10 } }
     ], { incomeDice: "1d6*10", workers: 8 }),
     summary: "Ore or gems (gems pay double). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
+  { id: "trading-post", group: "trade", name: "Trading Post", unit: "each", max: 5, cost: 2000, days: 45,
+    effects: { tradeRoutes: 3, workers: 3 }, summary: "A counting house and loading yard: handles 3 trade routes. Build several for more." },
   { id: "trading-company", group: "trade", name: "Trading Company", unit: "flat", cost: 10000, days: 120,
-    requires: { features: ["market-square"], check: ["marketTier2", "access5"] }, effects: { income: 60, incomeAccess: true, merchantTier: 1 },
+    requires: { features: ["market-square"], check: ["marketTier2", "access5"] }, effects: { income: 60, incomeAccess: true, merchantTier: 1, tradeRoutes: 2 },
     tiers: [
-      { label: "Trading company", cost: 10000, days: 120, effects: { income: 60, incomeAccess: true, merchantTier: 1 } },
+      { label: "Trading company", cost: 10000, days: 120, effects: { income: 60, incomeAccess: true, merchantTier: 1, tradeRoutes: 2 } },
       { label: "Regional trading house", cost: 20000, days: 180, effects: { income: 120 } },
       { label: "Merchant princedom", cost: 40000, days: 240, effects: { income: 250, renown: 2 } }
     ],

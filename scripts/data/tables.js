@@ -71,6 +71,20 @@ export const MERCHANT_TIERS = [
 ];
 
 /** Visitors rolled every turn, weighted by stats (see core/visitors.js). */
+/**
+ * Trade-route goods. "coin" routes pay gold each turn, "food" routes deliver food every day (not in a siege).
+ * weight: how often a settlement offers them.
+ */
+export const TRADE_GOODS = {
+  grain: { label: "Grain", kind: "food", mult: 1, weight: 3 },
+  livestock: { label: "Livestock and salt meat", kind: "food", mult: 1.2, weight: 2 },
+  timber: { label: "Timber", kind: "coin", mult: 0.8, weight: 2 },
+  cloth: { label: "Wool and cloth", kind: "coin", mult: 1, weight: 3 },
+  wine: { label: "Wine and ale", kind: "coin", mult: 1.2, weight: 2 },
+  ore: { label: "Ore and metalwork", kind: "coin", mult: 1.3, weight: 1 },
+  spices: { label: "Spices and silk", kind: "coin", mult: 1.8, weight: 1 }
+};
+
 export const VISITORS = {
   nobody: { label: "Nobody of note", text: "A quiet week." },
   recruits: { label: "Recruits", text: "Would-be guards ask for work: up to 1d4 can be hired." },
