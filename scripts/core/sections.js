@@ -39,7 +39,7 @@ export function specialSlots(level, advancement = {}) {
 /**
  * Whether a character can take a special facility.
  * @param {{level:number, facilities:{type:string, subtype:string, name:string, free?:boolean}[]}} who
- * @param {{level?:number, subtype?:string, name:string}} item
+ * @param {{level?:number, subtype?:string, name:string, free?:boolean}} item  a free facility takes no slot
  * @returns {{ok:boolean, reason?:"level"|"slots"|"have", used:number, max:number}}
  */
 export function canTakeFacility(who, item, advancement = {}) {
@@ -50,6 +50,6 @@ export function canTakeFacility(who, item, advancement = {}) {
   if ((Number(item?.level) || 0) > (Number(who?.level) || 0)) return { ok: false, reason: "level", ...base };
   const same = f => (item.subtype && f.subtype === item.subtype) || f.name === item.name;
   if (special.some(same)) return { ok: false, reason: "have", ...base };
-  if (used >= max) return { ok: false, reason: "slots", ...base };
+  if (!item.free && used >= max) return { ok: false, reason: "slots", ...base };
   return { ok: true, ...base };
 }

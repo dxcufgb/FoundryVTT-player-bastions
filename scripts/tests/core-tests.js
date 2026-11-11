@@ -1294,6 +1294,8 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(canTakeFacility(full, smithy, adv).reason, "slots");
       full.facilities[1].free = true;
       assert.isTrue(canTakeFacility(full, smithy, adv).ok, "a free facility takes no slot");
+      assert.isTrue(canTakeFacility({ ...full, facilities: [full.facilities[0], { type: "special", subtype: "pub2", name: "Inn" }] },
+        { ...smithy, free: true }, adv).ok, "and a free one can be taken with no slot left");
     });
   });
   describe("Codex", () => {

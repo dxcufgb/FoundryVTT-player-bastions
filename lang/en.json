@@ -805,10 +805,12 @@
         "renown": "Renown",
         "crews": "Crews",
         "wards": "Wards"
-      }
+      },
+      "RoadPartial": "unfinished: {n} of {of} miles"
     },
     "SystemRules": {
       "Title": "The system's Bastion rules are off",
+      "TitleOn": "The system's Bastion rules are on",
       "Body": "The D&D 5e system's own Bastion rules are turned off in this world. Player Bastions works without them: every Bastion owner gets the Bastion tab on their character sheet, and the module runs the Bastion turns.",
       "TurnOn": "Turning them on also gives every character of level 5 or higher the system's Bastion tab, and adds \"Advance Bastion turn\" to group rests. The system's own Bastion turn button stays off: the module runs the turns.",
       "Enable": "Turn on",

@@ -186,10 +186,18 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
   /* ----- Cards ----- */
   const cards = Object.fromEntries(SECTIONS.map(s => [s, []]));
   const openOn = fid => Object.values(record.projects ?? {}).find(p => p.featureId === fid && !["complete", "cancelled"].includes(p.state));
+  // One road card: the best step that covers the whole way to the settlement (the road as it is); with none, the
+  // furthest-along partial step, shown as unfinished.
+  const routeMiles = Math.ceil(Number(record.location?.settlement?.distance) || 0);
+  const covers = f => (Number(f?.count) || 0) >= routeMiles;
   let road = null;
   for (const [fid, f] of Object.entries(record.features ?? {})) {
-    if (roadRank(C.get(f?.id)) > roadRank(C.get(road?.[1]?.id))) road = [fid, f];
+    const rank = roadRank(C.get(f?.id));
+    if (!rank) continue;
+    const better = !road || (covers(f) && !covers(road[1])) || (covers(f) === covers(road[1]) && rank > roadRank(C.get(road[1].id)));
+    if (better) road = [fid, f];
   }
+  const roadDone = road ? covers(road[1]) : false;
   const shownItems = new Set();
   for (const [fid, f] of Object.entries(record.features ?? {})) {
     const e = C.get(f?.id);
@@ -202,6 +210,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     const parts = [];
     if (f.size) parts.push(SIZE_LABELS[f.size] ?? f.size);
     if (e.tiers) parts.push(e.tiers[(f.tier ?? 1) - 1]?.label ?? "");
+    else if (e.effects?.roadTier && !roadDone) parts.push(t("Fac.RoadPartial", { n: f.count ?? 0, of: routeMiles }));
     else if (f.count > 1 && e.unit === "mile") parts.push(t("SheetTab.Miles", { n: f.count }));
     else if (f.count > 1 && e.unit === "square") parts.push(t("Fac.Squares", { n: f.count }));
     else if (f.count > 1 && e.unit === "each") parts.push(`× ${f.count}`);
@@ -218,7 +227,8 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       } else if (e.unit === "sized" && ENLARGE[f.size]) {
         upgrade = { tip: t("Fac.Up.Enlarge", { to: SIZE_LABELS[ENLARGE[f.size].to] }) };
       } else if (e.effects?.roadTier) {
-        const step = [...C.values()].find(x => !x.legacy && roadRank(x) === roadRank(e) + 1);
+        // An unfinished road is finished first; a finished one goes up a step.
+        const step = roadDone ? [...C.values()].find(x => !x.legacy && roadRank(x) === roadRank(e) + 1) : e;
         if (step && planProject(record, C, stats, R, { expansionId: step.id, count: miles(record) }, { id: "probe", now: 0 }).ok) {
           upgrade = { tip: t("Fac.Up.Road", { name: step.name }), id: step.id };
         }
@@ -227,7 +237,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     if (upgrade) upgrade.action = "upgradeAt";
     const fxv = featureEffects(e, f);
     // The road reads as what it is now (a trail, a road, a highway), not as the last step built.
-    const title = e.effects?.roadTier ? ROADS[e.effects.roadTier]?.label ?? e.name : e.name;
+    const title = e.effects?.roadTier && roadDone ? ROADS[e.effects.roadTier]?.label ?? e.name : e.name;
     cards[sectionOfExpansion(e)].push({ name: title, subtitle: parts.filter(Boolean).join(" · "), icon: SECTION_ICONS[sectionOfExpansion(e)],
       img: codexArt(MODULE_ID, e.id, true), fid, damaged: !!f.damaged, upgrade,
       repair: mine && f.damaged && !open, count: e.unit === "each" && f.count > 1 ? f.count : 0,
@@ -350,15 +360,15 @@ export async function systemFacilityCatalog({ record, isGM, actorId = null, filt
   const add = (uuid, name, img, sys) => {
     if (sys?.type?.value !== "special") return;
     const key = `${sys.type.subtype ?? ""}|${name}`;
-    if (!found.has(key)) found.set(key, { uuid, name, img, level: Number(sys.level) || 0, subtype: sys.type.subtype ?? "" });
+    if (!found.has(key)) found.set(key, { uuid, name, img, level: Number(sys.level) || 0, subtype: sys.type.subtype ?? "", free: !!sys.free });
   };
-  for (const i of game.items ?? []) if (i.type === "facility") add(i.uuid, i.name, i.img, i.system);
+  for (const i of game.items ?? []) if (i.type === "facility" && i.visible !== false) add(i.uuid, i.name, i.img, i.system);
   for (const pack of game.packs ?? []) {
     if (pack.documentName !== "Item" || pack.visible === false) continue;
     // The index Foundry loaded at start has every entry's type: only packs with facilities are asked for more fields.
     if (!pack.index?.some?.(e => e.type === "facility")) continue;
     try {
-      const index = await pack.getIndex({ fields: ["system.type", "system.level"] });
+      const index = await pack.getIndex({ fields: ["system.type", "system.level", "system.free"] });
       for (const e of index) if (e.type === "facility") add(e.uuid ?? `Compendium.${pack.collection}.Item.${e._id}`, e.name, e.img, e.system);
     } catch (err) {
       console.warn(`${MODULE_ID} | facility index of ${pack.collection}`, err);

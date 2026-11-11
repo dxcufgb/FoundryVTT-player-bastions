@@ -89,6 +89,7 @@ function registerSettings() {
 
 function refreshAll() {
   for (const app of BastionSheet.instances.values()) if (app.rendered) app.render();
+  for (const panel of BastionSheet.embeddedPanels) if (panel.rendered) panel.render();
   refreshDashboards();
 }
 
@@ -144,7 +145,11 @@ function registerUI() {
   if (canRender && !canRender.dxpbWrapped) {
     const wrapped = function (options) {
       const doc = this.document;
-      if (options?.force && !this.rendered && doc?.documentName === "JournalEntry" && isBastionEntry(doc)) {
+      // Only the journal's content sheet: its ownership and other configuration windows open as usual.
+      const JournalSheet = foundry.applications.sheets?.journal?.JournalEntrySheet;
+      const contentSheet = JournalSheet ? this instanceof JournalSheet
+        : !(this instanceof (foundry.applications.apps?.DocumentOwnershipConfig ?? class {}));
+      if (contentSheet && options?.force && !this.rendered && doc?.documentName === "JournalEntry" && isBastionEntry(doc)) {
         BastionSheet.open(doc.id);
         return false;
       }
@@ -482,6 +487,15 @@ Hooks.on("deleteJournalEntry", (entry) => {
   for (const panel of [...BastionSheet.embeddedPanels]) if (panel.entryId === entry.id) panel.close();
   refreshDashboards();
   refreshCharacterSheets();
+});
+
+// A group's members are its Bastion's owners: a change of members is a change of owners (sheets, stored names).
+Hooks.on("updateActor", (actor, changes) => {
+  if (actor.type !== "group" || !foundry.utils.hasProperty(changes, "system.members")) return;
+  const owned = allBastions().filter(e => getRecord(e).groupUuid === actor.uuid);
+  if (!owned.length) return;
+  refreshCharacterSheets();
+  if (isResponsibleGM()) for (const entry of owned) syncBastionNames(entry);
 });
 
 // Facility and actor changes (defenders, hirelings, gold) change the stats too.

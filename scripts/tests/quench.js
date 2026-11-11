@@ -31,7 +31,8 @@ export function registerQuench(quench) {
 
   quench.registerBatch(`${MODULE_ID}.integration`, (context) => {
     const { describe, it, assert, before, after } = context;
-    const made = { actors: [], scenes: [], entries: [], users: [] };
+    const made = { actors: [], scenes: [], entries: [], users: [], messages: [] };
+    let messageHook = null;
     let entryId;
     let group;
     let hero;
@@ -44,9 +45,9 @@ export function registerQuench(quench) {
     describe("Player Bastions inside Foundry", function () {
       this.timeout(120000);
 
-      let startedAt = 0;
       before(async () => {
-        startedAt = Date.now();
+        // The chat messages this client writes while the batch runs: only those are ever cleaned up.
+        messageHook = Hooks.on("createChatMessage", m => { if (m.author?.id === game.user.id) made.messages.push(m.id); });
         if (!game.user.isGM) throw new Error("Run as GM");
         for (const k of ["clock", "timePrompt", "buildPrice"]) saved[k] = game.settings.get(MODULE_ID, k);
         await game.settings.set(MODULE_ID, "clock", "calendar");
@@ -89,7 +90,8 @@ export function registerQuench(quench) {
         // Turn and event cards of the test Bastions, and every other card the batch wrote about its test documents.
         const msgs = game.messages.filter(m => m.getFlag(MODULE_ID, "turn")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "turn").entryId)
           || m.getFlag(MODULE_ID, "event")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "event").entryId)
-          || ((m.timestamp ?? 0) >= startedAt && String(m.content ?? "").includes(PREFIX)));
+          || (made.messages.includes(m.id) && String(m.content ?? "").includes(PREFIX)));
+        Hooks.off("createChatMessage", messageHook);
         if (msgs.length) await ChatMessage.deleteDocuments(msgs.map(m => m.id));
       });
 
@@ -165,15 +167,18 @@ export function registerQuench(quench) {
             panel().querySelector(`.dxpb-tabs [data-tab="${key}"]`).click();
             for (let i = 0; i < 40 && !panel()?.querySelector(`.dxpb-tab.active[data-tab="${key}"]`); i++) await new Promise(r => setTimeout(r, 50));
           };
-          await go("projects");
-          assert.ok(panel().querySelector(".dxpb-crews"), "the Projects page with its building crews");
-          const select = panel().querySelector("select");
-          if (select) {
-            assert.equal(select.getAttribute("form"), "dxpb-none", "the page's inputs belong to no form");
-            select.dispatchEvent(new Event("change", { bubbles: true }));
+          try {
+            await go("projects");
+            assert.ok(panel().querySelector(".dxpb-crews"), "the Projects page with its building crews");
+            const select = panel().querySelector("select");
+            if (select) {
+              assert.equal(select.getAttribute("form"), "dxpb-none", "the page's inputs belong to no form");
+              select.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            await new Promise(r => setTimeout(r, 400));
+          } finally {
+            Hooks.off("updateActor", hook);
           }
-          await new Promise(r => setTimeout(r, 400));
-          Hooks.off("updateActor", hook);
           assert.equal(updates, 0, "nothing on the page updates the character");
           await go("facilities");
           assert.notEqual(getComputedStyle(tab().querySelector(":scope > .description")).display, "none", "the system's description under the page");
@@ -184,12 +189,11 @@ export function registerQuench(quench) {
           for (let i = 0; i < 40 && !panel(); i++) await new Promise(r => setTimeout(r, 50));
           assert.equal(BastionTabPanel.panels.get(sheet.id), before, "the same page");
           assert.ok(panel()?.querySelector('.dxpb-tab.active[data-tab="facilities"]'), "on the same sub-tab");
-          // The pop-out opens the full window.
-          await go("stats");
+          // The pop-out opens the full window, on the same page (Facilities included).
           panel().querySelector("[data-action=popOut]").click();
           for (let i = 0; i < 40 && !BastionSheet.instances.get(entryId)?.rendered; i++) await new Promise(r => setTimeout(r, 50));
           assert.ok(BastionSheet.instances.get(entryId)?.rendered, "the Bastion window");
-          assert.equal(BastionSheet.instances.get(entryId).tab, "stats");
+          assert.equal(BastionSheet.instances.get(entryId).tab, "facilities");
           await BastionSheet.instances.get(entryId).close();
         } finally {
           await sheet.close();
@@ -311,13 +315,14 @@ export function registerQuench(quench) {
       });
 
       it("the world's dnd5e special facilities can be added from the Projects page, by level and free slots", async () => {
-        const [cls] = await hero.createEmbeddedDocuments("Item", [{ name: `${PREFIX} Fighter`, type: "class", system: { identifier: "fighter", levels: 5 } }]);
-        const smithy = await Item.create({ name: `${PREFIX} Smithy`, type: "facility",
-          system: { type: { value: "special", subtype: "smithy" }, level: 5, size: "roomy" } });
-        const vault = await Item.create({ name: `${PREFIX} Demiplane`, type: "facility",
-          system: { type: { value: "special", subtype: "demiplane" }, level: 17, size: "roomy" } });
-        const app = BastionSheet.open(entryId, { tab: "projects" });
+        let cls = null, smithy = null, vault = null, app = null;
         try {
+          [cls] = await hero.createEmbeddedDocuments("Item", [{ name: `${PREFIX} Fighter`, type: "class", system: { identifier: "fighter", levels: 5 } }]);
+          smithy = await Item.create({ name: `${PREFIX} Smithy`, type: "facility",
+            system: { type: { value: "special", subtype: "smithy" }, level: 5, size: "roomy" } });
+          vault = await Item.create({ name: `${PREFIX} Demiplane`, type: "facility",
+            system: { type: { value: "special", subtype: "demiplane" }, level: 17, size: "roomy" } });
+          app = BastionSheet.open(entryId, { tab: "projects" });
           await app.render({ force: true });
           const row = id => app.element.querySelector(`.dxpb-system-facility[data-uuid="${id}"]`);
           assert.ok(row(smithy.uuid), "listed in the catalog");
@@ -337,12 +342,15 @@ export function registerQuench(quench) {
           await app.render();
           const titles = [...app.element.querySelectorAll('[data-section="trade"] .dxpb-fac .title')].map(x => x.textContent.trim());
           assert.include(titles, `${PREFIX} Smithy`, "a smithy is trade and crafting");
+          // Never from another actor's sheet, even a special facility (only world and compendium items).
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: added.uuid, actorId: ally.id }, game.user);
+          assert.isFalse(res.ok, "an item on an actor is no catalog source");
           await added.delete();
         } finally {
-          await app.close();
-          await smithy.delete();
-          await vault.delete();
-          await cls.delete();
+          await app?.close();
+          await smithy?.delete();
+          await vault?.delete();
+          await cls?.delete();
         }
       });
 

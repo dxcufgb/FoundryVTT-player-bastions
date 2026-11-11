@@ -1,4 +1,4 @@
-import { MODULE_ID, t, isResponsibleGM } from "./util.js";
+import { MODULE_ID, t, isResponsibleGM, escapeHTML } from "./util.js";
 
 /**
  * The dnd5e system's own Bastion rules (System Settings → Bastions) can be off in a world. The module works without
@@ -23,13 +23,15 @@ export function registerSystemRulesSetting() {
 }
 
 function cardHTML(state = "ask") {
-  const head = `<h3><i class="fa-solid fa-chess-rook"></i> ${t("SystemRules.Title")}</h3>`;
-  if (state === "enabled") return `<div class="dxpb-card dxpb-system-rules">${head}<p>${t("SystemRules.Enabled")}</p></div>`;
-  if (state === "dismissed") return `<div class="dxpb-card dxpb-system-rules">${head}<p>${t("SystemRules.Dismissed")}</p></div>`;
-  return `<div class="dxpb-card dxpb-system-rules">${head}<p>${t("SystemRules.Body")}</p><p>${t("SystemRules.TurnOn")}</p>
+  const e = key => escapeHTML(t(key));
+  const title = state === "enabled" ? e("SystemRules.TitleOn") : e("SystemRules.Title");
+  const head = `<h3><i class="fa-solid fa-chess-rook"></i> ${title}</h3>`;
+  if (state === "enabled") return `<div class="dxpb-card dxpb-system-rules">${head}<p>${e("SystemRules.Enabled")}</p></div>`;
+  if (state === "dismissed") return `<div class="dxpb-card dxpb-system-rules">${head}<p>${e("SystemRules.Dismissed")}</p></div>`;
+  return `<div class="dxpb-card dxpb-system-rules">${head}<p>${e("SystemRules.Body")}</p><p>${e("SystemRules.TurnOn")}</p>
     <div class="dxpb-button-row">
-      <button type="button" data-dxpb-system-rules="enable"><i class="fa-solid fa-toggle-on"></i> ${t("SystemRules.Enable")}</button>
-      <button type="button" data-dxpb-system-rules="dismiss"><i class="fa-solid fa-xmark"></i> ${t("SystemRules.Keep")}</button>
+      <button type="button" data-dxpb-system-rules="enable"><i class="fa-solid fa-toggle-on"></i> ${e("SystemRules.Enable")}</button>
+      <button type="button" data-dxpb-system-rules="dismiss"><i class="fa-solid fa-xmark"></i> ${e("SystemRules.Keep")}</button>
     </div></div>`;
 }
 

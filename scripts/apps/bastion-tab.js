@@ -207,18 +207,55 @@ export function registerBastionTab() {
   });
 }
 
+/** Name synchronisation, one at a time per Bastion; the owners and name each Bastion last wrote (responsible GM). */
+const nameQueue = new Map();
+const lastNamed = new Map();
+
 /**
  * The system's Bastion name of every owner follows this module's Bastion name (GM, on ready and on changes), so the
- * name reads the same wherever the system shows it.
+ * name reads the same wherever the system shows it. Runs one at a time per Bastion and reads the record when its turn
+ * comes, so an older sync never finishes last. A character who left the Bastion loses the name it had put there (unless
+ * another Bastion now owns it: that one's sync writes its own name).
  */
-export async function syncBastionNames(entry) {
-  const record = getRecord(entry);
-  if (!record?.name) return;
-  const { ownerActors } = await import("../store.js");
-  for (const actor of ownerActors(record)) {
-    if (actor.type !== "character" || !actor.system?.bastion) continue;
-    if (bastionForActor(actor)?.id !== entry.id) continue;
-    if (actor.system.bastion.name === record.name) continue;
-    await actor.update({ "system.bastion.name": record.name });
+export function syncBastionNames(entry) {
+  const id = entry?.id;
+  if (!id) return Promise.resolve();
+  const run = (nameQueue.get(id) ?? Promise.resolve()).then(() => syncNow(id)).catch(err => console.error(err));
+  nameQueue.set(id, run);
+  run.finally(() => { if (nameQueue.get(id) === run) nameQueue.delete(id); });
+  return run;
+}
+
+async function syncNow(id) {
+  const { getEntry, ownerActors } = await import("../store.js");
+  const entry = getEntry(id);
+  const record = entry ? getRecord(entry) : null;
+  const before = lastNamed.get(id);
+  const current = new Set();
+  if (record?.name) {
+    for (const actor of ownerActors(record)) {
+      if (actor.type !== "character" || !actor.system?.bastion) continue;
+      if (bastionForActor(actor)?.id !== id) continue;
+      current.add(actor.id);
+      if (actor.system.bastion.name !== record.name) await actor.update({ "system.bastion.name": record.name });
+    }
   }
+  // Former owners: clear the name this Bastion wrote, if it's still there and no other Bastion has them now.
+  for (const actorId of before?.actors ?? []) {
+    if (current.has(actorId)) continue;
+    const actor = game.actors.get(actorId);
+    if (!actor?.system?.bastion) continue;
+    const other = bastionForActor(actor);
+    if (other) { if (other.id !== id) syncBastionNames(other); continue; }
+    if (actor.system.bastion.name === before.name) await actor.update({ "system.bastion.name": "" });
+  }
+  if (record?.name) lastNamed.set(id, { name: record.name, actors: [...current] });
+  else lastNamed.delete(id);
+}
+
+/** Forget a deleted Bastion, clearing its name from everyone it named (responsible GM). */
+export function forgetBastionNames(entryId, name) {
+  const before = lastNamed.get(entryId);
+  lastNamed.delete(entryId);
+  return { name: before?.name ?? name, actors: before?.actors ?? [] };
 }

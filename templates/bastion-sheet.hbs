@@ -4,7 +4,7 @@
 {{else}}
   <nav class="dxpb-tabs">
     {{#each tabs}}<a class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}">{{label}}</a>{{/each}}
-    {{#if embedded}}<a class="dxpb-popout" data-action="popOut" data-tooltip="{{localize 'DXPB.PopOut'}}" aria-label="{{localize 'DXPB.PopOut'}}"><i class="fa-solid fa-arrow-up-right-from-square" inert></i></a>{{/if}}
+    {{#if embedded}}<button type="button" class="dxpb-linkbtn dxpb-popout" data-action="popOut" data-tooltip="{{localize 'DXPB.PopOut'}}" aria-label="{{localize 'DXPB.PopOut'}}"><i class="fa-solid fa-arrow-up-right-from-square" inert></i></button>{{/if}}
   </nav>
   <section class="dxpb-tab-body">
 
@@ -140,14 +140,14 @@
         <li class="dxpb-def" data-defenders="{{key}}" {{#if codex}}data-codex="{{codex}}"{{/if}}>
           {{#if img}}<img class="dxpb-def-img" src="{{img}}" alt="">{{else}}<span class="dxpb-def-img dxpb-def-icon"><i class="fa-solid {{icon}}" inert></i></span>{{/if}}
           <span class="dxpb-def-main">
-            <a class="dxpb-def-name" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{label}}</strong><span class="subtitle dxpb-muted">{{note}}</span></a>
+            <button type="button" class="dxpb-linkbtn dxpb-def-name" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{label}}</strong><span class="subtitle dxpb-muted">{{note}}</span></button>
             <span class="dxpb-fac-slots">
               {{#each portraits}}<img class="dxpb-def-portrait" src="{{img}}" alt="{{name}}" data-tooltip="{{name}}" data-action="openFacility" data-uuid="{{uuid}}">{{/each}}
               {{#if tab}}{{#if @root.mine}}<button type="button" class="dxpb-def-hire" data-action="dxpbTab" data-tab="{{tab}}" data-tooltip="{{localize 'DXPB.Fac.Def.Manage'}}" aria-label="{{localize 'DXPB.Fac.Def.Manage'}}"><i class="fa-solid fa-user-plus" inert></i></button>{{/if}}{{/if}}
             </span>
           </span>
           {{#each cells}}<span class="dxpb-cell" {{#if @first}}data-count="{{../count}}"{{/if}}>{{value}}</span>{{/each}}
-          <a class="dxpb-def-go" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}" aria-label="{{localize 'DXPB.Codex.Open'}}"><i class="fa-solid fa-chevron-right" inert></i></a>
+          <button type="button" class="dxpb-linkbtn dxpb-def-go" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}" aria-label="{{localize 'DXPB.Codex.Open'}}"><i class="fa-solid fa-chevron-right" inert></i></button>
         </li>
         {{/each}}
         <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each page.defenders.totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>

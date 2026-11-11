@@ -675,7 +675,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** From a character sheet's Bastion tab: the same page in a window of its own. */
   static #onPopOut() {
-    BastionSheet.open(this.entryId, { tab: this.tab === "facilities" ? "overview" : this.tab });
+    BastionSheet.open(this.entryId, { tab: this.tab });
   }
 
   /** The party's build queue: add, remove, up, down (data-op) for the project on this row. */

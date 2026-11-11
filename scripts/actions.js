@@ -1,6 +1,6 @@
 import { MODULE_ID, rules, catalog, randomId, now, setting, t, SECONDS_PER_DAY, gp, escapeHTML, bastionNow } from "./util.js";
 import { payFromPurse } from "./core/coins.js";
-import { getEntry, getRecord, patchRecord, createBastionEntry, canAct, ownerActors, ownershipFor } from "./store.js";
+import { getEntry, getRecord, patchRecord, createBastionEntry, canAct, ownerActors, ownershipFor, bastionForActor } from "./store.js";
 import { statsFor } from "./context.js";
 import { createRecord } from "./core/record.js";
 import { planProject as corePlan, fund as coreFund, transition, cancelRefund } from "./core/projects.js";
@@ -133,8 +133,15 @@ export const ACTIONS = {
       if (ids.length) await actor.deleteEmbeddedDocuments("Item", ids);
     }
     Hooks.callAll(`${MODULE_ID}.bastionDeleted`, { entryId: entry.id, name: record.name });
-    // The owners' system Bastion name showed this Bastion's name: clear it again.
-    for (const actor of ownerActors(record)) {
+    // The owners' (and former owners') system Bastion name showed this Bastion's name: clear it again, unless another
+    // Bastion has them now.
+    const { forgetBastionNames } = await import("./apps/bastion-tab.js");
+    const named = forgetBastionNames(entry.id, record.name);
+    const actors = new Map(ownerActors(record).map(a => [a.id, a]));
+    for (const id of named.actors) if (!actors.has(id) && game.actors.get(id)) actors.set(id, game.actors.get(id));
+    for (const actor of actors.values()) {
+      const other = bastionForActor(actor);
+      if (other && other.id !== entry.id) continue;
       if (actor.type === "character" && actor.system?.bastion?.name === record.name) await actor.update({ "system.bastion.name": "" });
     }
     await entry.delete();
@@ -271,12 +278,20 @@ export const ACTIONS = {
     const { record } = load(entryId);
     ownerOnly(record, user);
     const actor = actorFor(record, actorId, user);
+    // Only a catalog source the sender can see: a world item or an item in a compendium, never one on an actor.
+    if (typeof uuid !== "string") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    const parsed = foundry.utils.parseUuid(uuid);
+    const pack = uuid.startsWith("Compendium.") ? game.packs.get(parsed?.collection?.collection ?? "") ?? null : null;
+    if (uuid.startsWith("Compendium.") && !pack) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (!parsed || parsed.embedded?.length || parsed.documentType !== "Item") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (pack && !pack.testUserPermission(user, "OBSERVER")) return { ok: false, reason: t("Fac.Need.NotFacility") };
     const item = await fromUuid(uuid);
-    if (item?.type !== "facility" || item.system?.type?.value !== "special") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (item?.type !== "facility" || item.system?.type?.value !== "special" || item.parent) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (!pack && !item.testUserPermission(user, "LIMITED")) return { ok: false, reason: t("Fac.Need.NotFacility") };
     const level = actor.system?.details?.level ?? 0;
     const facilities = (actor.itemTypes?.facility ?? []).map(i => ({ type: i.system.type?.value, subtype: i.system.type?.subtype,
       name: i.name, free: !!i.system.free }));
-    const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level },
+    const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level, free: !!item.system.free },
       CONFIG.DND5E?.facilities?.advancement?.special ?? {});
     if (!check.ok) {
       const reason = check.reason === "level" ? t("Fac.Need.Level", { level: item.system.level })

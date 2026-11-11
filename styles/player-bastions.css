@@ -246,6 +246,12 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-def-img { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; object-position: center 40%; border: 1px solid var(--dxpb-gold); }
 .dxpb-def-icon { display: grid; place-content: center; color: var(--dxpb-gold); font-size: 16px; }
 .dxpb-def-main { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+/* A button that looks like the text it holds (keyboard-reachable rows, chevrons, the pop-out arrow). */
+.dxpb button.dxpb-linkbtn, .dxpb-root button.dxpb-linkbtn { background: none; border: none; box-shadow: none; padding: 0; margin: 0;
+  width: auto; height: auto; min-height: 0; font: inherit; line-height: inherit; color: inherit; text-align: left; cursor: pointer; }
+.dxpb-root button.dxpb-linkbtn:focus-visible { outline: 2px solid var(--dxpb-gold); outline-offset: 1px; border-radius: 3px; }
+.dxpb-root button.dxpb-def-go { color: var(--dxpb-gold); text-align: center; }
+.dxpb-root button.dxpb-popout { color: var(--color-text-tertiary, inherit); }
 .dxpb-def-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; color: inherit; cursor: pointer; }
 .dxpb-def-name .title, .dxpb-def-name .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dxpb-def-portrait { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
