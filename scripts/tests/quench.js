@@ -148,9 +148,11 @@ export function registerQuench(quench) {
           assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"]);
           // Our clicks and changes stay ours: the character isn't updated and the sheet isn't submitted.
           let updates = 0;
-          // The system Bastion name the GM keeps in step with the Bastion's (syncBastionNames) may land late: it isn't the page.
+          // The system Bastion name the GM keeps in step with the Bastion's (syncBastionNames) may land late, and other
+          // modules write their own flags on a new character: neither is the page.
           const hook = Hooks.on("updateActor", (a, changes) => {
-            const keys = Object.keys(foundry.utils.flattenObject(changes ?? {})).filter(k => !k.startsWith("_") && k !== "system.bastion.name");
+            const keys = Object.keys(foundry.utils.flattenObject(changes ?? {})).filter(k => !k.startsWith("_") && k !== "system.bastion.name"
+              && !(k.startsWith("flags.") && !k.startsWith(`flags.${MODULE_ID}.`)));
             if (a.id === hero.id && keys.length) { updates++; console.warn("dxpb test: hero updated", keys); }
           });
           const go = async key => {
