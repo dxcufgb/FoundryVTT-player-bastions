@@ -330,6 +330,17 @@ export function registerQuench(quench) {
         assert.deepEqual(missing, [], "every painting and icon is in the module");
       });
 
+      /** Gives the test Bastion a Trading Post (trade routes need one) unless it has one; remove() undoes it. */
+      async function addTradingPost() {
+        const { patchRecord } = await import("../store.js");
+        const has = Object.values(getRecord(getEntry(entryId)).features ?? {}).some(f => f?.id === "trading-post");
+        if (has) return { added: false, remove: async () => {} };
+        const fid = `qtp${Date.now().toString(36)}`;
+        const feature = { id: "trading-post", count: 1, label: "Trading Post" };
+        await patchRecord(getEntry(entryId), { [`features.${fid}`]: feature });
+        return { added: true, fid, feature, remove: async () => patchRecord(getEntry(entryId), { [`features.${fid}`]: undefined }) };
+      }
+
       it("trade routes: a settlement asks, the owners accept (a Quest Log quest), the GM signs, the route pays, then is cancelled", async () => {
         const { patchRecord } = await import("../store.js");
         const { tradeSettlements, questLog } = await import("../trade.js");
@@ -337,12 +348,21 @@ export function registerQuench(quench) {
         const gold = getRecord(entry()).treasury ?? 0;
         const home = tradeSettlements(getRecord(entry())).find(s => s.key === "home");
         assert.ok(home, "the Bastion's own settlement can ask");
-        let res = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
-        assert.isTrue(res.ok, res.reason);
-        const id = res.routeId;
+        const post = await addTradingPost();
+        let id = null;
         const route = () => getRecord(entry()).tradeRoutes?.[id];
         let questId = null;
         try {
+          if (post.added) {
+            await patchRecord(entry(), { [`features.${post.fid}`]: undefined });
+            const no = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
+            assert.isFalse(no.ok, "no Trading Post, no trade routes");
+            assert.equal(no.reason, t("Trade.NeedPost"));
+            await patchRecord(entry(), { [`features.${post.fid}`]: post.feature });
+          }
+          let res = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          id = res.routeId;
           assert.equal(route().state, "requested");
           assert.equal(route().kind, "coin");
           const app = BastionSheet.open(entryId, { tab: "routes" });
@@ -375,8 +395,9 @@ export function registerQuench(quench) {
           assert.isTrue(res.ok, res.reason);
           assert.notOk(route(), "a cancelled route is gone");
         } finally {
-          if (route()) await patchRecord(entry(), { [`tradeRoutes.${id}`]: undefined });
+          if (id && route()) await patchRecord(entry(), { [`tradeRoutes.${id}`]: undefined });
           await patchRecord(entry(), { treasury: gold });
+          await post.remove();
           // The quest this test made in the Quest Log's store.
           if (questId) {
             const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${questId}`));
@@ -391,7 +412,8 @@ export function registerQuench(quench) {
         let res = await ACTIONS.saveSettlement({ entryId, settlement: { name: `${PREFIX} Port`, distance: 240, size: "city" } }, game.user);
         assert.isTrue(res.ok, res.reason);
         const sid = res.id;
-        let routeId = null, questId = null;
+        let routeId = null, questId = null, routeId2 = null, questId2 = null;
+        const post = await addTradingPost();
         try {
           assert.deepEqual(getRecord(entry()).settlements[sid], { id: sid, name: `${PREFIX} Port`, distance: 240, size: "city" });
           const app = BastionSheet.open(entryId, { tab: "routes" });
@@ -415,18 +437,26 @@ export function registerQuench(quench) {
           assert.equal(route.size, "city");
           assert.isTrue(route.proposed);
           res = await ACTIONS.proposeTradeRoute({ entryId, key: `gm:${sid}`, goods: "wine" }, game.user);
-          assert.isFalse(res.ok, "one route per settlement");
+          assert.isTrue(res.ok, "a city holds several routes");
+          routeId2 = res.routeId;
+          questId2 = res.questId;
+          const app2 = BastionSheet.open(entryId, { tab: "routes" });
+          await app2.render({ force: true });
+          assert.include(app2.element.querySelector(`.dxpb-place[data-key="gm:${sid}"]`)?.textContent ?? "", t("Trade.PlaceRoutes", { n: 2, max: 12 }));
+          await app2.close();
           res = await ACTIONS.removeSettlement({ entryId, id: sid }, game.user);
           assert.isTrue(res.ok);
           assert.notOk(getRecord(entry()).settlements?.[sid]);
           assert.ok(getRecord(entry()).tradeRoutes[routeId], "the route goes on");
         } finally {
           if (getRecord(entry()).settlements?.[sid]) await patchRecord(entry(), { [`settlements.${sid}`]: undefined });
-          if (routeId) await patchRecord(entry(), { [`tradeRoutes.${routeId}`]: undefined });
-          if (questId) {
-            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${questId}`));
-            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${questId}`]: null });
+          for (const r of [routeId, routeId2]) if (r) await patchRecord(entry(), { [`tradeRoutes.${r}`]: undefined });
+          for (const q of [questId, questId2]) {
+            if (!q) continue;
+            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${q}`));
+            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${q}`]: null });
           }
+          await post.remove();
         }
       });
 

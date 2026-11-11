@@ -7,6 +7,7 @@
  * A route lives in record.tradeRoutes.<id>:
  *   { id, key, name, distance, size, goods, kind: "coin" | "food", income, food, cost, setup,
  *     state: "requested" | "accepted" | "active", requestedTurn, deadline, signedTurn, questId, raidedTurn }
+ * Routes need a Trading Post (routeCapacity); one settlement holds several (ROUTES_PER_SETTLEMENT by size).
  * A settlement asks (rollTradeRequest, in the turn), the owners accept or decline, the party travels there and the GM
  * signs (setup paid from the treasury), and from then on the route pays every turn until it is cancelled. A request
  * (accepted or not) that isn't signed by its deadline lapses. Ended routes are removed from the record.
@@ -28,9 +29,33 @@ export function routesOf(record, states = OPEN_STATES) {
   return Object.values(record?.tradeRoutes ?? {}).filter(r => r && states.includes(r.state));
 }
 
-/** Routes the Bastion can hold: a base, plus every trading building's share (stats fx.tradeRoutes). */
+/**
+ * Routes the Bastion can hold: none until a Trading Post stands (fx.tradePosts); then rules.tradeBaseRoutes plus every
+ * trading building's share (fx.tradeRoutes).
+ */
 export function routeCapacity(fx, rules) {
-  return Math.max(0, (rules?.tradeBaseRoutes ?? 1) + (Number(fx?.tradeRoutes) || 0));
+  if (!((Number(fx?.tradePosts) || 0) > 0)) return 0;
+  return Math.max(0, (rules?.tradeBaseRoutes ?? 0) + (Number(fx?.tradeRoutes) || 0));
+}
+
+/** How many routes one settlement holds at once, by its size. */
+export const ROUTES_PER_SETTLEMENT = { hamlet: 3, village: 6, town: 9, city: 12, metropolis: 15 };
+
+/** The open routes (requested, accepted or active) with one settlement. */
+export function routesWith(record, key) {
+  return routesOf(record).filter(r => r.key === key);
+}
+
+/**
+ * Room for more routes with a settlement: { size, max, used, free }. A map note has no size until a route to it
+ * rolls one; later routes keep that size (a note never asked counts as a village).
+ */
+export function settlementRoom(record, settlement, rules) {
+  const used = routesWith(record, settlement?.key);
+  const size = TRADE_SIZES[settlement?.size] ? settlement.size : (used.find(r => TRADE_SIZES[r.size])?.size ?? null);
+  const table = rules?.tradeRoutesPerSettlement ?? ROUTES_PER_SETTLEMENT;
+  const max = Math.max(1, Math.floor(Number(table[size ?? "village"] ?? ROUTES_PER_SETTLEMENT[size ?? "village"]) || 1));
+  return { size, max, used: used.length, free: Math.max(0, max - used.length) };
 }
 
 /**
@@ -93,12 +118,20 @@ export function cleanSettlement(raw, id) {
     size: TRADE_SIZES[raw?.size] ? raw.size : "village" };
 }
 
-/** Settlements that can still ask: within reach, and without an open route or request. */
+/**
+ * Settlements that can still ask: within reach, and with room for another route (settlementRoom). A map note that a
+ * route already went to keeps the size that route rolled.
+ */
 export function tradeCandidates(record, settlements, rules) {
-  const taken = new Set(routesOf(record).map(r => r.key));
   const max = rules?.tradeMaxMiles ?? 150;
-  // The GM's own list is always in reach: the GM put it there.
-  return (settlements ?? []).filter(s => s?.key && !taken.has(s.key) && (s.source === "gm" || (Number(s.distance) || 0) <= max));
+  const out = [];
+  for (const s of settlements ?? []) {
+    // The GM's own list is always in reach: the GM put it there.
+    if (!s?.key || (s.source !== "gm" && (Number(s.distance) || 0) > max)) continue;
+    const room = settlementRoom(record, s, rules);
+    if (room.free > 0) out.push(room.size && !s.size ? { ...s, size: room.size } : s);
+  }
+  return out;
 }
 
 /** The chance (%) a settlement asks for a route this turn. */
@@ -129,6 +162,8 @@ export function makeRequest(settlement, stats, rules, { rng = Math.random, turn 
 /** A turn's roll for a request: at most rules.tradeMaxOpen requests waiting at once. */
 export function rollTradeRequest(record, stats, rules, settlements, { rng = Math.random, turn = 0, id } = {}) {
   if (record?.siege) return null;
+  // No Trading Post, no trade: nobody asks.
+  if ((stats?.trade?.capacity ?? routeCapacity(stats?.fx, rules)) <= 0) return null;
   const waiting = routesOf(record, ["requested", "accepted"]).length;
   if (waiting >= (rules?.tradeMaxOpen ?? 2)) return null;
   const candidates = tradeCandidates(record, settlements, rules);

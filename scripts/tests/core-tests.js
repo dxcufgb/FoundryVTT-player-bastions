@@ -20,7 +20,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility, mergeSameKind } from "../core/sections.js";
-import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance } from "../core/trade.js";
+import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity } from "../core/trade.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -1355,14 +1355,32 @@ export function registerCoreTests({ describe, it, assert }) {
       rec.location.resources = ["stone"];
       rec.features.q = { id: "quarry", tier: 3 };
       const s = stats(rec);
-      assert.equal(s.people.workers, 8 + 8 + 6);
-      assert.equal(s.population, before.population + 22);
-      assert.equal(s.food.perDay, before.food.perDay + 22);
+      assert.equal(s.people.workers, 6 + 6 + 5);
+      assert.equal(s.population, before.population + 17);
+      assert.equal(s.food.perDay, before.food.perDay + 17);
+      assert.equal(s.economy.upkeep - before.economy.upkeep, 17 * rules.workerWage, "the workers' wages");
       const full = s.economy.incomeFlat;
-      rec.people = { ...(rec.people ?? {}), workersAway: 11 };
-      const half = stats(rec);
-      assert.equal(half.people.workers, 11);
-      assert.equal(full - half.economy.incomeFlat, Math.round(52 - 52 / 2), "the quarry earns half");
+      rec.people = { ...(rec.people ?? {}), workersAway: 8 };
+      const short = stats(rec);
+      assert.equal(short.people.workers, 9);
+      assert.equal(full - short.economy.incomeFlat, 70 - Math.round(70 * 9 / 17), "the quarry earns its share of the workers still there");
+      assert.equal(short.economy.upkeep - before.economy.upkeep, 9 * rules.workerWage, "only the workers there are paid");
+    });
+    it("buildings with workers pay their way from level 3: income beats wages, the workers' food at the dearest price and upkeep", () => {
+      const dearest = Math.max(...rules.access.map(r => r.material)) * rules.foodBuyGp;
+      const perWorker = rules.workerWage + rules.foodPerPerson * rules.turnDays * dearest;
+      const withWorkers = [...catalog.values()].filter(e => !e.legacy && (e.tiers ?? [{ effects: e.effects }]).some(t => t.effects?.workers));
+      for (const id of ["brewery", "merchant-charter", "quarry", "mine", "hunters-guild", "trading-post"]) assert.include(withWorkers.map(e => e.id), id);
+      for (const e of withWorkers) {
+        const top = e.tiers?.length ?? 1;
+        for (let tier = Math.min(3, top); tier <= top; tier++) {
+          const fx = featureEffects(e, { id: e.id, tier, count: 1 });
+          const dice = String(fx.incomeDice ?? "").split("+").filter(Boolean).reduce((n, f) => n + averageFormula(f), 0);
+          const income = (fx.income ?? 0) + dice;
+          const cost = (fx.workers ?? 0) * perWorker + (fx.upkeep ?? 0);
+          assert.ok(income > cost, `${e.id} level ${tier}: ${income} GP in, ${cost.toFixed(1)} GP out`);
+        }
+      }
     });
     it("a shortfall is bought from the treasury; when the gold runs out, outsiders leave first, then servants, workers and guards", () => {
       const rec = workedExampleRecord();
@@ -1441,7 +1459,7 @@ export function registerCoreTests({ describe, it, assert }) {
       const rec = workedExampleRecord();
       assert.isFalse(prerequisites(rec, exp("fishery"), catalog, stats(rec)).ok);
       rec.features.gh = { id: "greenhouse", tier: 3 };
-      assert.equal(stats(rec).food.inside - stats(workedExampleRecord()).food.inside, 65);
+      assert.equal(stats(rec).food.inside - stats(workedExampleRecord()).food.inside, 30 + 30 + 38, "20, 20 and 25 a day, half as much again");
     });
   });
   describe("Trade routes", () => {
@@ -1461,8 +1479,10 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(grain.cost, 40, "the Bastion pays for its grain: 48 a day × 7 × 0.2 GP × 0.6, to the nearest 5");
       assert.ok(grain.cost < grain.food * 7 * 0.2, "less than food bought in a hurry");
     });
-    it("settlements ask now and then; never twice at once, never beyond reach, never in a siege", () => {
+    it("settlements ask now and then (with a Trading Post); never more than two waiting, never beyond reach, never in a siege", () => {
       const rec = workedExampleRecord();
+      assert.equal(rollTradeRequest(rec, stats(rec), rules, towns, { rng: () => 0, turn: 4, id: "r0" }), null, "no Trading Post, nobody asks");
+      rec.features.tp = { id: "trading-post", count: 1 };
       const s = stats(rec);
       assert.deepEqual(tradeCandidates(rec, towns, rules).map(x => x.key), ["a", "b"]);
       const chance = requestChance(s, rules);
@@ -1473,7 +1493,7 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(req.deadline, 4 + rules.tradeRequestTurns);
       assert.equal(rollTradeRequest(rec, s, rules, towns, { rng: () => 0.99, turn: 4, id: "r2" }), null, "the roll failed");
       rec.tradeRoutes = { r1: req };
-      assert.deepEqual(tradeCandidates(rec, towns, rules).map(x => x.key), ["b"], "one route per settlement");
+      assert.deepEqual(tradeCandidates(rec, towns, rules).map(x => x.key), ["a", "b"], "a town holds several routes");
       rec.tradeRoutes.r2 = { ...req, id: "r2", key: "b" };
       assert.equal(rollTradeRequest(rec, s, rules, towns, { rng: () => 0, turn: 4, id: "r3" }), null, "two waiting already");
       assert.equal(rollTradeRequest({ ...workedExampleRecord(), siege: { day: 1 } }, s, rules, towns, { rng: () => 0, id: "r4" }), null);
@@ -1491,15 +1511,30 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(out.lapsed.length, 1);
       assert.deepEqual(rec.tradeRoutes, {});
     });
-    it("the Bastion holds one route, three more per Trading Post and two with a Trading Company", () => {
+    it("no routes without a Trading Post; three per Trading Post and two more with a Trading Company", () => {
       const rec = workedExampleRecord();
-      assert.equal(stats(rec).trade.capacity, 1);
+      assert.equal(stats(rec).trade.capacity, 0);
+      assert.equal(routeCapacity({ tradeRoutes: 2 }, rules), 0, "a Trading Company alone opens no routes");
       rec.features.tp = { id: "trading-post", count: 2 };
       const s = stats(rec);
-      assert.equal(s.trade.capacity, 7);
+      assert.equal(s.trade.capacity, 6);
+      assert.equal(routeCapacity({ tradeRoutes: 8, tradePosts: 2 }, rules), 8, "with a Trading Company");
       assert.equal(s.people.workers, 6, "the posts' clerks and carters");
-      rec.tradeRoutes = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`r${i}`, { id: `r${i}`, key: `k${i}`, state: "active", kind: "coin", income: 10 }]));
+      rec.tradeRoutes = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`r${i}`, { id: `r${i}`, key: `k${i}`, state: "active", kind: "coin", income: 10 }]));
       assert.isFalse(canAcceptRoute(rec, s.trade.capacity));
+    });
+    it("one settlement holds several routes, by its size: hamlet 3 to metropolis 15", () => {
+      const rec = { tradeRoutes: {} };
+      const room = (s, r = rec) => settlementRoom(r, s, rules);
+      assert.deepEqual([["hamlet", 3], ["village", 6], ["town", 9], ["city", 12], ["metropolis", 15]].map(([size]) => room({ key: "x", size }).max), [3, 6, 9, 12, 15]);
+      for (let i = 0; i < 3; i++) rec.tradeRoutes[`h${i}`] = { id: `h${i}`, key: "ham", state: i ? "active" : "requested", size: "hamlet" };
+      assert.deepEqual(room({ key: "ham", size: "hamlet" }), { size: "hamlet", max: 3, used: 3, free: 0 });
+      assert.deepEqual(tradeCandidates(rec, [{ key: "ham", name: "H", distance: 5, size: "hamlet" }], rules), [], "full");
+      // A map note keeps the size its first route rolled.
+      rec.tradeRoutes.n = { id: "n", key: "note1", state: "active", size: "city" };
+      assert.equal(room({ key: "note1" }).max, 12);
+      assert.equal(tradeCandidates(rec, [{ key: "note1", name: "N", distance: 5, source: "map" }], rules)[0].size, "city");
+      assert.equal(room({ key: "fresh" }).max, 6, "a note nobody traded with yet counts as a village");
     });
     it("active routes pay gold or food every turn; a raided caravan brings nothing that turn", () => {
       const rec = workedExampleRecord();
@@ -1537,6 +1572,7 @@ export function registerCoreTests({ describe, it, assert }) {
     });
     it("a turn can bring a request from a nearby settlement", () => {
       const rec = workedExampleRecord();
+      rec.features.tp = { id: "trading-post", count: 1 };
       const { report, record } = advanceTurn(rec, { stats: stats(rec), rules: { ...rules, tradeRequestBase: 100, tradeRequestMax: 100 }, now: 604800,
         rng: seeded(5), newId, settlements: towns });
       assert.ok(report.tradeRequest, "a request");

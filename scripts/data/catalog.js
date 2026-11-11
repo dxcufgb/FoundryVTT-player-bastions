@@ -127,79 +127,79 @@ export const EXPANSIONS = [
   { id: "smokehouse", group: "supplies", name: "Smokehouse and Salt Store", unit: "flat", cost: 375, days: 10,
     effects: { foodStockPct: 25 }, summary: "Food keeps longer: food stock capacity +25 %." },
   { id: "kitchen-garden", group: "supplies", name: "Kitchen Garden", unit: "flat", cost: 500, days: 30,
-    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 15 },
+    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 23 },
     tiers: [
-      { label: "Kitchen garden", cost: 500, days: 30, effects: { foodPerDay: 15 } },
-      { label: "Walled garden", cost: 875, days: 30, effects: { foodPerDay: 10 } },
-      { label: "Terraced gardens", cost: 1500, days: 45, effects: { foodPerDay: 15 } }
+      { label: "Kitchen garden", cost: 500, days: 30, effects: { foodPerDay: 23 } },
+      { label: "Walled garden", cost: 875, days: 30, effects: { foodPerDay: 15 } },
+      { label: "Terraced gardens", cost: 1500, days: 45, effects: { foodPerDay: 23 } }
     ],
-    summary: "Vegetables inside the walls: +15 food a day, more with each upgrade." },
+    summary: "Vegetables inside the walls: +23 food a day, more with each upgrade." },
   { id: "greenhouse", group: "supplies", name: "Greenhouse", unit: "flat", cost: 2500, days: 60,
-    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 20 },
+    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 30 },
     tiers: [
-      { label: "Greenhouse", cost: 2500, days: 60, effects: { foodPerDay: 20 } },
-      { label: "Glass gardens", cost: 4000, days: 60, effects: { foodPerDay: 20 } },
-      { label: "Orangery", cost: 6500, days: 90, effects: { foodPerDay: 25, comfort: 1 } }
+      { label: "Greenhouse", cost: 2500, days: 60, effects: { foodPerDay: 30 } },
+      { label: "Glass gardens", cost: 4000, days: 60, effects: { foodPerDay: 30 } },
+      { label: "Orangery", cost: 6500, days: 90, effects: { foodPerDay: 38, comfort: 1 } }
     ],
     summary: "Glass and braziers: food grown inside the walls all year, and through a siege." },
   { id: "orchard", group: "supplies", name: "Orchard", unit: "flat", cost: 1250, days: 180,
-    requires: { check: ["farmland"] }, effects: { foodOutside: 25, comfort: 1, income: 5 },
+    requires: { check: ["farmland"] }, effects: { foodOutside: 38, comfort: 1, income: 5 },
     tiers: [
-      { label: "Orchard", cost: 1250, days: 180, effects: { foodOutside: 25, comfort: 1, income: 5 } },
-      { label: "Fruit groves", cost: 2000, days: 120, effects: { foodOutside: 25, income: 5 } },
-      { label: "Cider estate", cost: 3500, days: 180, effects: { foodOutside: 30, income: 10 } }
+      { label: "Orchard", cost: 1250, days: 180, effects: { foodOutside: 38, comfort: 1, income: 5 } },
+      { label: "Fruit groves", cost: 2000, days: 120, effects: { foodOutside: 38, income: 5 } },
+      { label: "Cider estate", cost: 3500, days: 180, effects: { foodOutside: 45, income: 10 } }
     ],
-    summary: "Fruit trees: +25 food a day, +5 GP a turn; upgrades plant more." },
+    summary: "Fruit trees: +38 food a day, +5 GP a turn; upgrades plant more." },
   { id: "fields", group: "supplies", name: "Fields and Tenant Farms", unit: "flat", cost: 2500, days: 90,
-    requires: { check: ["farmland"] }, effects: { foodOutside: 100, income: 15 },
+    requires: { check: ["farmland"] }, effects: { foodOutside: 150, income: 15 },
     tiers: [
-      { label: "Tenant farms", cost: 2500, days: 90, effects: { foodOutside: 100, income: 15 } },
-      { label: "Estate farms", cost: 3750, days: 60, effects: { foodOutside: 50, income: 15 } },
-      { label: "Great estate", cost: 6250, days: 90, effects: { foodOutside: 100, income: 25 } }
+      { label: "Tenant farms", cost: 2500, days: 90, effects: { foodOutside: 150, income: 15 } },
+      { label: "Estate farms", cost: 3750, days: 60, effects: { foodOutside: 75, income: 15 } },
+      { label: "Great estate", cost: 6250, days: 90, effects: { foodOutside: 150, income: 25 } }
     ],
     summary: "Farmland worked by tenants. Upgrades grow food and rent." },
   { id: "livestock", group: "supplies", name: "Livestock Pens", unit: "flat", cost: 750, days: 20,
-    effects: { foodOutside: 20, income: 8 },
+    effects: { foodOutside: 30, income: 8 },
     tiers: [
-      { label: "Livestock pens", cost: 750, days: 20, effects: { foodOutside: 20, income: 8 } },
-      { label: "Dairy and piggery", cost: 1500, days: 30, effects: { foodOutside: 25, income: 8 } },
-      { label: "Cattle ranch", cost: 3000, days: 45, effects: { foodOutside: 40, income: 15 } }
+      { label: "Livestock pens", cost: 750, days: 20, effects: { foodOutside: 30, income: 8 } },
+      { label: "Dairy and piggery", cost: 1500, days: 30, effects: { foodOutside: 38, income: 8 } },
+      { label: "Cattle ranch", cost: 3000, days: 45, effects: { foodOutside: 60, income: 15 } }
     ],
-    summary: "+20 food a day and animals to sell; upgrades raise bigger herds." },
+    summary: "+30 food a day and animals to sell; upgrades raise bigger herds." },
   { id: "fishery", group: "supplies", name: "Fishery", unit: "flat", cost: 1000, days: 30,
-    requires: { check: ["fishing"] }, effects: { foodOutside: 30, income: 5 },
+    requires: { check: ["fishing"] }, effects: { foodOutside: 45, income: 5 },
     tiers: [
-      { label: "Fishery", cost: 1000, days: 30, effects: { foodOutside: 30, income: 5 } },
-      { label: "Fish weirs", cost: 1750, days: 30, effects: { foodOutside: 25 } },
-      { label: "Fishing fleet", cost: 3500, days: 60, effects: { foodOutside: 40, income: 15 } }
+      { label: "Fishery", cost: 1000, days: 30, effects: { foodOutside: 45, income: 5 } },
+      { label: "Fish weirs", cost: 1750, days: 30, effects: { foodOutside: 38 } },
+      { label: "Fishing fleet", cost: 3500, days: 60, effects: { foodOutside: 60, income: 15 } }
     ],
-    summary: "Boats, nets and weirs on the river, lake or sea: +30 food a day." },
+    summary: "Boats, nets and weirs on the river, lake or sea: +45 food a day." },
   { id: "mill", group: "supplies", name: "Mill", unit: "flat", cost: 1900, days: 60,
     requires: { features: ["fields"], check: ["millSite"] }, effects: { farmMult: 1.5, income: 15 }, summary: "Field output x1.5, +15 GP a turn." },
   { id: "hunting-lodge", group: "supplies", name: "Hunting Lodge", unit: "flat", cost: 875, days: 25,
-    requires: { check: ["game"] }, effects: { foodOutside: 20, income: 5, renown: 1 }, summary: "+20 food a day, +5 GP a turn from hides and furs, Renown +1." },
+    requires: { check: ["game"] }, effects: { foodOutside: 30, income: 5, renown: 1 }, summary: "+30 food a day, +5 GP a turn from hides and furs, Renown +1." },
   { id: "hunters-guild", group: "supplies", name: "Hunters' Guild", unit: "flat", cost: 1500, days: 30,
-    requires: { check: ["notUnderground"] }, effects: { foodOutside: 25, income: 6, workers: 6 },
+    requires: { check: ["notUnderground"] }, effects: { foodOutside: 38, income: 8, workers: 4 },
     tiers: [
-      { label: "Hunters' guild", cost: 1500, days: 30, effects: { foodOutside: 25, income: 6, workers: 6 } },
-      { label: "Trappers' and rangers' lodge", cost: 2500, days: 45, effects: { foodOutside: 25, income: 6, workers: 4 } },
-      { label: "Great hunt", cost: 4500, days: 60, effects: { foodOutside: 40, income: 10, renown: 1, workers: 6 } }
+      { label: "Hunters' guild", cost: 1500, days: 30, effects: { foodOutside: 38, income: 8, workers: 4 } },
+      { label: "Trappers' and rangers' lodge", cost: 2500, days: 45, effects: { foodOutside: 38, income: 12, workers: 3 } },
+      { label: "Great hunt", cost: 4500, days: 60, effects: { foodOutside: 60, income: 25, renown: 1, workers: 4 } }
     ],
-    summary: "Hunters and trappers who range far into the wilds, game or not: +25 food a day and +6 GP a turn in pelts, much more upgraded." },
+    summary: "Hunters and trappers who range far into the wilds, game or not: +38 food a day and +8 GP a turn in pelts, much more upgraded." },
   { id: "highland-herds", group: "supplies", name: "Highland Herds", unit: "flat", cost: 1250, days: 30,
-    requires: { check: ["highland"] }, effects: { foodOutside: 20, income: 6 },
+    requires: { check: ["highland"] }, effects: { foodOutside: 30, income: 6 },
     tiers: [
-      { label: "Goat and sheep herds", cost: 1250, days: 30, effects: { foodOutside: 20, income: 6 } },
-      { label: "Summer pastures", cost: 2000, days: 30, effects: { foodOutside: 20, income: 6 } },
-      { label: "Drovers' station", cost: 3500, days: 45, effects: { foodOutside: 30, income: 10 } }
+      { label: "Goat and sheep herds", cost: 1250, days: 30, effects: { foodOutside: 30, income: 6 } },
+      { label: "Summer pastures", cost: 2000, days: 30, effects: { foodOutside: 30, income: 6 } },
+      { label: "Drovers' station", cost: 3500, days: 45, effects: { foodOutside: 45, income: 10 } }
     ],
     summary: "Goats and hardy sheep on the slopes: milk, cheese and meat where nothing grows. Hills, mountains or barren land." },
   { id: "mushroom-cellars", group: "supplies", name: "Mushroom Cellars", unit: "flat", cost: 1000, days: 30,
-    effects: { foodPerDay: 12 },
+    effects: { foodPerDay: 18 },
     tiers: [
-      { label: "Mushroom cellars", cost: 1000, days: 30, effects: { foodPerDay: 12 } },
-      { label: "Deep cellars", cost: 1750, days: 30, effects: { foodPerDay: 12 } },
-      { label: "Fungus caverns", cost: 3000, days: 45, effects: { foodPerDay: 18 } }
+      { label: "Mushroom cellars", cost: 1000, days: 30, effects: { foodPerDay: 18 } },
+      { label: "Deep cellars", cost: 1750, days: 30, effects: { foodPerDay: 18 } },
+      { label: "Fungus caverns", cost: 3000, days: 45, effects: { foodPerDay: 27 } }
     ],
     summary: "Mushrooms on straw and logs under the keep: food inside the walls anywhere, even underground or in a siege." },
   { id: "workers-lodge", group: "supplies", name: "Workers' Lodge", unit: "flat", cost: 1500, days: 45,
@@ -253,8 +253,8 @@ export const EXPANSIONS = [
   { id: "brewery", group: "trade", name: "Brewery", unit: "flat", cost: 1500, days: 40,
     effects: { income: 10, innMult: 1.5, comfort: 1, workers: 4 },
     tiers: levels([{ label: "Brewery", cost: 1500, days: 40, effects: { income: 10, innMult: 1.5, comfort: 1, workers: 4 } }],
-      { income: 6, workers: 3 }),
-    summary: "+10 GP a turn, Inn income x1.5. Expands to 10 levels: more ale, more brewers." },
+      { income: 14, workers: 3 }),
+    summary: "+10 GP a turn, Inn income x1.5. Expands to 10 levels: more ale, more brewers; pays for its brewers from level 2." },
   { id: "craftsmens-row", group: "trade", name: "Craftsmen's Row", unit: "flat", cost: 2500, days: 60,
     requires: { features: ["market-square"] }, effects: { income: 25, craftedSale: 10 },
     tiers: [
@@ -268,7 +268,7 @@ export const EXPANSIONS = [
   { id: "merchant-charter", group: "trade", name: "Merchant Charter", unit: "flat", cost: 1250, days: 14,
     requires: { features: ["market-square"] }, effects: { merchantTier: 1, workers: 2 },
     tiers: levels([{ label: "Merchant charter", cost: 1250, days: 14, effects: { merchantTier: 1, workers: 2 } }],
-      { merchant: 3, income: 8, workers: 2 }),
+      { merchant: 3, income: 12, workers: 2 }),
     summary: "Better traders come: merchant tier +1. Expands to 10 levels: more traders and fees, more clerks." },
   { id: "tollgate", group: "trade", name: "Tollgate", unit: "flat", cost: 625, days: 10,
     requires: { check: ["roadRoad", "access4"] }, effects: { tollPerAccess: 5, renown: -1 }, summary: "+5 GP a turn per Accessibility point." },
@@ -280,11 +280,11 @@ export const EXPANSIONS = [
     ],
     summary: "Timber projects cost x0.8; the sawmill sells planks." },
   { id: "quarry", group: "trade", name: "Quarry", unit: "flat", cost: 3750, days: 90,
-    requires: { check: ["stone"] }, effects: { income: 10, stoneDiscount: 0.8, workers: 8 },
+    requires: { check: ["stone"] }, effects: { income: 15, stoneDiscount: 0.8, workers: 6 },
     tiers: levels([
-      { label: "Quarry", cost: 3750, days: 90, effects: { income: 10, stoneDiscount: 0.8, workers: 8 } },
-      { label: "Stoneworks", cost: 6250, days: 90, effects: { income: 30, workers: 8 } }
-    ], { income: 12, workers: 6 }),
+      { label: "Quarry", cost: 3750, days: 90, effects: { income: 15, stoneDiscount: 0.8, workers: 6 } },
+      { label: "Stoneworks", cost: 6250, days: 90, effects: { income: 35, workers: 6 } }
+    ], { income: 20, workers: 5 }),
     summary: "Stone projects cost x0.8; cut stone sells. Expands to 10 levels: more stone, more quarrymen." },
   { id: "mine", group: "trade", name: "Mine", unit: "flat", cost: 7500, days: 150, upkeep: 5,
     requires: { check: ["ore"] }, effects: { incomeDice: "3d6*10", concealment: -1, workers: 12 },
@@ -295,7 +295,8 @@ export const EXPANSIONS = [
     ], { incomeDice: "1d6*10", workers: 8 }),
     summary: "Ore or gems (gems pay double). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
   { id: "trading-post", group: "trade", name: "Trading Post", unit: "each", max: 5, cost: 2000, days: 45,
-    effects: { tradeRoutes: 3, workers: 3 }, summary: "A counting house and loading yard: handles 3 trade routes. Build several for more." },
+    effects: { tradeRoutes: 3, tradePosts: 1, income: 10, workers: 3 },
+    summary: "A counting house and loading yard: trade routes need one; each handles 3 and earns 10 GP a turn in fees. Build several for more." },
   { id: "trading-company", group: "trade", name: "Trading Company", unit: "flat", cost: 10000, days: 120,
     requires: { features: ["market-square"], check: ["marketTier2", "access5"] }, effects: { income: 60, incomeAccess: true, merchantTier: 1, tradeRoutes: 2 },
     tiers: [

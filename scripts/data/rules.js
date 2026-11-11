@@ -31,6 +31,8 @@ export const DEFAULT_RULES = {
   foodPerPerson: 1,
   /** Food bought when the stores run dry: gold per person-day (times the access's hauling factor) */
   foodBuyGp: 0.2,
+  /** What each worker (industries, the Trading Post, the Hunters' Guild) is paid a turn, as upkeep */
+  workerWage: 1,
   /** Share of the workers who moved away that come back each turn the Bastion is fed */
   workersReturn: 0.5,
   crowdingPenaltyPer: 10,
@@ -86,10 +88,12 @@ export const DEFAULT_RULES = {
   roadRouteFactor: 1.0,
   envoyMounted: 40,
   envoyRelay: 60,
-  /** Trade routes: routes without a trading building, gold and food per route (scaled by the settlement and goods),
+  /** Trade routes (only with a Trading Post): routes on top of the trading buildings' own, gold and food per route (scaled by the settlement and goods),
    *  setup cost in turns of the route's value, request chance (%, per turn), open requests at once, turns to sign,
    *  how far away a settlement can be, and the chance (%) a caravan is raided each turn by the land's danger */
-  tradeBaseRoutes: 1,
+  tradeBaseRoutes: 0,
+  /** Routes one settlement holds at once, by its size */
+  tradeRoutesPerSettlement: { hamlet: 3, village: 6, town: 9, city: 12, metropolis: 15 },
   tradeIncome: 25,
   tradeFood: 30,
   /** What the Bastion pays for a food route's deliveries: this share of the price of food bought when the stores run dry */

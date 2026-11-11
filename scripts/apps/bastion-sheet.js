@@ -21,6 +21,7 @@ import { quoteDispatch, orderCount } from "../core/dispatch.js";
 import { partyDistance } from "../marker.js";
 import { facilitiesPage, systemFacilityCatalog, tradeRoutesPage } from "./facilities-page.js";
 import { tradeSettlements } from "../trade.js";
+import { routesOf } from "../core/trade.js";
 import { openCodex } from "./codex-page.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -156,9 +157,13 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const myActors = ownerActors(record).filter(a => isGM || a.isOwner);
     const present = record.presence === "present";
 
+    // Trade routes need a Trading Post: players see the tab once there is one (or a route); the GM always does.
+    const routesOn = isGM || (stats.trade?.capacity ?? 0) > 0 || routesOf(record).length > 0;
+    const tabKeys = TABS.filter(k => k !== "routes" || routesOn);
+    if (!tabKeys.includes(this.tab)) this.tab = "overview";
     const c = {
       embedded: !!this.embedded,
-      entryId: this.entryId, isGM, mine, present, tab: this.tab, tabs: TABS.map(k => ({ key: k, label: t(`Tab.${k}`), active: k === this.tab })),
+      entryId: this.entryId, isGM, mine, present, tab: this.tab, tabs: tabKeys.map(k => ({ key: k, label: t(`Tab.${k}`), active: k === this.tab })),
       record, name: record.name, description: record.description,
       image: bastionImage(record), terrain: TERRAINS[record.location?.terrain]?.label ?? "", site: SITES[record.location?.site]?.label ?? "",
       structure: STRUCTURES[record.structure?.type]?.label ?? "",
@@ -861,7 +866,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const record = getRecord(getEntry(this.entryId));
     const { tradeCandidates } = await import("../core/trade.js");
     const { TRADE_GOODS } = await import("../data/tables.js");
-    const list = tradeCandidates(record, tradeSettlements(record), { tradeMaxMiles: Infinity });
+    if (!(statsFor(record).stats.trade?.capacity > 0)) return ui.notifications.warn(t("Trade.NeedPost"));
+    const list = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity });
     if (!list.length) return ui.notifications.warn(t("Trade.NoSettlement"));
     const content = `<div class="dxpb-plan">
       <label>${t("Trade.Settlement")}<select name="key">${list.map(s => `<option value="${escapeHTML(s.key)}">${escapeHTML(s.name)} (${s.distance} mi)</option>`).join("")}</select></label>
@@ -962,11 +968,15 @@ function tangible(key, stats, record, R) {
   }
 }
 
+/** Effects that are bookkeeping, not perks to list. */
+const HIDDEN_PERKS = new Set(["tradePosts"]);
+
 /** A one-line list of an expansion's perks. */
 export function perksText(e) {
   const src = e.tiers ? e.tiers[0].effects : e.effects;
   const parts = [];
   for (const [k, v] of Object.entries(src ?? {})) {
+    if (HIDDEN_PERKS.has(k)) continue;
     const val = Array.isArray(v) ? v.join("/") : v;
     if (typeof val === "boolean") parts.push(game.i18n.has?.(`DXPB.Perk.${k}`) ? t(`Perk.${k}`) : k);
     else parts.push(game.i18n.has?.(`DXPB.Perk.${k}`) ? t(`Perk.${k}`, { v: val }) : `${k} ${val}`);

@@ -87,7 +87,10 @@ export function codexRows(type, ref) {
       const fp = footprintOf(e, { count: 1, tier: 1 });
       add("room", fp ? `${fp} ${t("Sq")}${e.unit === "each" ? ` ${t("Unit.each")}` : ""}` : t("OutsideWalls"));
     }
-    if (e.upkeep) add("upkeep", t("Codex.PerTurn", { v: gp(e.upkeep) }));
+    // Upkeep: the building's own, and its workers' wages (rules.workerWage each a turn).
+    const workers = Number((e.tiers ? e.tiers[0].effects : e.effects)?.workers) || 0;
+    add("upkeep", [e.upkeep ? t("Codex.PerTurn", { v: gp(e.upkeep) }) : "",
+      workers ? t("Codex.Wages", { n: workers, v: gp(workers * (R.workerWage ?? 0)), each: gp(R.workerWage ?? 0) }) : ""].filter(Boolean).join(" + "));
     add("effects", perksText(e));
     if (e.tiers) add("tiers", tierLine(e.tiers));
     const needs = [...(e.requires?.features ?? []).map(id => catalog().get(id)?.name ?? id),
@@ -116,7 +119,7 @@ export function codexRows(type, ref) {
       add("food", t("Codex.RouteFood", { n: R.tradeFood ?? 30, pct: Math.round(100 * (R.tradeFoodPrice ?? 0.6)) }));
       add("setup", t("Codex.RouteSetup", { n: R.tradeSetupTurns ?? 6 }));
       add("risk", t("Codex.RouteRaid", { safe: R.tradeRaid?.safe ?? 0, frontier: R.tradeRaid?.frontier ?? 0, wild: R.tradeRaid?.wild ?? 0, hostile: R.tradeRaid?.hostile ?? 0 }));
-      add("limit", t("Codex.RouteLimit", { n: R.tradeBaseRoutes ?? 1 }));
+      add("limit", t("Codex.RouteLimit"));
     }
   };
   people[ref]?.();

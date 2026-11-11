@@ -344,7 +344,8 @@
   <div class="dxpb-facpage">
     <section class="dxpb-fac-section dxpb-routes" data-section="routes">
       <h3 class="icon"><i class="fa-solid fa-route" inert></i> <span class="roboto-upper">{{localize "DXPB.Trade.Title"}}</span>{{#if routes.count}} <span class="dxpb-fac-count">{{routes.count}}</span>{{/if}}
-        {{#if @root.isGM}}<button type="button" class="dxpb-fac-plan" data-action="tradeRequest"><i class="fa-solid fa-envelope-open-text" inert></i> {{localize "DXPB.Trade.NewRequest"}}</button>{{/if}}</h3>
+        {{#if @root.isGM}}{{#unless routes.needPost}}<button type="button" class="dxpb-fac-plan" data-action="tradeRequest"><i class="fa-solid fa-envelope-open-text" inert></i> {{localize "DXPB.Trade.NewRequest"}}</button>{{/unless}}{{/if}}</h3>
+      {{#if routes.needPost}}<p class="dxpb-warn"><i class="fa-solid fa-triangle-exclamation" inert></i> {{localize "DXPB.Trade.NeedPost"}}</p>{{/if}}
       <p class="dxpb-fac-summary">{{#each routes.summary}}<span>{{this}}</span>{{/each}}</p>
       <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{routes.limit}}</p>
       {{#if routes.rows.length}}<ul class="dxpb-def-list dxpb-fac-list" style="--cols: {{routes.cols}}">

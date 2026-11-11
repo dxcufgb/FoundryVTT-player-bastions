@@ -193,7 +193,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const incomeAverage = incomeFlat + dice.reduce((n, d) => n + d.average, 0);
   const tax = political.tax ? Math.round(incomeAverage * political.tax) : 0;
   const upkeep = (structure?.upkeep ?? 0) + (fx.upkeep ?? 0) + guards * rules.guardUpkeep + servants * rules.servantUpkeep
-    + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) * (rules.crewUpkeep ?? 0) + trade.cost;
+    + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) * (rules.crewUpkeep ?? 0) + trade.cost
+    + workers * (rules.workerWage ?? 0);
   const net = incomeAverage - tax - upkeep;
   const prosperity = clamp(Math.floor(Math.max(0, incomeAverage) / rules.prosperityPer));
 

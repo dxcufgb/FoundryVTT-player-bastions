@@ -18,7 +18,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/brewery.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/brewery.webp",
-        "description": "<p>Copper kettles, oak barrels and the smell of malt.</p><p>The brewery earns a little each turn and makes an Inn far more profitable. It can be expanded up to ten times: each expansion costs more than the last and brews a little more, but needs more brewers, who need beds and food.</p>"
+        "description": "<p>Copper kettles, oak barrels and the smell of malt.</p><p>The brewery earns a little each turn and makes an Inn far more profitable. It can be expanded up to ten times: each expansion costs more than the last and brews a little more, but needs more brewers, who need beds, food and wages. From the second expansion on it brews more than its brewers cost.</p>"
       },
       "ownership": {
         "default": -1
@@ -183,7 +183,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/merchant-charter.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/merchant-charter.webp",
-        "description": "<p>A sealed charter that tells the trading houses the Bastion is open for business.</p><p>Better merchants come: the merchant tier rises by one.</p><p>The charter can be extended up to ten times: each extension brings more traders and more fees, and more clerks to house and feed.</p>"
+        "description": "<p>A sealed charter that tells the trading houses the Bastion is open for business.</p><p>Better merchants come: the merchant tier rises by one.</p><p>The charter can be extended up to ten times: each extension brings more traders and more fees, and more clerks to house, feed and pay. From the second extension on the fees cover the clerks.</p>"
       },
       "ownership": {
         "default": -1
@@ -216,7 +216,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/mine.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mine.webp",
-        "description": "<p>Timbered tunnels into the hill, ore carts and miners' lanterns.</p><p>A mine earns big income with some risk; gems pay double. It grows into a deep mine and a mining company.</p><p>Past the mining company the shafts can go deeper still, up to ten levels: each costs more than the last and digs out a little more, with more miners to house and feed.</p>"
+        "description": "<p>Timbered tunnels into the hill, ore carts and miners' lanterns.</p><p>A mine earns big income with some risk; gems pay double. It grows into a deep mine and a mining company.</p><p>Past the mining company the shafts can go deeper still, up to ten levels: each costs more than the last and digs out a little more, with more miners to house, feed and pay.</p>"
       },
       "ownership": {
         "default": -1
@@ -249,7 +249,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/quarry.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/quarry.webp",
-        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less, and once upgraded to stoneworks the cut stone sells.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house and feed.</p>"
+        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less, and once upgraded to stoneworks the cut stone sells.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house, feed and pay. Once it is stoneworks it earns more than its quarrymen cost.</p>"
       },
       "ownership": {
         "default": -1
@@ -381,7 +381,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/trading-post.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/trading-post.webp",
-        "description": "<p>A counting house with a loading yard: clerks with ledgers, carters, and a wall map of every road the Bastion trades along.</p><p>A Trading Post handles three trade routes. A Bastion can build several, so the number of routes it keeps grows with them. Its clerks and carters live at the Bastion and need beds and food.</p>"
+        "description": "<p>A counting house with a loading yard: clerks with ledgers, carters, and a wall map of every road the Bastion trades along.</p><p>No trade route can be made until the Bastion has a Trading Post. Each one handles three routes and earns a little in fees, and a Bastion can build several, so the number of routes it keeps grows with them. Its clerks and carters live at the Bastion: they need beds and food, and draw wages.</p>"
       },
       "ownership": {
         "default": -1

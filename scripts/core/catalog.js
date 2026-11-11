@@ -33,7 +33,7 @@ function pick(value, feature) {
 
 /** Keys added per unit when an expansion is built several times ("each"). */
 const PER_UNIT = new Set(["defensePct", "integrity", "security", "concealment", "engineCut", "garrison", "upkeep", "housing", "income",
-  "workers", "tradeRoutes"]);
+  "workers", "tradeRoutes", "tradePosts"]);
 /** Keys that multiply instead of add. */
 export const MULT_KEYS = new Set(["defenseMult", "farmMult", "innMult", "siegeFood", "merchantStock", "visitorPay", "defenderMult",
   "timberDiscount", "stoneDiscount", "palisadeTime"]);

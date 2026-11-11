@@ -7,7 +7,7 @@ import { planProject, quote } from "../core/projects.js";
 import { featureEffects } from "../core/catalog.js";
 import { footprintOf } from "../core/grounds.js";
 import { codexUuid, codexArt } from "../core/codex.js";
-import { routesOf } from "../core/trade.js";
+import { routesOf, settlementRoom } from "../core/trade.js";
 import { mergeSameKind } from "../core/sections.js";
 import { hiddenApproachWarning } from "./bastion-sheet.js";
 import { averageFormula } from "../core/stats.js";
@@ -86,8 +86,8 @@ export const SECTION_COLUMNS = {
     { key: "concealment", kind: "num", get: fx => num(fx.concealment) }
   ]
 };
-/** Every section ends with the upkeep. */
-const UPKEEP_COLUMN = { key: "upkeep", kind: "gp", get: fx => num(fx.upkeep) };
+/** Every section ends with the upkeep: the building's own and its workers' wages. */
+const UPKEEP_COLUMN = { key: "upkeep", kind: "gp", get: (fx, exp, f, c) => num((fx.upkeep ?? 0) + (fx.workers ?? 0) * (c?.R?.workerWage ?? 0)) };
 const DEFENDER_COLUMNS = ["count", "garrison", "upkeep", "food"];
 
 /** A value as the column shows it. */
@@ -335,7 +335,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       summary: [t("Fac.Sum.money", { income: gp(stats.economy.incomeAverage), upkeep: gp(stats.economy.upkeep), net: gp(stats.economy.net) }),
         t("Fac.Sum.merchants", { chance: stats.merchant.chance, tier: stats.merchant.tier.label }),
         stats.people.workersNeeded ? t(stats.people.workersAway ? "Fac.Sum.workersAway" : "Fac.Sum.workers",
-          { n: stats.people.workers, needed: stats.people.workersNeeded, away: stats.people.workersAway }) : ""],
+          { n: stats.people.workers, needed: stats.people.workersNeeded, away: stats.people.workersAway, wage: gp(R.workerWage ?? 0) }) : ""],
       limit: t("Fac.Lim.merchants", { tier: MERCHANT_TIERS[maxTier]?.label ?? "" })
     },
     staff: {
@@ -404,13 +404,15 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
   });
   const active = rows.filter(r => r.state === "active");
   // The settlements the party can trade with: the GM keeps the list; owners seek a route with one themselves.
-  const openBy = new Map(routes.map(r => [r.key, r]));
+  // One settlement holds several routes (by its size); a map note keeps the size its first route rolled.
   const places = settlements.map(s => {
-    const r = openBy.get(s.key);
+    const room = settlementRoom(record, s, R);
+    const size = room.size ?? s.size;
     return { key: s.key, id: s.id ?? "", name: s.name, distance: s.distance, gm: s.source === "gm" && isGM,
-      icon: settlementIcon(s.size), sizeLabel: SIZE_NAMES[s.size] ?? t("Trade.SizeUnknown"),
-      detail: [SIZE_NAMES[s.size] ?? "", t("Trade.Miles", { n: s.distance }), t(`Trade.Source.${s.source}`)].filter(Boolean).join(" · "),
-      status: r ? t(`Trade.Status.${r.state}`) : "", seek: mine && !r && free > 0 };
+      icon: settlementIcon(size), sizeLabel: SIZE_NAMES[size] ?? t("Trade.SizeUnknown"),
+      detail: [SIZE_NAMES[size] ?? "", t("Trade.Miles", { n: s.distance }), t(`Trade.Source.${s.source}`)].filter(Boolean).join(" · "),
+      status: room.used ? t("Trade.PlaceRoutes", { n: room.used, max: room.max }) : "",
+      seek: mine && room.free > 0 && free > 0 };
   });
   return {
     places, canEdit: isGM, sizes: Object.entries(SIZE_NAMES).map(([key, label]) => ({ key, label })),
@@ -420,7 +422,8 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
     totals: columns.map((c, i) => ({ value: c.key === "miles" || c.key === "setup" ? "" : totalOf(c.kind, active.map(r => r.raw[i])) })),
     summary: [t("Trade.Sum", { active: trade.active, capacity: trade.capacity, income: gp(trade.income), cost: gp(trade.cost ?? 0), food: trade.food }),
       trade.waiting ? t("Trade.SumWaiting", { n: trade.waiting }) : ""].filter(Boolean),
-    limit: t("Trade.Limit", { free, per: (R?.tradeBaseRoutes ?? 1) })
+    limit: t("Trade.Limit", { free }),
+    needPost: trade.capacity <= 0
   };
 }
 

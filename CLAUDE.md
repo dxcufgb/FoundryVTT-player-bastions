@@ -143,14 +143,19 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `SITE_CHECKS` — terrain, land, water, resources — and, recursively, the buildings it needs) says it can be built here
   later; one-ofs built or planned, maxed "each", road steps and walls aren't listed locked. `c.impossible` lists what the
   site rules out, with the reason; the "everything" estimate skips those.
-- Workers: an expansion's `workers` effect (industries, per level) counts in `stats.population` (beds, food).
+- Workers: an expansion's `workers` effect (industries, per level) counts in `stats.population` (beds, food) and
+  `rules.workerWage` each a turn in `economy.upkeep` (present workers only; the Upkeep column adds them per building).
+  From level 3 every building with workers earns more than wages + their food at the dearest buy price + upkeep
+  (engine test checks every level).
   `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
   dice of every building with workers by the share still there (`workforce` in stats.js).
 - Food in a turn: `feedBastion` (core/turn.js) after upkeep and before the dividend: the shortfall is bought at
   `stats.food.buyPrice` (`rules.foodBuyGp` × the access's material factor); unfed people leave in `LEAVE_ORDER`
   (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.
 - Trade routes: pure rules in `core/trade.js` (`quoteRoute`, `rollTradeRequest`, `transitionRoute`, `advanceTrade`,
-  `routeCapacity` = `rules.tradeBaseRoutes` + fx.tradeRoutes); `record.tradeRoutes.<id>` (requested → accepted → active;
+  `routeCapacity` = 0 without a Trading Post (`fx.tradePosts`), else `rules.tradeBaseRoutes` (0) + fx.tradeRoutes; no
+  requests, seeking or accepting at 0, and players don't get the tab; `settlementRoom`: routes per settlement by size,
+  `rules.tradeRoutesPerSettlement` 3/6/9/12/15, a map note keeps the size its first route rolled); `record.tradeRoutes.<id>` (requested → accepted → active;
   ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat`, food to `food.outside` and food routes' `cost` (the Bastion pays for its food, `rules.tradeFoodPrice` × the buy price) to `economy.upkeep`; a turn
   lapses offers past `deadline`, rolls raids (lost gold / food that turn) and maybe a request from `opts.settlements`
   (`tradeSettlements`, scripts/trade.js → core `settlementList`: "home", the GM's `record.settlements.<id>` as key `gm:<id>`

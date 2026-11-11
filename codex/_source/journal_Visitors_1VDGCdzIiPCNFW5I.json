@@ -84,7 +84,7 @@
         "category": "visitors",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/caravans.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/caravans.webp",
-        "description": "<p>Wagons, drovers and a few hired swords on the road between the Bastion and another settlement.</p><p>A trade route starts as a request: a town or village asks, the owners accept, the party travels there to agree the terms, and the GM signs the contract once they have. From then on the caravans bring gold every turn, or food every day when the town sends grain or livestock, until the route is cancelled. A request nobody signs lapses. Caravans can be raided in dangerous country, and nothing gets through a siege.</p>"
+        "description": "<p>Wagons, drovers and a few hired swords on the road between the Bastion and another settlement.</p><p>Caravans only come once the Bastion has a Trading Post to load and unload them, and one settlement can keep several routes going at once, more the bigger it is.</p><p>A trade route starts as a request: a town or village asks, the owners accept, the party travels there to agree the terms, and the GM signs the contract once they have. From then on the caravans bring gold every turn, or food every day when the town sends grain or livestock, until the route is cancelled. A request nobody signs lapses. Caravans can be raided in dangerous country, and nothing gets through a siege.</p>"
       },
       "ownership": {
         "default": -1

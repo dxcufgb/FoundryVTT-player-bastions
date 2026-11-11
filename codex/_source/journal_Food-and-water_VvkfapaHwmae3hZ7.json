@@ -249,7 +249,7 @@
         "category": "supplies",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/hunters-guild.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/hunters-guild.webp",
-        "description": "<p>A timber guildhall hung with antlers and furs, its yard busy with hounds, pack ponies and drying racks.</p><p>The guild's hunters and trappers range far beyond the walls, so it feeds the Bastion even where there is little game close by and nothing grows, and their pelts bring in gold every turn. Upgraded into a trappers' and rangers' lodge and then a great hunt, it brings in much more meat and fur money, and makes the Bastion's name known. The hunters live at the Bastion and need beds and food; the hunt stops during a siege.</p>"
+        "description": "<p>A timber guildhall hung with antlers and furs, its yard busy with hounds, pack ponies and drying racks.</p><p>The guild's hunters and trappers range far beyond the walls, so it feeds the Bastion even where there is little game close by and nothing grows, and their pelts bring in gold every turn. Upgraded into a trappers' and rangers' lodge and then a great hunt, it brings in much more meat and fur money, and makes the Bastion's name known. The hunters live at the Bastion and need beds, food and wages, which the pelts pay for once the guild is a great hunt; the hunt stops during a siege.</p>"
       },
       "ownership": {
         "default": -1

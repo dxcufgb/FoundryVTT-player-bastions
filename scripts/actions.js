@@ -335,9 +335,10 @@ export const ACTIONS = {
   async proposeTradeRoute({ entryId, key, goods }, user) {
     const { entry, record } = load(entryId);
     ownerOnly(record, user);
+    const { stats } = statsFor(record);
+    if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
     const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
     if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
-    const { stats } = statsFor(record);
     if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
     const turn = record.turn?.number ?? 0;
     const id = randomId();
@@ -359,6 +360,7 @@ export const ACTIONS = {
     const turn = record.turn?.number ?? 0;
     if (op === "accept") {
       const { stats } = statsFor(record);
+      if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
       if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
     }
     const res = transitionRoute(route, op, { turn });
@@ -396,13 +398,14 @@ export const ACTIONS = {
     return { ok: true };
   },
 
-  /** The GM makes a settlement ask for a route now (key from tradeSettlements; goods optional, else rolled). */
+  /** The GM makes a settlement ask for a route now (key from tradeSettlements; goods optional, else rolled). Needs a Trading Post. */
   async requestTradeRoute({ entryId, key, goods }, user) {
     gmOnly(user);
     const { entry, record } = load(entryId);
+    const { stats } = statsFor(record);
+    if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
     const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
     if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
-    const { stats } = statsFor(record);
     const id = randomId();
     const route = makeRequest(settlement, stats, rules(), { turn: record.turn?.number ?? 0, id, goods });
     await patchRecord(entry, { [`tradeRoutes.${id}`]: route });
