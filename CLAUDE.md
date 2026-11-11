@@ -96,7 +96,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   makes one more after. `.projectFinished` always redraws; `.postTurn` / `.restCounted` when anything completed.
 - Building crews (core/crews.js): `stats.crews` = 1 + `record.garrison.crews` (hired, `hireCrews` action) + `fx.crews`
   (Workers' Lodge). A project holds `projectTeams(p)` = 1 + extraCrews only while "building". `quote()` divides days
-  by the project's own crews (not the Bastion's). `construction` checks `canAssign` on start/resume/crews; after any
+  by the project's own crews (not the Bastion's); new crews or a new pace re-time progress with `rescaleProgress`
+  (core/projects.js: same share of work left, days left rounded down, at least 1 left if unfinished). `construction` checks `canAssign` on start/resume/crews; after any
   change `startWaiting` (actions.js) runs `assignCrews`, which starts queued projects (the party's order: `queuePos`, see `queueOrder` / `nextQueuePos` / `moveInQueue`; then queuedAt; funded unless
   pay-as-you-build) and requeues the latest-started when over the count. `workDays(record, days, { crews })` goes day
   by day and reassigns after completions; the turn passes `stats.crews`, `finishProject` passes none.

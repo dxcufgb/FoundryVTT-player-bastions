@@ -54,8 +54,22 @@ export function unpaceDays(days, pace) {
 const samePace = (a, b) => (Number(a?.scale) || 1) === (Number(b?.scale) || 1) && (Number(a?.power) || 1) === (Number(b?.power) || 1);
 
 /**
+ * Progress on a job that now takes `newDays` instead of `oldDays` (more or fewer crews, another build pace): the share
+ * of the work still to do stays the same, and the days left round down (a job never goes from unfinished to finished,
+ * so at least one day stays left). 2 of 8 done, then 3 crews on a 3-day job: 6/8 × 3 = 2.25 → 2 left, so 1 of 3 done.
+ */
+export function rescaleProgress(progress, oldDays, newDays) {
+  const done = Math.max(0, Number(progress) || 0);
+  if (!oldDays || newDays <= 0) return 0;
+  if (done >= oldDays) return newDays;
+  if (done <= 0) return 0;
+  const left = Math.max(1, Math.floor((oldDays - done) / oldDays * newDays + 1e-9));
+  return Math.max(0, newDays - left);
+}
+
+/**
  * Re-times the unfinished projects for a new build pace (projects from before paces existed were planned at the
- * DMG's). Work already done keeps its share of the job. Returns { projects, changed } with new objects.
+ * DMG's). The share of the work still to do stays the same (`rescaleProgress`). Returns { projects, changed } with new objects.
  */
 export function repaceProjects(projectsIn, pace) {
   const projects = structuredClone(projectsIn ?? {});
@@ -64,9 +78,9 @@ export function repaceProjects(projectsIn, pace) {
     if (["complete", "cancelled"].includes(p.state)) continue;
     const from = p.pace ?? BUILD_PACES.dmg;
     if (samePace(from, pace)) continue;
-    const share = p.days ? Math.min(1, (p.progress ?? 0) / p.days) : 0;
+    const oldDays = p.days;
     p.days = Math.max(1, paceDays(Math.round(unpaceDays(p.days, from)), pace));
-    p.progress = Math.min(p.days, Math.floor(share * p.days));
+    p.progress = rescaleProgress(p.progress, oldDays, p.days);
     p.pace = { scale: Number(pace?.scale) || 1, power: Number(pace?.power) || 1 };
     changed = true;
   }

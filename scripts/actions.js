@@ -228,17 +228,16 @@ export const ACTIONS = {
       const chk = canAssign(record, stats, p.id, teams);
       // A running project needs the crews free now; a waiting one only needs the Bastion to have that many.
       if (!chk.ok && (p.state === "building" || chk.code === "tooMany")) return crewFail(chk);
-      const { quote, GROUNDS_PROJECT } = await import("./core/projects.js");
+      const { quote, GROUNDS_PROJECT, rescaleProgress } = await import("./core/projects.js");
       const grounds = p.kind === "grounds";
       const exp = grounds ? GROUNDS_PROJECT : catalog().get(p.expansionId);
       const groundsBase = grounds ? (await import("./core/grounds.js")).extendGroundsBase(record, catalog(), rules()) : undefined;
       const q = quote(record, exp, { kind: p.kind, size: p.size, count: p.count, featureId: p.featureId, rush: p.rush, extraCrews: want,
         groundsBase }, stats, rules());
       if (q.ok) {
-        // Work already done keeps its share of the job.
-        const share = p.days ? Math.min(1, (p.progress ?? 0) / p.days) : 0;
-        p = { ...p, extraCrews: q.extraCrews, cost: Math.max(q.cost, p.funded), days: q.days, pace: { ...rules().pace }, price: q.price };
-        p.progress = Math.min(p.days, Math.floor(share * p.days + 1e-9));
+        // The share of the work still to do stays the same; the days left round down.
+        const progress = rescaleProgress(p.progress, p.days, q.days);
+        p = { ...p, extraCrews: q.extraCrews, cost: Math.max(q.cost, p.funded), days: q.days, pace: { ...rules().pace }, price: q.price, progress };
       }
     }
     if (action) {

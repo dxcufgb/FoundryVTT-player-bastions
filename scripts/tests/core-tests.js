@@ -7,7 +7,7 @@ import { payFromPurse } from "../core/coins.js";
 import { buildCatalog, prerequisites, possibleHere, featureEffects, roadTier } from "../core/catalog.js";
 import { computeStats, averageFormula, rollFormula } from "../core/stats.js";
 import { holdout, attackStrength, engineDamage, siegeDay } from "../core/siege.js";
-import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
+import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, rescaleProgress, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
 import { quoteDispatch, methodAvailable, mergeOrders, arrivedBy } from "../core/dispatch.js";
 import { rollMerchant, rollVisitor, eventForRoll, eventKeyFromText, requestForAid } from "../core/visitors.js";
 import { advanceTurn, workDays, finishProject, finishAllProjects, feedBastion } from "../core/turn.js";
@@ -213,12 +213,21 @@ export function registerCoreTests({ describe, it, assert }) {
       const { projects, changed } = repaceProjects(old, BUILD_PACES.adventure);
       assert.isTrue(changed);
       assert.equal(projects.g.days, paceDays(343, BUILD_PACES.adventure));
-      assert.equal(projects.g.progress, Math.floor(projects.g.days / 2));
+      // 171 of 343 days were still to do: that share of the new days, rounded down, is left.
+      assert.equal(projects.g.days - projects.g.progress, Math.floor(171 / 343 * projects.g.days));
       assert.equal(projects.d.days, paceDays(80, BUILD_PACES.adventure));
       assert.equal(projects.c.days, 60, "finished projects stay as they were");
       assert.isFalse(repaceProjects(projects, BUILD_PACES.adventure).changed, "already at this pace");
       const back = repaceProjects(projects, BUILD_PACES.dmg).projects;
       assert.ok(Math.abs(back.d.days - 80) <= 8, `back to about 80 days (rounding) (${back.d.days})`);
+    });
+    it("more or fewer crews: the share of work left stays the same, the days left round down", () => {
+      assert.equal(rescaleProgress(2, 8, 3), 1, "2/8 done, three crews on a 3-day job: 2 of 3 left");
+      assert.equal(rescaleProgress(0, 8, 3), 0, "not started stays not started");
+      assert.equal(rescaleProgress(8, 8, 3), 3, "done stays done");
+      assert.equal(rescaleProgress(7, 8, 3), 2, "1/8 left of 3 days rounds down to 0, but one day stays left");
+      assert.equal(rescaleProgress(1, 3, 8), 3, "a crew leaves: 2/3 left of 8 days = 5.33, so 5 left");
+      assert.equal(rescaleProgress(3, 9, 3), 1, "2/3 of 3 days: exactly 2 left");
     });
     it("sized rooms use the DMG ladder", () => {
       const exp = catalog.get("bedroom");
