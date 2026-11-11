@@ -91,7 +91,7 @@ export const DEFAULT_RULES = {
    *  how far away a settlement can be, and the chance (%) a caravan is raided each turn by the land's danger */
   tradeBaseRoutes: 1,
   tradeIncome: 25,
-  tradeFood: 12,
+  tradeFood: 30,
   /** What the Bastion pays for a food route's deliveries: this share of the price of food bought when the stores run dry */
   tradeFoodPrice: 0.6,
   tradeSetupTurns: 6,

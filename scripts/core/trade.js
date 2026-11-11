@@ -42,7 +42,7 @@ export function quoteRoute({ size = "village", distance = 0, goods = "cloth" }, 
   const sizeMult = TRADE_SIZES[size] ?? 1;
   const turnDays = rules?.turnDays ?? 7;
   if (g.kind === "food") {
-    const food = Math.max(1, Math.round((rules?.tradeFood ?? 12) * sizeMult * g.mult));
+    const food = Math.max(1, Math.round((rules?.tradeFood ?? 30) * sizeMult * g.mult));
     const value = food * turnDays * foodPrice;
     // The Bastion pays for the food: a contract price, below what food bought when the stores run dry costs.
     const cost = round5(value * (rules?.tradeFoodPrice ?? 0.6));

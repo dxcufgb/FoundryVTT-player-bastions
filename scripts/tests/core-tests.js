@@ -1447,9 +1447,9 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.ok(quoteRoute({ size: "village", distance: 120, goods: "cloth" }, rules).income > cloth.income);
       const grain = quoteRoute({ size: "town", distance: 40, goods: "grain" }, rules);
       assert.equal(grain.kind, "food");
-      assert.equal(grain.food, 19);
+      assert.equal(grain.food, 48);
       assert.equal(grain.income, 0);
-      assert.equal(grain.cost, 15, "the Bastion pays for its grain: 19 a day × 7 × 0.2 GP × 0.6, to the nearest 5");
+      assert.equal(grain.cost, 40, "the Bastion pays for its grain: 48 a day × 7 × 0.2 GP × 0.6, to the nearest 5");
       assert.ok(grain.cost < grain.food * 7 * 0.2, "less than food bought in a hurry");
     });
     it("settlements ask now and then; never twice at once, never beyond reach, never in a siege", () => {
