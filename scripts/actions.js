@@ -132,6 +132,10 @@ export const ACTIONS = {
       if (ids.length) await actor.deleteEmbeddedDocuments("Item", ids);
     }
     Hooks.callAll(`${MODULE_ID}.bastionDeleted`, { entryId: entry.id, name: record.name });
+    // The owners' system Bastion name showed this Bastion's name: clear it again.
+    for (const actor of ownerActors(record)) {
+      if (actor.type === "character" && actor.system?.bastion?.name === record.name) await actor.update({ "system.bastion.name": "" });
+    }
     await entry.delete();
     return { ok: true };
   },

@@ -183,6 +183,7 @@ export function registerQuench(quench) {
           await sheet.close();
         }
         assert.notOk(BastionTabPanel.panels.get(sheet.id), "the page goes with the sheet");
+        assert.equal(hero.system.bastion.name, getRecord(getEntry(entryId)).name, "the owners' system Bastion name follows the Bastion");
       });
 
       it("the party's group sheet keeps a rook button in its header", async () => {
