@@ -37,7 +37,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab
   (under the system's name field; sub-tab "facilities" shows the system's `.contents`/`.description`, the others hide
   them through the tab's `dxpb-has-bastion` / `dxpb-sub-facilities` classes). Its element is moved back in on every
-  `renderCharacterActorSheet`; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
+  `renderCharacterActorSheet`; `decorateSystemSections` adds `.dxpb-virtual` cards to the system's lists (`exp.room` → basic, unless
+  the owner already has its facility item; else special; road only at its highest step), guards to `.roster`, and turns
+  `findItem` slots into links to Projects; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
   and its controls get `form="dxpb-none"`. `showTabForOwners` wraps `CharacterActorSheet#_prepareTabsContext` so an
   owner gets the tab at any level and with the system's Bastion setting off. The system name field shows the record's
   name (players read-only; the GM's edit renames the Bastion); `syncBastionNames` (responsible GM) writes
@@ -82,6 +84,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - Build pace: `paceDays` (core/projects.js) applies `rules.pace` to base days inside `quote()`; the "Build pace"
   setting sets `rules().pace` unless the house rules set `pace`. DEFAULT_RULES keeps the DMG pace so the engine tests
   check DMG numbers; the module's default setting is "adventure".
+- One of a kind: `once: true` (parlor, courtyard, wall, spike-barricade) is built once; `unit: "flat"` and road steps can't be
+  planned twice; `roadUnpaved` closes the road once it is a highway. Road steps aren't `once` (a partial-mile road must stay open).
 - Walls: no structure brings a wall. One expansion `wall` with `tiers` (palisade → stone → reinforced → wall walk;
   each tier has its own `material`), upgrades priced per square × the wall's count in `quote()`; only one wall can be
   built. `palisade`, `stone-wall`, `reinforce-wall`, `wall-walk` are `legacy: true` (not plannable, hidden);

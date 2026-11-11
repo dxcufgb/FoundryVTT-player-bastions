@@ -175,8 +175,10 @@ export function registerQuench(quench) {
           assert.ok(tab().querySelector(".facilities.special .facility.dxpb-virtual"), "buildings under Special Facilities");
           const special = [...tab().querySelectorAll(".facilities.special .dxpb-virtual .title")].map(x => x.textContent);
           assert.include(special, "Gatehouse");
-          assert.notInclude([...tab().querySelectorAll(".facilities.special .dxpb-virtual")].map(x => x.dataset.dxpbFeature)
-            .map(fid => getRecord(getEntry(entryId)).features[fid]?.id), "bedroom", "rooms go under Basic Facilities");
+          const specialIds = [...tab().querySelectorAll(".facilities.special .dxpb-virtual")].map(x => x.dataset.dxpbFeature)
+            .map(fid => getRecord(getEntry(entryId)).features[fid]?.id).filter(Boolean);
+          assert.notOk(specialIds.some(id => catalog().get(id)?.room), "basic facilities (rooms, granary, servants' quarters) stay out of Special Facilities");
+          assert.isAtMost(specialIds.filter(id => catalog().get(id)?.effects?.roadTier).length, 1, "the road shows once");
           // "Build facility" plans on the Projects page instead of opening the compendium browser.
           const browsers = () => [...foundry.applications.instances.values()].filter(a => a.constructor.name.includes("CompendiumBrowser") && a.rendered).length;
           const browsersBefore = browsers();

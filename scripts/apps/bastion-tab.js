@@ -1,6 +1,7 @@
 import { MODULE_ID, t, catalog, escapeHTML } from "../util.js";
 import { bastionForActor, getEntry, getRecord } from "../store.js";
 import { GROUPS, SIZE_LABELS } from "../data/catalog.js";
+import { ROADS } from "../data/location.js";
 import { request } from "../socket.js";
 import { BastionSheet } from "./bastion-sheet.js";
 
@@ -158,10 +159,19 @@ function decorateSystemSections(panel) {
     else if (f?.count > 1 && e.unit !== "flat") parts.push(e.unit === "mile" ? t("SheetTab.Miles", { n: f.count }) : `× ${f.count}`);
     return parts.filter(Boolean).join(" · ");
   };
+  // The road shows once, as its highest step (a trail, a road, a highway).
+  const roadRank = e => ROADS[e?.effects?.roadTier]?.rank ?? 0;
+  let road = null;
+  for (const [fid, f] of Object.entries(record.features ?? {})) {
+    const e = C.get(f?.id);
+    if (roadRank(e) > roadRank(C.get(road?.[1]?.id))) road = [fid, f];
+  }
   for (const [fid, f] of Object.entries(record.features ?? {})) {
     const e = C.get(f?.id);
     if (!e || e.legacy) continue;
-    const room = e.group === "rooms";
+    if (e.effects?.roadTier && fid !== road?.[0]) continue;
+    // What the system calls a basic facility (it gets a basic facility item when finished) goes under Basic Facilities.
+    const room = !!e.room;
     if (room && asItems.has(fid)) continue;
     cards[room ? "basic" : "special"].push(facilityCard({ name: e.name, subtitle: describe(e, f), icon: GROUP_ICONS[e.group] ?? "fa-chess-rook",
       damaged: !!f.damaged, fid }));
@@ -170,7 +180,7 @@ function decorateSystemSections(panel) {
     if (p?.kind !== "build" || !["building", "paused"].includes(p.state)) continue;
     const e = C.get(p.expansionId);
     if (!e) continue;
-    cards[e.group === "rooms" ? "basic" : "special"].push(facilityCard({ name: e.name, subtitle: t(`State.${p.state}`), building: true,
+    cards[e.room ? "basic" : "special"].push(facilityCard({ name: e.name, subtitle: t(`State.${p.state}`), building: true,
       progress: { value: Math.floor(p.progress ?? 0), max: p.days ?? 0 } }));
   }
   for (const type of ["basic", "special"]) {
