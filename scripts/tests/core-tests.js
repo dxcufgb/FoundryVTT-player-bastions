@@ -4,7 +4,7 @@ import { EXPANSIONS, GROUPS, MAX_LEVELS, levels } from "../data/catalog.js";
 import { STRUCTURES, FIRST_BUILDINGS } from "../data/structures.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { payFromPurse } from "../core/coins.js";
-import { buildCatalog, prerequisites, possibleHere, featureEffects, roadTier } from "../core/catalog.js";
+import { buildCatalog, prerequisites, possibleHere, featureEffects, roadTier, projectMaterial } from "../core/catalog.js";
 import { computeStats, averageFormula, rollFormula } from "../core/stats.js";
 import { holdout, attackStrength, engineDamage, siegeDay } from "../core/siege.js";
 import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, rescaleProgress, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
@@ -1363,8 +1363,31 @@ export function registerCoreTests({ describe, it, assert }) {
       rec.people = { ...(rec.people ?? {}), workersAway: 8 };
       const short = stats(rec);
       assert.equal(short.people.workers, 9);
-      assert.equal(full - short.economy.incomeFlat, 70 - Math.round(70 * 9 / 17), "the quarry earns its share of the workers still there");
+      // No stone project under way: the quarry sells its stone, earning double (rules.surplusSaleMult).
+      assert.equal(full - short.economy.incomeFlat, 2 * 70 - 2 * Math.round(70 * 9 / 17), "the quarry earns its share of the workers still there");
       assert.equal(short.economy.upkeep - before.economy.upkeep, 9 * rules.workerWage, "only the workers there are paid");
+    });
+    it("the Quarry and Lumber Camp sell their stone and timber while no project under way uses it", () => {
+      const rec = workedExampleRecord();
+      rec.location.resources = ["stone", "timber"];
+      rec.projects = {};
+      const base = stats(rec).economy.incomeFlat;
+      rec.features.q = { id: "quarry", tier: 1 };
+      rec.features.l = { id: "lumber-camp", tier: 2 };
+      let s = stats(rec);
+      assert.deepEqual(s.surplus, { stone: true, timber: true });
+      assert.equal(s.economy.incomeFlat - base, 2 * 15 + 2 * 20, "both earn double");
+      // A stone gatehouse under way: the quarry's stone goes into it.
+      rec.projects.g = { id: "g", kind: "build", expansionId: "gatehouse", state: "building", days: 9, progress: 1 };
+      s = stats(rec);
+      assert.deepEqual(s.surplus, { stone: false, timber: true });
+      assert.equal(s.economy.incomeFlat - base, 15 + 2 * 20);
+      // Only a project at work counts; a palisade raised to a stone wall is a stone job.
+      rec.projects.g.state = "paused";
+      rec.projects.w = { id: "w", kind: "upgrade", expansionId: "wall", tier: 2, state: "building", days: 9, progress: 0 };
+      assert.equal(projectMaterial(rec.projects.w, catalog), "stone");
+      assert.equal(projectMaterial({ kind: "build", expansionId: "wall" }, catalog), "timber", "a new wall starts as a palisade");
+      assert.deepEqual(stats(rec).surplus, { stone: false, timber: true });
     });
     it("buildings with workers pay their way from level 3: income beats wages, the workers' food at the dearest price and upkeep", () => {
       const dearest = Math.max(...rules.access.map(r => r.material)) * rules.foodBuyGp;

@@ -67,6 +67,14 @@ export function featureEffects(exp, feature) {
   return out;
 }
 
+/** What a project is built of ("stone", "timber", "magic" or ""): an upgrade's target tier can change it. */
+export function projectMaterial(project, catalog) {
+  const exp = catalog?.get?.(project?.expansionId);
+  if (!exp) return "";
+  const tier = project.kind === "upgrade" ? exp.tiers?.[(Number(project.tier) || 2) - 1] : exp.tiers?.[0];
+  return tier?.material ?? exp.material ?? "";
+}
+
 /** Features of the record as [featureId, feature, expansion] (unknown expansions skipped), excluding damaged ones when asked. */
 export function features(record, catalog, { includeDamaged = false } = {}) {
   const out = [];

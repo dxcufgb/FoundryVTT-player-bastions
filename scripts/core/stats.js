@@ -4,7 +4,7 @@ import {
 } from "../data/location.js";
 import { STRUCTURES } from "../data/structures.js";
 import { MERCHANT_TIERS } from "../data/tables.js";
-import { features, featureEffects, roadTier, MULT_KEYS } from "./catalog.js";
+import { features, featureEffects, roadTier, MULT_KEYS, projectMaterial } from "./catalog.js";
 import { routeCapacity, routeTotals, routesOf } from "./trade.js";
 import { groundsOf } from "./grounds.js";
 
@@ -42,10 +42,18 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const workersNeeded = features(record, catalog).reduce((n, [, f, exp]) => n + (Number(featureEffects(exp, f).workers) || 0), 0);
   const workersAway = Math.min(workersNeeded, Math.max(0, Math.floor(Number(record?.people?.workersAway) || 0)));
   const workforce = workersNeeded > 0 ? (workersNeeded - workersAway) / workersNeeded : 1;
+  // The Quarry and the Lumber Camp sell what no project under way is using: their income × rules.surplusSaleMult.
+  const usedNow = new Set(Object.values(record?.projects ?? {}).filter(p => p?.state === "building").map(p => projectMaterial(p, catalog)));
+  const surplus = {};
   for (const [, f, exp] of features(record, catalog)) {
     const e = featureEffects(exp, f);
     const share = e.workers ? workforce : 1;
     if (share < 1 && typeof e.income === "number") e.income = Math.round(e.income * share);
+    const material = e.stoneDiscount ? "stone" : e.timberDiscount ? "timber" : null;
+    if (material) {
+      surplus[material] = !usedNow.has(material);
+      if (surplus[material] && typeof e.income === "number") e.income = Math.round(e.income * (rules.surplusSaleMult ?? 2));
+    }
     for (const [k, v] of Object.entries(e)) {
       if (k === "incomeDice") { incomeDice.push({ formula: v, source: exp.name, id: exp.id, share }); continue; }
       if (k === "wall" || k === "roadTier") continue;
@@ -224,6 +232,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     wards: Math.min(100, fx.wards ?? 0),
     housing,
     population,
+    surplus,
     people: { ownersPresent, hirelings, dmgDefenders, guards, mercenaries, servants, guests, refugees, workers, workersAway, workersNeeded },
     garrison: Math.round(garrison * 100) / 100,
     wall: { type: wallType, enclosed, partial, mult: wallMult, integrity },

@@ -117,7 +117,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/lumber-camp.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/lumber-camp.webp",
-        "description": "<p>Felled logs, a sawpit and woodcutters at the forest's edge.</p><p>Timber projects cost less, and once upgraded to a sawmill it sells planks.</p>"
+        "description": "<p>Felled logs, a sawpit and woodcutters at the forest's edge.</p><p>Timber projects cost less, and once upgraded to a sawmill it sells planks. Whenever no timber project is under way, the camp sells what it fells instead, and earns twice as much.</p>"
       },
       "ownership": {
         "default": -1
@@ -249,7 +249,7 @@
         "category": "trade",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/quarry.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/quarry.webp",
-        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less, and once upgraded to stoneworks the cut stone sells.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house, feed and pay. Once it is stoneworks it earns more than its quarrymen cost.</p>"
+        "description": "<p>Workers cutting stone blocks from the hillside, a crane lifting them out.</p><p>Stone projects cost less. Whenever no stone project is under way, the quarry sells what it cuts instead, and earns twice as much.</p><p>The quarry can be opened up to ten levels: each costs more than the last and cuts a little more stone, with more quarrymen to house, feed and pay. Once it is stoneworks it earns more than its quarrymen cost.</p>"
       },
       "ownership": {
         "default": -1

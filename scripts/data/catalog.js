@@ -278,14 +278,14 @@ export const EXPANSIONS = [
       { label: "Lumber camp", cost: 1000, days: 30, effects: { income: 5, timberDiscount: 0.8, palisadeTime: 0.5 } },
       { label: "Sawmill", cost: 2500, days: 45, effects: { income: 15 } }
     ],
-    summary: "Timber projects cost x0.8; the sawmill sells planks." },
+    summary: "Timber projects cost x0.8; the sawmill sells planks. Income x2 while no timber project is under way." },
   { id: "quarry", group: "trade", name: "Quarry", unit: "flat", cost: 3750, days: 90,
     requires: { check: ["stone"] }, effects: { income: 15, stoneDiscount: 0.8, workers: 6 },
     tiers: levels([
       { label: "Quarry", cost: 3750, days: 90, effects: { income: 15, stoneDiscount: 0.8, workers: 6 } },
       { label: "Stoneworks", cost: 6250, days: 90, effects: { income: 35, workers: 6 } }
     ], { income: 20, workers: 5 }),
-    summary: "Stone projects cost x0.8; cut stone sells. Expands to 10 levels: more stone, more quarrymen." },
+    summary: "Stone projects cost x0.8; cut stone sells, x2 while no stone project is under way. Expands to 10 levels: more stone, more quarrymen." },
   { id: "mine", group: "trade", name: "Mine", unit: "flat", cost: 7500, days: 150, upkeep: 5,
     requires: { check: ["ore"] }, effects: { incomeDice: "3d6*10", concealment: -1, workers: 12 },
     tiers: levels([

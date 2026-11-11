@@ -149,6 +149,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   (engine test checks every level).
   `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
   dice of every building with workers by the share still there (`workforce` in stats.js).
+- Surplus: `stats.surplus` { stone, timber } (computeStats): a feature with `stoneDiscount` / `timberDiscount` (Quarry,
+  Lumber Camp) earns income × `rules.surplusSaleMult` while no "building" project uses that material
+  (`projectMaterial`, core/catalog.js: an upgrade's target tier material, else the first tier's / the expansion's).
 - Food in a turn: `feedBastion` (core/turn.js) after upkeep and before the dividend: the shortfall is bought at
   `stats.food.buyPrice` (`rules.foodBuyGp` × the access's material factor); unfed people leave in `LEAVE_ORDER`
   (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.

@@ -759,6 +759,16 @@
         "ways": "Dispatches by: {ways}",
         "buy": "Short of food: about {gp} a turn bought from the treasury once the stores are empty",
         "workers": "Workers {n} (they need beds and food, and {wage} a turn each in wages)",
+        "surplus": {
+          "stone": {
+            "selling": "No stone project under way: the Quarry sells its stone, income ×{mult}",
+            "busy": "The Quarry's stone goes into the project under way (no surplus to sell)"
+          },
+          "timber": {
+            "selling": "No timber project under way: the Lumber Camp sells its timber, income ×{mult}",
+            "busy": "The Lumber Camp's timber goes into the project under way (no surplus to sell)"
+          }
+        },
         "workersAway": "Workers {n} of {needed}: {away} moved away, so the industries earn less until they come back"
       },
       "Lim": {
