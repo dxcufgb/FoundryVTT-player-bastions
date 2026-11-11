@@ -269,9 +269,9 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 .dxpb-fac-icon { border-radius: 50%; opacity: 0.85; }
 .dxpb-fac-icon dnd5e-icon { width: 16px; height: 16px; --icon-fill: var(--dxpb-gold); }
-.dxpb-fac-up { color: var(--dxpb-good); border-color: var(--dxpb-good); font-size: 13px; }
+.dxpb-fac-slots .dxpb-fac-up { color: #4fae55; border-color: #4fae55; font-size: 13px; }
 span.dxpb-fac-up { opacity: 0.85; }
-.dxpb-fac-repair { color: var(--dxpb-bad) !important; border-color: var(--dxpb-bad) !important; }
+.dxpb-fac-slots .dxpb-fac-repair { color: var(--dxpb-bad); border-color: var(--dxpb-bad); }
 .dxpb-fac-progress { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--dxpb-good); }
 .dxpb-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0 0.5rem; border: 1px solid var(--dxpb-gold); border-radius: 999px; }
 .dxpb-chip a { cursor: pointer; }
