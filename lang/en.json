@@ -413,7 +413,7 @@
       "ArrestedNoFacility": "The hireling was arrested."
     },
     "Notify": {
-      "SystemBastionsOff": "Player Bastions: the D&D 5e system's Bastion rules are turned off in this world (System Settings → Bastions). Bastions still work, but the Bastion tab on character sheets and the system's own Bastion turn button stay hidden.",
+      "SystemBastionsOff": "Player Bastions: the D&D 5e system's Bastion rules are turned off in this world (System Settings → Bastions). Bastions still work: their owners' character sheets still get the Bastion tab, but the system's own Bastion turn button stays hidden.",
       "NoGM": "No GM is online to carry this out.",
       "OnlyOwnUnfunded": "You can only remove your own unfunded plans.",
       "NothingToPay": "Nothing left to pay.",
@@ -697,8 +697,10 @@
     },
     "Controls": {
       "Group": "Bastions",
-      "Mine": "Open my Bastion",
       "Found": "Found a Bastion"
-    }
+    },
+    "OtherFacilities": "The other owners' facilities",
+    "PopOut": "Open the Bastion in a window",
+    "TabNameHint": "The Bastion's name: the GM renames it"
   }
 }

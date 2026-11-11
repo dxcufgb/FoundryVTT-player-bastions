@@ -163,3 +163,62 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-rules .dxpb-rules-pre { max-height: 22rem; overflow: auto; font-size: 0.8em; white-space: pre; margin: 0.3rem 0; padding: 0.4rem; background: rgba(0, 0, 0, 0.08); border-radius: 3px; }
 .dxpb-rules .dxpb-rules-foot { flex: 0 0 auto; padding-top: 0.5rem; }
 .dxpb-rules .dxpb-rules-foot button { width: 100%; }
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/* Inside the dnd5e character sheet's Bastion tab (apps/bastion-tab.js): the page joins the system's own sections.     */
+/* ------------------------------------------------------------------------------------------------------------------ */
+.tab[data-tab="bastion"].dxpb-has-bastion > .dxpb-embedded,
+.tab[data-tab="bastion"].dxpb-has-bastion > .dxpb-embedded > .dxpb-root { display: contents; }
+.tab[data-tab="bastion"].dxpb-has-bastion > .name { order: 0; }
+.tab[data-tab="bastion"].dxpb-has-bastion .dxpb-embedded .dxpb-tabs { order: 1; }
+.tab[data-tab="bastion"].dxpb-has-bastion > .contents { order: 2; }
+.tab[data-tab="bastion"].dxpb-has-bastion .dxpb-embedded .dxpb-tab-body { order: 3; }
+.tab[data-tab="bastion"].dxpb-has-bastion > .description { order: 4; }
+.tab[data-tab="bastion"].dxpb-has-bastion .dxpb-embedded .dxpb-empty { order: 1; }
+/* The system's facilities and description are the Facilities sub-tab. */
+.tab[data-tab="bastion"].dxpb-has-bastion:not(.dxpb-sub-facilities) > .contents,
+.tab[data-tab="bastion"].dxpb-has-bastion:not(.dxpb-sub-facilities) > .description { display: none; }
+.tab[data-tab="bastion"].dxpb-has-bastion.dxpb-sub-facilities .dxpb-embedded .dxpb-tab-body:not(:has(*)) { display: none; }
+.tab[data-tab="bastion"].dxpb-has-bastion > .name input[readonly] { cursor: default; }
+
+.dxpb-embedded {
+  --dxpb-gold: var(--dnd5e-color-gold, #9f9275);
+  --dxpb-line: var(--dnd5e-color-tan, rgba(120, 90, 50, 0.35));
+  font-size: var(--font-size-13, 13px);
+}
+/* Headings as the system draws them. */
+.dxpb-embedded h2 { display: none; }
+.dxpb-embedded h3 {
+  margin: 0.75rem 0 6px; padding-bottom: 4px; border: none; border-bottom: var(--dnd5e-border-heading-3, 1px solid var(--dxpb-line));
+  color: var(--dnd5e-heading-3-color, inherit); font-family: var(--dnd5e-font-roboto-slab, serif); font-size: var(--font-size-13, 13px);
+}
+.dxpb-embedded h3:first-child { margin-top: 0; }
+.dxpb-embedded h4 { font-family: var(--dnd5e-font-roboto-condensed, sans-serif); text-transform: uppercase; font-size: var(--font-size-12, 12px); }
+
+/* The sub-tabs: a row of pills under the Bastion's name. */
+.dxpb-embedded .dxpb-tabs {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px;
+  border: none; padding: 0 0.5rem; margin: 0;
+}
+.dxpb-embedded .dxpb-tab {
+  padding: 2px 10px; border: 1px solid var(--dxpb-gold); border-radius: 999px; background: var(--dnd5e-background-card, transparent);
+  font-family: var(--dnd5e-font-roboto-condensed, sans-serif); font-size: var(--font-size-12, 12px); text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--color-text-primary, inherit); box-shadow: 0 0 4px var(--dnd5e-shadow-15, transparent);
+}
+.dxpb-embedded .dxpb-tab:hover { text-shadow: 0 0 8px var(--color-shadow-primary, transparent); }
+.dxpb-embedded .dxpb-tab.active { background: var(--dxpb-gold); color: var(--dnd5e-color-light, #fff); font-weight: bold; }
+.dxpb-embedded .dxpb-popout { margin-left: 4px; color: var(--color-text-tertiary, inherit); cursor: pointer; }
+.dxpb-embedded .dxpb-tab-body { overflow: visible; padding: 0 0.5rem 1rem; }
+
+/* Narrower than the Bastion window. */
+.dxpb-embedded .dxpb-overview { grid-template-columns: 150px 1fr; gap: 0.75rem; }
+.dxpb-embedded .dxpb-hero img { width: 150px; border: var(--dnd5e-border-gold, 2px solid var(--dxpb-gold)); border-radius: 5px; box-shadow: 0 0 6px var(--dnd5e-shadow-15, rgba(0, 0, 0, 0.35)); }
+.dxpb-embedded .dxpb-stat-grid { grid-template-columns: repeat(2, 1fr); }
+.dxpb-embedded .dxpb-stat { border: var(--dnd5e-border-gold, 1px solid var(--dxpb-line)); border-radius: 5px; background: var(--dnd5e-background-card, transparent); }
+.dxpb-embedded .dxpb-calc { grid-template-columns: repeat(2, 1fr); }
+.dxpb-embedded .dxpb-table { font-size: var(--font-size-12, 12px); }
+.dxpb-embedded .dxpb-table th, .dxpb-embedded .dxpb-table td { border-bottom: var(--dnd5e-border-dotted, 1px dotted var(--dxpb-line)); }
+.dxpb-embedded .dxpb-table thead th { font-family: var(--dnd5e-font-roboto-condensed, sans-serif); }
+.dxpb-embedded .dxpb-crews, .dxpb-embedded .dxpb-grounds { border: var(--dnd5e-border-gold, 1px solid var(--dxpb-gold)); border-radius: 5px; background: var(--dnd5e-background-card, transparent); }
+.dxpb-embedded .dxpb-perks { max-width: 12rem; }
+.dxpb-embedded .dxpb-other-facilities { margin-top: 0.5rem; }

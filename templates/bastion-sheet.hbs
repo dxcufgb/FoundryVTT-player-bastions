@@ -4,6 +4,7 @@
 {{else}}
   <nav class="dxpb-tabs">
     {{#each tabs}}<a class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}">{{label}}</a>{{/each}}
+    {{#if embedded}}<a class="dxpb-popout" data-action="popOut" data-tooltip="{{localize 'DXPB.PopOut'}}" aria-label="{{localize 'DXPB.PopOut'}}"><i class="fa-solid fa-arrow-up-right-from-square" inert></i></a>{{/if}}
   </nav>
   <section class="dxpb-tab-body">
 
@@ -126,13 +127,18 @@
 
   {{!-- ================= FACILITIES ================= --}}
   {{#if (eq tab "facilities")}}
+  {{#if embedded}}
+  {{!-- In a character sheet the system's own sections show this character's facilities: only the others are listed here. --}}
+  {{#if facilities.length}}
+  <section class="dxpb-other-facilities">
+    <h3 class="icon"><i class="fas fa-people-roof" inert></i> <span class="roboto-upper">{{localize "DXPB.OtherFacilities"}}</span></h3>
+    {{> dxpbFacilityTable}}
+  </section>
+  {{/if}}
+  {{else}}
   <p class="dxpb-muted">{{localize "DXPB.FacilitiesHint"}}</p>
-  <table class="dxpb-table">
-    <thead><tr><th>{{localize "DXPB.FacilityCol"}}</th><th>{{localize "DXPB.Owner"}}</th><th>{{localize "DXPB.Type"}}</th><th>{{localize "DXPB.Order"}}</th><th>{{localize "DXPB.Progress"}}</th><th></th></tr></thead>
-    <tbody>{{#each facilities}}<tr class="{{#if disabled}}dxpb-bad{{/if}}"><td>{{name}}</td><td>{{actorName}}</td><td>{{typeLabel}}</td><td>{{orderLabel}}</td><td>{{progressText}}{{#if disabled}} {{localize "DXPB.Disabled"}}{{/if}}</td>
-      <td><button type="button" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-up-right-from-square"></i></button></td></tr>
-    {{else}}<tr><td colspan="6" class="dxpb-muted">{{localize "DXPB.NoFacilities"}}</td></tr>{{/each}}</tbody>
-  </table>
+  {{> dxpbFacilityTable}}
+  {{/if}}
   {{/if}}
 
   {{!-- ================= PROJECTS ================= --}}

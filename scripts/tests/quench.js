@@ -122,14 +122,74 @@ export function registerQuench(quench) {
         assert.isTrue(canAct(record, game.user), "the GM can act");
       });
 
-      it("a party member's sheet finds the Bastion and shows the rook button", async () => {
+      it("a party member's character sheet shows the Bastion in the system's own Bastion tab, like official content", async () => {
         const { bastionForActor } = await import("../store.js");
+        const { BastionTabPanel } = await import("../apps/bastion-tab.js");
         assert.equal(bastionForActor(hero)?.id, entryId, "a member of the group owns it");
         assert.equal(bastionForActor(group)?.id, entryId, "the group owns it");
-        await hero.sheet.render({ force: true });
-        for (let i = 0; i < 20 && !hero.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));
-        assert.ok(hero.sheet.element.querySelector(".window-header .dxpb-open-bastion"), "rook button in the sheet header");
-        await hero.sheet.close();
+        const sheet = hero.sheet;
+        await sheet.render({ force: true });
+        const el = () => sheet.element;
+        const tab = () => el()?.querySelector(".tab[data-tab=bastion]");
+        const panel = () => tab()?.querySelector(".dxpb-embedded");
+        for (let i = 0; i < 60 && !panel()?.querySelector(".dxpb-tabs"); i++) await new Promise(r => setTimeout(r, 50));
+        try {
+          // The tab is there whatever the character's level or the system's Bastion setting.
+          assert.ok(el().querySelector('[data-tab="bastion"][data-action="tab"], nav [data-tab="bastion"]'), "the Bastion tab in the sheet's tab list");
+          assert.ok(tab(), "the system's Bastion tab");
+          assert.ok(panel(), "the Bastion page inside it");
+          assert.notOk(el().querySelector(".window-header .dxpb-open-bastion"), "no extra button in the window header");
+          assert.ok(tab().querySelector(":scope > .contents .facilities.basic"), "the system's own sections stay");
+          const record = getRecord(getEntry(entryId));
+          const nameInput = tab().querySelector(":scope > .name input");
+          const shown = nameInput ? nameInput.value : tab().querySelector(":scope > .name .document-name")?.textContent;
+          assert.equal(shown, record.name, "the name field shows the Bastion's name");
+          const subTabs = [...panel().querySelectorAll(".dxpb-tabs .dxpb-tab")].map(a => a.dataset.tab);
+          assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"]);
+          // Our clicks and changes stay ours: the character isn't updated and the sheet isn't submitted.
+          let updates = 0;
+          const hook = Hooks.on("updateActor", a => { if (a.id === hero.id) updates++; });
+          const go = async key => {
+            panel().querySelector(`.dxpb-tabs [data-tab="${key}"]`).click();
+            for (let i = 0; i < 40 && !panel()?.querySelector(`.dxpb-tab.active[data-tab="${key}"]`); i++) await new Promise(r => setTimeout(r, 50));
+          };
+          await go("projects");
+          assert.equal(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "the system's sections hide on other sub-tabs");
+          assert.ok(panel().querySelector(".dxpb-crews"), "the Projects page with its building crews");
+          const select = panel().querySelector("select");
+          if (select) {
+            assert.equal(select.getAttribute("form"), "dxpb-none", "the page's inputs belong to no form");
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+          await new Promise(r => setTimeout(r, 400));
+          Hooks.off("updateActor", hook);
+          assert.equal(updates, 0, "nothing on the page updates the character");
+          await go("facilities");
+          assert.notEqual(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "Facilities shows the system's sections");
+          // A re-render of the sheet keeps the page and its sub-tab.
+          const before = BastionTabPanel.panels.get(sheet.id);
+          await sheet.render();
+          for (let i = 0; i < 40 && !panel(); i++) await new Promise(r => setTimeout(r, 50));
+          assert.equal(BastionTabPanel.panels.get(sheet.id), before, "the same page");
+          assert.ok(panel()?.querySelector('.dxpb-tab.active[data-tab="facilities"]'), "on the same sub-tab");
+          // The pop-out opens the full window.
+          await go("stats");
+          panel().querySelector("[data-action=popOut]").click();
+          for (let i = 0; i < 40 && !BastionSheet.instances.get(entryId)?.rendered; i++) await new Promise(r => setTimeout(r, 50));
+          assert.ok(BastionSheet.instances.get(entryId)?.rendered, "the Bastion window");
+          assert.equal(BastionSheet.instances.get(entryId).tab, "stats");
+          await BastionSheet.instances.get(entryId).close();
+        } finally {
+          await sheet.close();
+        }
+        assert.notOk(BastionTabPanel.panels.get(sheet.id), "the page goes with the sheet");
+      });
+
+      it("the party's group sheet keeps a rook button in its header", async () => {
+        await group.sheet.render({ force: true });
+        for (let i = 0; i < 20 && !group.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));
+        assert.ok(group.sheet.element.querySelector(".window-header .dxpb-open-bastion"));
+        await group.sheet.close();
       });
 
       it("reads DMG defenders and hirelings from the dnd5e facilities", () => {
@@ -981,7 +1041,8 @@ export function registerQuench(quench) {
         if (controls.notes) assert.equal(group.order, controls.notes.order + 1, "right after Journal Notes");
         const orders = Object.values(controls).map(c => c.order);
         assert.equal(new Set(orders).size, orders.length, "no two groups share a place");
-        assert.ok(group.tools.list?.button && group.tools.found?.button, "list and (GM) found buttons");
+        assert.ok(group.tools.list?.button && group.tools.found?.button, "list and found buttons");
+        assert.notOk(group.tools.mine, "players find their Bastion in their character sheet, not here");
         assert.ok(canvas.dxpbBastions, "the group has its own canvas layer");
         const btn = document.querySelector('#scene-controls [data-control="dxpbBastions"]');
         assert.ok(btn, "the group's button is on the screen");

@@ -48,9 +48,13 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     return app;
   }
 
+  /** Frameless copies of the page inside character sheets' Bastion tabs (apps/bastion-tab.js). */
+  static embeddedPanels = new Set();
+
   static refresh(entryId) {
     const app = this.instances.get(entryId);
     if (app?.rendered) app.render();
+    for (const panel of BastionSheet.embeddedPanels) if (panel.entryId === entryId && panel.rendered) panel.render();
   }
 
   constructor(options = {}) {
@@ -101,7 +105,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       buy: BastionSheet.#onBuy,
       openMap: BastionSheet.#onOpenMap,
       editBastion: BastionSheet.#onEdit,
-      dispatchStatus: BastionSheet.#onDispatchStatus
+      dispatchStatus: BastionSheet.#onDispatchStatus,
+      popOut: BastionSheet.#onPopOut
     }
   };
 
@@ -114,7 +119,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _onClose(options) {
     super._onClose(options);
-    BastionSheet.instances.delete(this.entryId);
+    if (BastionSheet.instances.get(this.entryId) === this) BastionSheet.instances.delete(this.entryId);
+    BastionSheet.embeddedPanels.delete(this);
   }
 
   /* ---------------------------------------------------------------- */
@@ -132,6 +138,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const present = record.presence === "present";
 
     const c = {
+      embedded: !!this.embedded,
       entryId: this.entryId, isGM, mine, present, tab: this.tab, tabs: TABS.map(k => ({ key: k, label: t(`Tab.${k}`), active: k === this.tab })),
       record, name: record.name, description: record.description,
       image: bastionImage(record), terrain: TERRAINS[record.location?.terrain]?.label ?? "", site: SITES[record.location?.site]?.label ?? "",
@@ -200,7 +207,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       force: record.siege.force?.label ?? t("Siege.Custom") };
 
     /* Facilities (dnd5e) */
-    c.facilities = ctx.facilities.map(f => ({ ...f, typeLabel: f.type === "special" ? t("Facility.Special") : t("Facility.Basic"),
+    // In a character sheet's Bastion tab the system lists this character's own facilities: list the others' here.
+    c.facilities = ctx.facilities.filter(f => !this.embedded || f.actorId !== this.actorId).map(f => ({ ...f, typeLabel: f.type === "special" ? t("Facility.Special") : t("Facility.Basic"),
       progressText: f.progress?.max ? `${f.progress.order}: ${f.progress.value}/${f.progress.max} ${t("Days")}` : "",
       orderLabel: f.order ? game.i18n.localize(`DND5E.FACILITY.Orders.${f.order}.inf`) : "" }));
 
@@ -641,6 +649,11 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const box = target.closest("[data-group]");
     return BastionSheet.#run("hire", { entryId: this.entryId, guards: box.querySelector("[name=guards]")?.value,
       servants: box.querySelector("[name=servants]")?.value });
+  }
+
+  /** From a character sheet's Bastion tab: the same page in a window of its own. */
+  static #onPopOut() {
+    BastionSheet.open(this.entryId, { tab: this.tab === "facilities" ? "overview" : this.tab });
   }
 
   /** The party's build queue: add, remove, up, down (data-op) for the project on this row. */

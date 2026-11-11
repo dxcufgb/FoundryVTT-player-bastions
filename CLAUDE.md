@@ -34,6 +34,15 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   paint, upload to `worlds/<world>/bastions/`, create/update the scene, replace our flagged walls, redraw hooks.
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
 - `scripts/apps/` – `BastionSheet` (8 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
+  `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab
+  (under the system's name field; sub-tab "facilities" shows the system's `.contents`/`.description`, the others hide
+  them through the tab's `dxpb-has-bastion` / `dxpb-sub-facilities` classes). Its element is moved back in on every
+  `renderCharacterActorSheet`; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
+  and its controls get `form="dxpb-none"`. `showTabForOwners` wraps `CharacterActorSheet#_prepareTabsContext` so an
+  owner gets the tab at any level and with the system's Bastion setting off. The system name field shows the record's
+  name (players read-only; the GM's edit renames the Bastion); `syncBastionNames` (responsible GM) writes
+  `system.bastion.name` on the owners. Players have no scene-control group or journal button: the sheet is their way
+  in; the group sheet keeps a header rook.
 - `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a
   dependency): `registerDebugRecorder` (init and ready; also listens for `dxcufgbs-debug-recorder.ready` from import
   time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action
