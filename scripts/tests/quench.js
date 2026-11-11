@@ -287,7 +287,9 @@ export function registerQuench(quench) {
       });
 
       it("with the system's Bastion rules off, the GMs get one chat card that can turn them on (turn button off)", async () => {
-        const { postSystemRulesNotice, resolveSystemRulesNotice } = await import("../system-rules.js");
+        const { postSystemRulesNotice: post, resolveSystemRulesNotice } = await import("../system-rules.js");
+        // As if this GM were the responsible one (another GM may be logged in too).
+        const postSystemRulesNotice = () => post({ responsible: true });
         const savedCfg = game.settings.get("dnd5e", "bastionConfiguration");
         const plainCfg = typeof savedCfg?.toObject === "function" ? savedCfg.toObject() : { ...savedCfg };
         const savedState = game.settings.get(MODULE_ID, "systemRulesNotice");

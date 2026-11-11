@@ -37,8 +37,8 @@ function cardHTML(state = "ask") {
  * Responsible GM, on ready: whispers the card to the GMs if the system's rules are off and the world hasn't been asked.
  * @returns {Promise<ChatMessage|null>}
  */
-export async function postSystemRulesNotice({ force = false } = {}) {
-  if (!isResponsibleGM() || game.system?.id !== "dnd5e") return null;
+export async function postSystemRulesNotice({ force = false, responsible = isResponsibleGM() } = {}) {
+  if (!responsible || !game.user.isGM || game.system?.id !== "dnd5e") return null;
   const cfg = systemConfig();
   if (!cfg) return null;
   const state = game.settings.get(MODULE_ID, "systemRulesNotice");
