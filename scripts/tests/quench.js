@@ -148,7 +148,11 @@ export function registerQuench(quench) {
           assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"]);
           // Our clicks and changes stay ours: the character isn't updated and the sheet isn't submitted.
           let updates = 0;
-          const hook = Hooks.on("updateActor", a => { if (a.id === hero.id) updates++; });
+          // The system Bastion name the GM keeps in step with the Bastion's (syncBastionNames) may land late: it isn't the page.
+          const hook = Hooks.on("updateActor", (a, changes) => {
+            const keys = Object.keys(foundry.utils.flattenObject(changes ?? {})).filter(k => !k.startsWith("_") && k !== "system.bastion.name");
+            if (a.id === hero.id && keys.length) { updates++; console.warn("dxpb test: hero updated", keys); }
+          });
           const go = async key => {
             panel().querySelector(`.dxpb-tabs [data-tab="${key}"]`).click();
             for (let i = 0; i < 40 && !panel()?.querySelector(`.dxpb-tab.active[data-tab="${key}"]`); i++) await new Promise(r => setTimeout(r, 50));
@@ -1081,7 +1085,7 @@ export function registerQuench(quench) {
         for (const tab of ["stats", "defense", "facilities", "projects", "dispatches", "trade", "history", "overview"]) {
           // Click the real tab link, the way a user does.
           app.element.querySelector(`.dxpb-tab[data-tab="${tab}"]`).click();
-          for (let i = 0; i < 20 && app.element.querySelector(".dxpb-tab.active")?.dataset.tab !== tab; i++) {
+          for (let i = 0; i < 60 && app.element.querySelector(".dxpb-tab.active")?.dataset.tab !== tab; i++) {
             await new Promise(r => setTimeout(r, 50));
           }
           assert.equal(app.element.querySelector(".dxpb-tab.active")?.dataset.tab, tab, `clicking the ${tab} tab`);

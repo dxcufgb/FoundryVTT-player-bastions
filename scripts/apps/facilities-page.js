@@ -241,6 +241,8 @@ export async function systemFacilityCatalog({ record, isGM, actorId = null, filt
   for (const i of game.items ?? []) if (i.type === "facility") add(i.uuid, i.name, i.img, i.system);
   for (const pack of game.packs ?? []) {
     if (pack.documentName !== "Item" || pack.visible === false) continue;
+    // The index Foundry loaded at start has every entry's type: only packs with facilities are asked for more fields.
+    if (!pack.index?.some?.(e => e.type === "facility")) continue;
     try {
       const index = await pack.getIndex({ fields: ["system.type", "system.level"] });
       for (const e of index) if (e.type === "facility") add(e.uuid ?? `Compendium.${pack.collection}.Item.${e._id}`, e.name, e.img, e.system);
