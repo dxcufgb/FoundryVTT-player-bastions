@@ -30,7 +30,7 @@ Requirements and updating: see [Installation](https://github.com/dxcufgb/Foundry
 The full guide is in the [wiki](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki):
 
 - [Founding a Bastion](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/Founding-a-Bastion): the GM's six-step wizard, the first building and deleting a Bastion
-- [The Bastion Page](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/The-Bastion-Page): the eight tabs, the Bastions scene controls and the character-sheet button
+- [The Bastion Page](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/The-Bastion-Page): the Bastion in the character sheet's own Bastion tab, its eight pages and the GM's Bastions controls
 - [Building](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/Building): the catalog, the build queue, building crews and finishing projects
 - [Grounds and Walls](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/Grounds-and-Walls): room inside the walls, extending the grounds, the wall and its upgrades
 - [The Battle Map](https://github.com/dxcufgb/FoundryVTT-player-bastions/wiki/The-Battle-Map): the Bastion drawn as its own scene, kept up to date

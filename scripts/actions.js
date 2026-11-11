@@ -1,17 +1,21 @@
 import { MODULE_ID, rules, catalog, randomId, now, setting, t, SECONDS_PER_DAY, gp, escapeHTML, bastionNow } from "./util.js";
 import { payFromPurse } from "./core/coins.js";
-import { getEntry, getRecord, patchRecord, createBastionEntry, canAct, ownerActors, ownershipFor } from "./store.js";
+import { withActorLock } from "./lock.js";
+import { getEntry, getRecord, patchRecord, createBastionEntry, canAct, ownerActors, ownershipFor, bastionForActor } from "./store.js";
 import { statsFor } from "./context.js";
 import { createRecord } from "./core/record.js";
 import { planProject as corePlan, fund as coreFund, transition, cancelRefund } from "./core/projects.js";
 import { assignCrews, canAssign, canDismiss, crewStatus, crewsInUse, projectTeams, nextQueuePos, moveInQueue } from "./core/crews.js";
 import { quoteDispatch, orderCount } from "./core/dispatch.js";
 import { holdout } from "./core/siege.js";
-import { FORCES, DISPATCH_METHODS } from "./data/tables.js";
+import { FORCES, DISPATCH_METHODS, TRADE_GOODS } from "./data/tables.js";
 import { placeMarker, partyDistance } from "./marker.js";
 import { rollDice } from "./core/visitors.js";
 import { runTurn, runSiegeDay, runRest, runFinish, runFinishAll } from "./turn-runner.js";
 import { resolveEventChoice } from "./events.js";
+import { canTakeFacility } from "./core/sections.js";
+import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates, cleanSettlement, rememberSize } from "./core/trade.js";
+import { tradeSettlements, createRouteQuest, closeRouteQuest } from "./trade.js";
 
 /**
  * GM-side actions. Every handler gets (data, user) and re-checks the user's rights, because players reach them over
@@ -47,7 +51,11 @@ function ownerOnly(record, user) {
 }
 
 /** Takes gold from a character, using the system's currency manager when there is one (makes change from other coins). */
-async function takeGold(actor, amount) {
+function takeGold(actor, amount) {
+  return withActorLock(actor, () => takeGoldNow(actor, amount));
+}
+
+async function takeGoldNow(actor, amount) {
   // Prices below 1 GP are real (a sack is 1 CP): work in copper so nothing rounds down to free.
   const copper = Math.max(0, Math.round((Number(amount) || 0) * 100));
   if (!copper) return true;
@@ -64,10 +72,10 @@ async function takeGold(actor, amount) {
   return true;
 }
 
-async function giveGold(actor, amount) {
+export async function giveGold(actor, amount) {
   amount = Math.max(0, Math.floor(Number(amount) || 0));
   if (!amount || !actor) return;
-  await actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + amount });
+  await withActorLock(actor, () => actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + amount }));
 }
 
 function actorFor(record, actorId, user) {
@@ -132,7 +140,22 @@ export const ACTIONS = {
       if (ids.length) await actor.deleteEmbeddedDocuments("Item", ids);
     }
     Hooks.callAll(`${MODULE_ID}.bastionDeleted`, { entryId: entry.id, name: record.name });
+    // The owners' (and former owners') system Bastion name showed this Bastion's name: clear it again, unless another
+    // Bastion has them now.
+    const { forgetBastionNames } = await import("./apps/bastion-tab.js");
+    const named = await forgetBastionNames(entry.id, record.name);
+    const actors = new Map(ownerActors(record).map(a => [a.id, a]));
+    for (const id of named.actors) if (!actors.has(id) && game.actors.get(id)) actors.set(id, game.actors.get(id));
+    // Another Bastion of theirs (not this one) gets its name back on their sheets once this one is gone.
+    const others = new Map();
+    for (const actor of actors.values()) {
+      const other = bastionForActor(actor, { except: entry.id });
+      if (other) { others.set(other.id, other); continue; }
+      if (actor.type === "character" && actor.system?.bastion?.name === record.name) await actor.update({ "system.bastion.name": "" });
+    }
     await entry.delete();
+    const { syncBastionNames } = await import("./apps/bastion-tab.js");
+    for (const other of others.values()) await syncBastionNames(other);
     return { ok: true };
   },
 
@@ -214,17 +237,16 @@ export const ACTIONS = {
       const chk = canAssign(record, stats, p.id, teams);
       // A running project needs the crews free now; a waiting one only needs the Bastion to have that many.
       if (!chk.ok && (p.state === "building" || chk.code === "tooMany")) return crewFail(chk);
-      const { quote, GROUNDS_PROJECT } = await import("./core/projects.js");
+      const { quote, GROUNDS_PROJECT, rescaleProgress } = await import("./core/projects.js");
       const grounds = p.kind === "grounds";
       const exp = grounds ? GROUNDS_PROJECT : catalog().get(p.expansionId);
       const groundsBase = grounds ? (await import("./core/grounds.js")).extendGroundsBase(record, catalog(), rules()) : undefined;
       const q = quote(record, exp, { kind: p.kind, size: p.size, count: p.count, featureId: p.featureId, rush: p.rush, extraCrews: want,
         groundsBase }, stats, rules());
       if (q.ok) {
-        // Work already done keeps its share of the job.
-        const share = p.days ? Math.min(1, (p.progress ?? 0) / p.days) : 0;
-        p = { ...p, extraCrews: q.extraCrews, cost: Math.max(q.cost, p.funded), days: q.days, pace: { ...rules().pace }, price: q.price };
-        p.progress = Math.min(p.days, Math.floor(share * p.days + 1e-9));
+        // The share of the work still to do stays the same; the days left round down.
+        const progress = rescaleProgress(p.progress, p.days, q.days);
+        p = { ...p, extraCrews: q.extraCrews, cost: Math.max(q.cost, p.funded), days: q.days, pace: { ...rules().pace }, price: q.price, progress };
       }
     }
     if (action) {
@@ -261,6 +283,154 @@ export const ACTIONS = {
    * a queued one back out, "up" / "down" / "first" / "last" move it. Queued projects start by themselves, in this
    * order, as soon as a crew is free and they are paid for, so the next one starts the moment one is done.
    */
+  /** Adds one of the system's special facilities defined in the world to an owner's sheet (level and slots checked). */
+  async addSystemFacility({ entryId, uuid, actorId }, user) {
+    const { record } = load(entryId);
+    ownerOnly(record, user);
+    const actor = actorFor(record, actorId, user);
+    // Only a catalog source the sender can see: a world item or an item in a compendium, never one on an actor.
+    if (typeof uuid !== "string") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    const parsed = foundry.utils.parseUuid(uuid);
+    const pack = uuid.startsWith("Compendium.") ? game.packs.get(parsed?.collection?.collection ?? "") ?? null : null;
+    if (uuid.startsWith("Compendium.") && !pack) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (!parsed || parsed.embedded?.length || parsed.documentType !== "Item") return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (pack && !pack.testUserPermission(user, "OBSERVER")) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    const item = await fromUuid(uuid);
+    if (item?.type !== "facility" || item.system?.type?.value !== "special" || item.parent) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    if (!pack && !item.testUserPermission(user, "LIMITED")) return { ok: false, reason: t("Fac.Need.NotFacility") };
+    // The slot check and the new item go together, one at a time per character (two Bastions can share an owner).
+    return withActorLock(actor, async () => {
+      const level = actor.system?.details?.level ?? 0;
+      const facilities = (actor.itemTypes?.facility ?? []).map(i => ({ type: i.system.type?.value, subtype: i.system.type?.subtype,
+        name: i.name, free: !!i.system.free }));
+      const check = canTakeFacility({ level, facilities }, { name: item.name, subtype: item.system.type?.subtype, level: item.system.level, free: !!item.system.free },
+        CONFIG.DND5E?.facilities?.advancement?.special ?? {});
+      if (!check.ok) {
+        const reason = check.reason === "level" ? t("Fac.Need.Level", { level: item.system.level })
+          : check.reason === "have" ? t("Fac.Need.Have") : t("Fac.Need.Slots", { used: check.used, max: check.max });
+        return { ok: false, reason };
+      }
+      const data = item.toObject();
+      delete data._id;
+      data._stats = { ...(data._stats ?? {}), compendiumSource: item.pack ? item.uuid : (data._stats?.compendiumSource ?? null) };
+      foundry.utils.setProperty(data, `flags.${MODULE_ID}.entryId`, entryId);
+      const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+      return { ok: !!created, name: item.name, actor: actor.name };
+    });
+  },
+
+  /* ---------------- Trade routes ---------------- */
+
+  /** The GM adds or edits a settlement the party can trade with: { id?, name, distance (miles), size }. */
+  async saveSettlement({ entryId, settlement }, user) {
+    gmOnly(user);
+    const { entry } = load(entryId);
+    // The id is a record key (settlements.<id>): a plain id only, no dots or other path characters.
+    if (settlement?.id !== undefined && settlement?.id !== "" && !(typeof settlement.id === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(settlement.id))) {
+      return { ok: false, reason: t("Trade.NoSettlement") };
+    }
+    const clean = cleanSettlement(settlement, settlement?.id || randomId());
+    if (!clean) return { ok: false, reason: t("Trade.SettlementName") };
+    await patchRecord(entry, { [`settlements.${clean.id}`]: clean });
+    return { ok: true, id: clean.id };
+  },
+
+  /** The GM removes a listed settlement (a route already made with it stays). */
+  async removeSettlement({ entryId, id }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    if (!record.settlements?.[id]) return { ok: false, reason: t("Trade.NoSettlement") };
+    await patchRecord(entry, { [`settlements.${id}`]: undefined });
+    return { ok: true };
+  },
+
+  /**
+   * The owners seek a route with a settlement themselves: it starts accepted (the party travels there to negotiate,
+   * with a Quest Log quest), and the GM signs it like any other.
+   */
+  async proposeTradeRoute({ entryId, key, goods }, user) {
+    const { entry, record } = load(entryId);
+    ownerOnly(record, user);
+    const { stats } = statsFor(record);
+    if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
+    // The owners name the goods: an unknown one is refused, not swapped for a random good.
+    if (typeof goods !== "string" || !Object.hasOwn(TRADE_GOODS, goods)) return { ok: false, reason: t("Trade.UnknownGoods") };
+    const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
+    if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
+    if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
+    const turn = record.turn?.number ?? 0;
+    const id = randomId();
+    const offer = makeRequest(settlement, stats, rules(), { turn, id, goods });
+    const route = { ...transitionRoute(offer, "accept", { turn }).route, proposed: true };
+    route.questId = await createRouteQuest(record, route);
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route, ...rememberSize(structuredClone(record), route) });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteAccepted`, entry, route);
+    return { ok: true, routeId: id, questId: route.questId };
+  },
+
+  /** Owners answer a settlement's request (accept / decline), withdraw an accepted one, or cancel an active route. */
+  async tradeRoute({ entryId, routeId, op }, user) {
+    const { entry, record } = load(entryId);
+    ownerOnly(record, user);
+    if (!["accept", "decline", "withdraw", "cancel"].includes(op)) return { ok: false, reason: "Unknown trade-route operation" };
+    const route = record.tradeRoutes?.[routeId];
+    if (!route) return { ok: false, reason: t("Trade.Gone") };
+    const turn = record.turn?.number ?? 0;
+    if (op === "accept") {
+      const { stats } = statsFor(record);
+      if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
+      if (!canAcceptRoute(record, stats.trade.capacity)) return { ok: false, reason: t("Trade.Full", { n: stats.trade.capacity }) };
+    }
+    const res = transitionRoute(route, op, { turn });
+    if (!res.ok) return { ok: false, reason: t("Trade.WrongState") };
+    if (res.ended) {
+      await patchRecord(entry, { [`tradeRoutes.${routeId}`]: undefined });
+      if (op === "withdraw") await closeRouteQuest(route, "failed");
+      Hooks.callAll(`${MODULE_ID}.tradeRouteEnded`, entry, { ...route, ended: res.route.ended });
+      return { ok: true };
+    }
+    // Accepted: the party travels there to sign, followed by a quest in Dxcufgb's Quest Log when it is active.
+    const next = res.route;
+    next.questId = await createRouteQuest(record, next);
+    await patchRecord(entry, { [`tradeRoutes.${routeId}`]: next });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteAccepted`, entry, next);
+    return { ok: true, questId: next.questId };
+  },
+
+  /** The GM signs an accepted route once the party has been there: the setup is paid from the treasury (or waived). */
+  async signTradeRoute({ entryId, routeId, from = "treasury" }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    const route = record.tradeRoutes?.[routeId];
+    if (!route) return { ok: false, reason: t("Trade.Gone") };
+    const res = transitionRoute(route, "sign", { turn: record.turn?.number ?? 0 });
+    if (!res.ok) return { ok: false, reason: t("Trade.WrongState") };
+    const changes = { [`tradeRoutes.${routeId}`]: res.route };
+    if (from !== "free") {
+      if ((record.treasury ?? 0) < (route.setup ?? 0)) return { ok: false, reason: t("Notify.TreasuryShort") };
+      changes.treasury = (record.treasury ?? 0) - (route.setup ?? 0);
+    }
+    await patchRecord(entry, changes);
+    await closeRouteQuest(route, "completed");
+    Hooks.callAll(`${MODULE_ID}.tradeRouteSigned`, entry, res.route);
+    return { ok: true };
+  },
+
+  /** The GM makes a settlement ask for a route now (key from tradeSettlements; goods optional, else rolled). Needs a Trading Post. */
+  async requestTradeRoute({ entryId, key, goods }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    const { stats } = statsFor(record);
+    if (stats.trade.capacity <= 0) return { ok: false, reason: t("Trade.NeedPost") };
+    const settlement = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity }).find(s => s.key === key);
+    if (!settlement) return { ok: false, reason: t("Trade.NoSettlement") };
+    const id = randomId();
+    const route = makeRequest(settlement, stats, rules(), { turn: record.turn?.number ?? 0, id, goods });
+    await patchRecord(entry, { [`tradeRoutes.${id}`]: route, ...rememberSize(structuredClone(record), route) });
+    Hooks.callAll(`${MODULE_ID}.tradeRouteRequested`, entry, route);
+    return { ok: true, routeId: id };
+  },
+
   async queueProject({ entryId, projectId, op }, user) {
     const { entry, record } = load(entryId);
     ownerOnly(record, user);

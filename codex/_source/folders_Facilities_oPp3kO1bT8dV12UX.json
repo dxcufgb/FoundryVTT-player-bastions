@@ -1,0 +1,22 @@
+{
+  "_id": "oPp3kO1bT8dV12UX",
+  "name": "Facilities",
+  "type": "JournalEntry",
+  "sorting": "m",
+  "sort": 100000,
+  "color": null,
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!oPp3kO1bT8dV12UX"
+}

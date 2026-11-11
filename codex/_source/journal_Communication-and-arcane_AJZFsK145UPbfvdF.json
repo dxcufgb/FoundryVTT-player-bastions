@@ -1,0 +1,194 @@
+{
+  "_id": "AJZFsK145UPbfvdF",
+  "name": "Communication and arcane",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 700000,
+  "pages": [
+    {
+      "_id": "Qj0k2DOHR887n3cN",
+      "name": "Arcane Lanterns",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "arcane-lanterns",
+        "category": "arcane",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/arcane-lanterns.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/arcane-lanterns.webp",
+        "description": "<p>Lanterns that float along the battlements and never go out.</p><p>Security rises, and night attacks lose their surprise.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!AJZFsK145UPbfvdF.Qj0k2DOHR887n3cN"
+    },
+    {
+      "_id": "If7JoCGO3EFjHlLV",
+      "name": "Beacon Tower",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "beacon-tower",
+        "category": "arcane",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/beacon-tower.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/beacon-tower.webp",
+        "description": "<p>A tall tower with a great fire laid ready on top.</p><p>Preset signals reach the Bastion at once, and the watch adds to Security. A Bastion has one beacon.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!AJZFsK145UPbfvdF.If7JoCGO3EFjHlLV"
+    },
+    {
+      "_id": "tlvLUoLjqRNFvrAW",
+      "name": "Rookery",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "rookery",
+        "category": "arcane",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/rookery.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/rookery.webp",
+        "description": "<p>A tower of roosting messenger birds and a keeper who knows each one.</p><p>Birds carry the party's orders home, for a small cost each.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!AJZFsK145UPbfvdF.tlvLUoLjqRNFvrAW"
+    },
+    {
+      "_id": "a104S9b0nl0JDZRy",
+      "name": "Scrying Pool",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "scrying-pool",
+        "category": "arcane",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/scrying-pool.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/scrying-pool.webp",
+        "description": "<p>A still, dark pool that shows what the seer asks to see.</p><p>Once a day the owners can see the Bastion as it is, wherever they are.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!AJZFsK145UPbfvdF.a104S9b0nl0JDZRy"
+    },
+    {
+      "_id": "lel5oYDN8LoXTN77",
+      "name": "Sending Stone Station",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "sending-station",
+        "category": "arcane",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/sending-station.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/sending-station.webp",
+        "description": "<p>A quiet chamber where a pair of sending stones rests on a pedestal.</p><p>Once a day an order goes home and a reply comes back at once. It needs a pair of sending stones.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!AJZFsK145UPbfvdF.lel5oYDN8LoXTN77"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "arcane"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!AJZFsK145UPbfvdF"
+}

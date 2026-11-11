@@ -1,0 +1,161 @@
+{
+  "_id": "1VDGCdzIiPCNFW5I",
+  "name": "Visitors",
+  "folder": "g8h9QAv3ju4rdsfu",
+  "sort": 1000000,
+  "pages": [
+    {
+      "_id": "lx9M62ZmwSVVLDR9",
+      "name": "Guests",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "guests",
+        "category": "visitors",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/guests.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/guests.webp",
+        "description": "<p>Visitors who stay a while: a renowned figure, someone seeking sanctuary, now and then a friendly monster or a sellsword.</p><p>Guests arrive through the Bastion's events. Some pay for their stay, some leave a letter of recommendation, and some help defend the walls.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!1VDGCdzIiPCNFW5I.lx9M62ZmwSVVLDR9"
+    },
+    {
+      "_id": "Bz3JUK7BUM2PPt87",
+      "name": "Merchants",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "merchants",
+        "category": "visitors",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/merchants.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/merchants.webp",
+        "description": "<p>Peddlers, caravans, merchant companies and the occasional exotic trader who stop at the Bastion to sell their wares.</p><p>How often they come and how rich their stock is depends on Accessibility, Prosperity, Renown and the Bastion's trade buildings. While a merchant is visiting, the owners can buy from the Trade page.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!1VDGCdzIiPCNFW5I.Bz3JUK7BUM2PPt87"
+    },
+    {
+      "_id": "R4qGC8Wk2acF5oHk",
+      "name": "Trade caravans",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "caravans",
+        "category": "visitors",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/caravans.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/caravans.webp",
+        "description": "<p>Wagons, drovers and a few hired swords on the road between the Bastion and another settlement.</p><p>Caravans only come once the Bastion has a Trading Post to load and unload them, and one settlement can keep several routes going at once, more the bigger it is.</p><p>A trade route starts in one of two ways: a town or village asks and the owners accept, or the owners pick a settlement themselves and seek a route with it. Either way the party travels there to agree the terms, and the GM signs the contract once they have. From then on the caravans bring gold every turn, or food every day when the town sends grain or livestock, until the route is cancelled. Food isn't a gift: the Bastion pays for each delivery, a little below what food bought in a hurry costs, and that charge comes out of its upkeep every turn. A caravan the treasury can't pay holds its food back. A request nobody signs lapses. Caravans can be raided in dangerous country, and nothing gets through a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!1VDGCdzIiPCNFW5I.R4qGC8Wk2acF5oHk"
+    },
+    {
+      "_id": "ls5amuLRsZ02tMkc",
+      "name": "Travellers",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "visitors",
+        "category": "visitors",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/visitors.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/visitors.webp",
+        "description": "<p>The steady traffic of a Bastion on a road: pilgrims, adventurers with a rumor, would-be recruits, the lord's tax collector, an envoy, now and then a spy.</p><p>A visitor may arrive each turn. Most bring news, coin or work; a few bring trouble. A Guest Wing makes paying visitors pay more.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!1VDGCdzIiPCNFW5I.ls5amuLRsZ02tMkc"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "visitors"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!1VDGCdzIiPCNFW5I"
+}

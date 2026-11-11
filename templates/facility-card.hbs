@@ -1,0 +1,21 @@
+{{!-- One building on the Facilities page (bastion-sheet.hbs), a row like the defenders': this module's building or a dnd5e facility. --}}
+<li class="dxpb-def dxpb-fac {{#if building}}building{{/if}} {{#if damaged}}damaged{{/if}} {{#if system}}dxpb-fac-system{{/if}}"
+    {{#if fid}}data-fid="{{fid}}"{{/if}} {{#if uuid}}data-uuid="{{uuid}}"{{/if}} {{#if codex}}data-codex="{{codex}}"{{/if}}>
+  {{#if img}}<img class="dxpb-def-img" src="{{img}}" alt="">{{else}}<span class="dxpb-def-img dxpb-def-icon"><i class="fa-solid {{icon}}" inert></i></span>{{/if}}
+  <span class="dxpb-def-main">
+    <button type="button" class="dxpb-linkbtn dxpb-def-name dxpb-fac-name" data-action="{{open.action}}" {{#if uuid}}data-uuid="{{uuid}}"{{/if}} {{#if codex}}data-codex="{{codex}}"{{/if}} data-tooltip="{{open.tip}}">
+      <span class="dxpb-fac-titleline"><strong class="title">{{name}}</strong>{{#if many}}<span class="dxpb-fac-many">× {{many}}</span>{{/if}}</span>{{#if subtitle}}<span class="subtitle dxpb-muted">{{subtitle}}</span>{{/if}}
+    </button>
+    <span class="dxpb-fac-slots">
+      {{#if upgrade}}{{#if upgrade.action}}<button type="button" class="dxpb-fac-up" data-action="{{upgrade.action}}" {{#if fid}}data-fid="{{fid}}"{{/if}} {{#if upgrade.id}}data-id="{{upgrade.id}}"{{/if}} {{#if upgrade.kind}}data-kind="{{upgrade.kind}}"{{/if}} {{#if upgrade.count}}data-count="{{upgrade.count}}"{{/if}}
+        data-tooltip="{{upgrade.tip}}" aria-label="{{upgrade.tip}}"><i class="fa-solid fa-angles-up" inert></i></button>
+      {{else}}<span class="dxpb-fac-up" data-tooltip="{{upgrade.tip}}" aria-label="{{upgrade.tip}}"><i class="fa-solid fa-angles-up" inert></i></span>{{/if}}{{/if}}
+      {{#if repair}}<button type="button" class="dxpb-fac-repair" data-action="featureProject" data-kind="repair" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Repair'}}" aria-label="{{localize 'DXPB.Repair'}}"><i class="fa-solid fa-screwdriver-wrench" inert></i></button>{{/if}}
+      {{#if use}}<button type="button" class="dxpb-fac-use" data-action="useFacility" data-tooltip="{{use}}" aria-label="{{use}}"><i class="fa-solid fa-scroll" inert></i></button>{{/if}}
+      {{#if orderIcon}}<span class="dxpb-fac-order" data-tooltip="{{orderLabel}}"><dnd5e-icon src="{{orderIcon}}"></dnd5e-icon></span>{{/if}}
+    </span>
+  </span>
+  {{#each cells}}<span class="dxpb-cell">{{value}}</span>{{/each}}
+  <button type="button" class="dxpb-linkbtn dxpb-def-go" data-action="{{open.action}}" {{#if uuid}}data-uuid="{{uuid}}"{{/if}} {{#if codex}}data-codex="{{codex}}"{{/if}} data-tooltip="{{open.tip}}" aria-label="{{open.tip}}"><i class="fa-solid fa-chevron-right" inert></i></button>
+  {{#if progress}}<span class="dxpb-fac-progress" style="width: {{progress.pct}}%"></span>{{/if}}
+</li>

@@ -117,9 +117,9 @@ export const BAILEY_GROUND = {
 /** Floor of each building or yard. Anything not listed: flagstone for buildings, the bailey ground for yards. */
 export const FLOORS = {
   bedroom: "planks", "dining-room": "planks", parlor: "planks", courtyard: "cobble", kitchen: "flagstone", storage: "flagstone",
-  granary: "planks", cistern: "flagstone", smokehouse: "flagstone", "kitchen-garden": "tilled", orchard: "grass",
+  granary: "planks", cistern: "flagstone", smokehouse: "flagstone", "kitchen-garden": "tilled", orchard: "grass", greenhouse: "tilled",
   "workers-lodge": "planks", "coach-house": "dirt", "market-square": "cobble", inn: "planks", brewery: "planks",
-  "craftsmens-row": "flagstone", warehouse: "planks", "trading-company": "planks", strongroom: "flagstone",
+  "craftsmens-row": "flagstone", warehouse: "planks", "trading-company": "planks", "trading-post": "planks", strongroom: "flagstone", "oasis-gardens": "tilled", "deep-road-gate": "flagstone", "fur-trading-lodge": "planks",
   "servants-quarters": "planks", bathhouse: "flagstone", chapel: "flagstone", infirmary: "planks", "training-yard": "dirt",
   "garrison-hall": "planks", "great-hall": "flagstone", "guest-wing": "planks", "stewards-office": "planks",
   "pleasure-gardens": "grass", rookery: "planks", "sending-station": "flagstone", "scrying-pool": "flagstone",
@@ -147,6 +147,10 @@ export const FURNISH = {
   warehouse: [["crates", 2, 1], ["barrels", 2, 0.6], ["cart", 2, 0.15]],
   "trading-company": [["desk", 2, 0.5], ["chest", 1, 0.5], ["crates", 2, 0.5], ["bookshelf", 2, 0.3]],
   strongroom: [["chest", 1, 2]],
+  "trading-post": [["crates", 2, 0.8], ["cart", 2, 0.3], ["desk", 2, 0.25], ["barrels", 1, 0.4]],
+  "oasis-gardens": [["flowers", 1, 1], ["bush", 1, 0.8], ["well", 2, 0.15], ["barrels", 1, 0.2]],
+  "deep-road-gate": [["crates", 2, 0.6], ["brazier", 1, 0.3], ["weaponrack", 2, 0.25], ["cart", 2, 0.2]],
+  "fur-trading-lodge": [["crates", 2, 0.6], ["desk", 2, 0.3], ["fireplace", 2, 0.2], ["chest", 1, 0.4]],
   "servants-quarters": [["bunks", 2, 0.8], ["chest", 1, 0.3], ["fireplace", 2, 0.15]],
   bathhouse: [["bathtub", 2, 0.6], ["barrels", 1, 0.3], ["fireplace", 2, 0.15]],
   chapel: [["altar", 2, 0.35], ["statue", 1, 0.4], ["brazier", 1, 0.3]],
@@ -159,7 +163,8 @@ export const FURNISH = {
   "sending-station": [["altar", 2, 0.6], ["desk", 2, 0.4]],
   "scrying-pool": [["fountain", 2, 0.5], ["bookshelf", 2, 0.4], ["brazier", 1, 0.3]],
   well: [["well", 1, 1]],
-  "deep-well": [["well", 1, 1]]
+  "deep-well": [["well", 1, 1]],
+  greenhouse: [["flowers", 1, 1.2], ["bush", 1, 0.8], ["brazier", 1, 0.2], ["barrels", 1, 0.2]]
 };
 
 /** Open ground has its own patterns (see map-render.js yardProps). */

@@ -1,7 +1,7 @@
 /** The pure engine, exposed as api.core for macros and other modules. */
 export { computeStats, averageFormula, rollFormula } from "./stats.js";
 export { holdout, attackStrength, engineDamage, siegeDay } from "./siege.js";
-export { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, STATES, BUILD_PACES, BUILD_PRICES, priceGp, samePrice, GROUNDS_PROJECT, paceDays, unpaceDays, repaceProjects, foldLegacyWalls, LEGACY_WALL_TIER } from "./projects.js";
+export { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, STATES, BUILD_PACES, BUILD_PRICES, priceGp, samePrice, GROUNDS_PROJECT, paceDays, unpaceDays, repaceProjects, rescaleProgress, foldLegacyWalls, LEGACY_WALL_TIER } from "./projects.js";
 export { quoteDispatch, methodAvailable, mergeOrders, arrivedBy, orderCount } from "./dispatch.js";
 export { rollMerchant, rollVisitor, eventForRoll, eventKeyFromText, requestForAid } from "./visitors.js";
 export { advanceTurn, workDays, finishProject, finishAllProjects } from "./turn.js";
@@ -17,3 +17,4 @@ export * as location from "../data/location.js";
 export * from "./coins.js";
 export * from "./grounds.js";
 export * from "./layout.js";
+export { fullBuild, RIVER_KEEP } from "./fullbuild.js";

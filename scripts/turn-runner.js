@@ -1,5 +1,6 @@
-import { MODULE_ID, rules, catalog, randomId, now, setting, t, gp, escapeHTML, formatGameTime, SECONDS_PER_DAY, clockMode } from "./util.js";
-import { getRecord, patchRecord, writeRecordKeys, ownerActors } from "./store.js";
+import { tradeSettlements, closeRouteQuest } from "./trade.js";
+import { MODULE_ID, rules, catalog, randomId, now, setting, t, gp, escapeHTML, formatGameTime, SECONDS_PER_DAY, clockMode, isResponsibleGM } from "./util.js";
+import { getRecord, patchRecord, writeRecordKeys, ownerActors, allBastions } from "./store.js";
 import { statsFor } from "./context.js";
 import { advanceTurn, workDays, finishProject, finishAllProjects } from "./core/turn.js";
 import { countRest } from "./core/rests.js";
@@ -8,12 +9,19 @@ import { siegeDay } from "./core/siege.js";
 import { rollBastionEvent, restoreDisabled } from "./events.js";
 import { fillStock } from "./merchant.js";
 import { describeOrder } from "./actions.js";
+import { withBastionLock, withActorLock } from "./lock.js";
 
 /** Bastions whose turn is being run right now, so the system's own turn summary message isn't processed twice. */
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
-  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests"];
+  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison", "tradeRoutes", "tradeSizes", "refundsDue"];
+
+/* One at a time per Bastion with its actions (lock.js). */
+export function runTurn(entry, opts) { return withBastionLock(entry?.id, () => runTurnNow(entry, opts)); }
+export function runRest(entry, actorUuid, opts) { return withBastionLock(entry?.id, () => runRestNow(entry, actorUuid, opts)); }
+export function runFinish(entry, projectId) { return withBastionLock(entry?.id, () => runFinishNow(entry, projectId)); }
+export function runSiegeDay(entry) { return withBastionLock(entry?.id, () => runSiegeDayNow(entry)); }
 
 /** When a Bastion's next turn is due, in game seconds. */
 export function turnDueTime(record) {
@@ -22,7 +30,7 @@ export function turnDueTime(record) {
 }
 
 /** Runs one Bastion turn for a Bastion journal entry (responsible GM only). Returns the report. */
-export async function runTurn(entry, { systemAdvance = true } = {}) {
+async function runTurnNow(entry, { systemAdvance = true } = {}) {
   if (!entry || !game.user.isGM) return null;
   running.add(entry.id);
   try {
@@ -38,7 +46,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
     const { record: next, report } = advanceTurn(record, {
       stats, rules: rules(), catalog: catalog(), now: turnTime, days, rng: Math.random, newId: randomId,
       partyLevel: ctx.partyLevel, payAsYouBuild: !!setting("payAsYouBuild"), standingRule: setting("standingOrders") !== false,
-      skipProjects: restClock
+      skipProjects: restClock, settlements: tradeSettlements(record)
     });
     // With the long-rest clock the building work moved on with each rest; the turn starts the next count of rests.
     if (restClock) next.rests = { ...(next.rests ?? {}), sinceTurn: 0 };
@@ -46,6 +54,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
 
     // Rooms finished: add the dnd5e basic facility to an owner's sheet; enlarged rooms grow there too.
     for (const c of report.completed) await syncRoom(entry, c);
+    await settleRefunds(entry);
 
     // A new merchant: roll the stock from compendium items.
     if (report.merchant) {
@@ -54,6 +63,13 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
       Hooks.callAll(`${MODULE_ID}.merchantArrived`, entry, { ...report.merchant, stock });
     }
     if (report.visitor && report.visitor.key !== "nobody") Hooks.callAll(`${MODULE_ID}.visitorArrived`, entry, report.visitor);
+
+    // Trade routes: a settlement's new request; offers nobody came to sign lapse (their quest fails).
+    if (report.tradeRequest) Hooks.callAll(`${MODULE_ID}.tradeRouteRequested`, entry, report.tradeRequest);
+    for (const r of report.tradeLapsed ?? []) {
+      await closeRouteQuest(r, "failed");
+      Hooks.callAll(`${MODULE_ID}.tradeRouteEnded`, entry, { ...r, ended: "lapsed" });
+    }
 
     // The system's own facility advance (orders progress, crafted items, trade gold), with its own summary cards.
     const bastion = globalThis.dnd5e?.bastion;
@@ -96,7 +112,7 @@ export async function runTurn(entry, { systemAdvance = true } = {}) {
  * members close together count once (see core/rests.js). A counted rest is one work day on every running project.
  * Returns { counted, rests, completed, layoutChanged, turnDue }.
  */
-export async function runRest(entry, actorUuid, { force = false } = {}) {
+async function runRestNow(entry, actorUuid, { force = false } = {}) {
   if (!entry || !game.user.isGM) return null;
   const record = getRecord(entry);
   if (!record) return null;
@@ -109,9 +125,12 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
   next.rests = rests;
   const done = workDays(next, 1, { rules: rules(), catalog: catalog(), now: now(), newId: randomId,
     payAsYouBuild: !!setting("payAsYouBuild"), crews: statsFor(next).stats.crews });
-  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout"]);
+  await writeRecordKeys(entry, next, ["rests", "projects", "features", "grounds", "layout", "treasury", "refundsDue"]);
   for (const c of done.completed) await syncRoom(entry, c);
-  if (done.completed.length || done.started.length) {
+  await settleRefunds(entry);
+  // Only the lines that aren't already a finished / started row (a Hidden Approach ended, a cancelled project).
+  const extra = done.lines.filter(l => !/^(Finished|Started|Waiting for a crew):/.test(l));
+  if (done.completed.length || done.started.length || extra.length) {
     const fresh = getRecord(entry);
     const users = ownerActors(fresh, { includeGroup: true })
       .flatMap(a => game.users.filter(u => !u.isGM && a.testUserPermission(u, "OWNER")).map(u => u.id));
@@ -119,7 +138,8 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
       content: `<div class="dxpb-card dxpb-turn"><h3><i class="fa-solid fa-chess-rook"></i> ${escapeHTML(fresh.name)}</h3>
         <p class="dxpb-muted">${t("Chat.RestTitle", { n: rests.count })}</p>
         <ul>${done.completed.map(c => `<li>${escapeHTML(t("Chat.Finished", { label: c.label }))}</li>`).join("")}
-        ${done.started.map(c => `<li>${escapeHTML(t("Chat.Started", { label: c.label }))}</li>`).join("")}</ul></div>`,
+        ${done.started.map(c => `<li>${escapeHTML(t("Chat.Started", { label: c.label }))}</li>`).join("")}
+        ${extra.map(l => `<li>${escapeHTML(l)}</li>`).join("")}</ul></div>`,
       whisper: [...new Set([...users, ...ChatMessage.getWhisperRecipients("GM").map(u => u.id)])],
       flags: { [MODULE_ID]: { rest: { entryId: entry.id, count: rests.count } } }
     });
@@ -131,7 +151,7 @@ export async function runRest(entry, actorUuid, { force = false } = {}) {
 }
 
 /** GM: finish one project now (rooms join an owner's sheet and the battle map like any finished building). */
-export async function runFinish(entry, projectId) {
+async function runFinishNow(entry, projectId) {
   if (!entry || !game.user.isGM) return { ok: false };
   const record = getRecord(entry);
   if (!record) return { ok: false };
@@ -144,13 +164,15 @@ export async function runFinish(entry, projectId) {
   // The crews it freed (and any a finished Workers' Lodge brings) pick up queued projects.
   const crewed = assignCrews(next.projects, statsFor(next).stats.crews, { payAsYouBuild: !!setting("payAsYouBuild"), now: now() });
   next.projects = crewed.projects;
-  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout"]);
+  await writeRecordKeys(entry, next, ["projects", "features", "grounds", "layout", "treasury", "refundsDue"]);
   for (const c of res.completed) await syncRoom(entry, c);
+  await settleRefunds(entry);
   const fresh = getRecord(entry);
   for (const c of res.completed) {
     const p = fresh.projects[c.projectId];
     Hooks.callAll(`${MODULE_ID}.projectStateChanged`, entry, p, before[c.projectId], p.state);
   }
+  for (const c of res.cancelled ?? []) Hooks.callAll(`${MODULE_ID}.projectStateChanged`, entry, fresh.projects[c.projectId], before[c.projectId], "cancelled");
   // One hook (and one map redraw) for the lot.
   Hooks.callAll(`${MODULE_ID}.projectFinished`, { entryId: entry.id, projectId: all ? null : projectId, completed: res.completed,
     layoutChanged: res.layoutChanged });
@@ -160,6 +182,47 @@ export async function runFinish(entry, projectId) {
 /** GM: finish every open project at once. */
 export function runFinishAll(entry) {
   return runFinish(entry, null);
+}
+
+/**
+ * Pays the characters what the Bastion owes them (record.refundsDue.<actorId>.<projectId>, written with the record
+ * before any payment: a project a finished road cancelled). The gold and a receipt (the character's flag
+ * refundReceipts.<entryId>_<projectId>) go in one update, so a debt whose record entry couldn't be cleared is never
+ * paid twice; the entry is cleared once the receipt is there. A failed payment stays owed and is tried again on the
+ * next turn, rest, finish or world load. A character that no longer exists: its share goes to the treasury.
+ * Responsible GM; call it holding the Bastion's lock (or from settleAllRefunds).
+ */
+async function settleRefunds(entry) {
+  for (const [actorId, debts] of Object.entries(getRecord(entry)?.refundsDue ?? {})) {
+    const actor = game.actors.get(actorId);
+    for (const [projectId, owed] of Object.entries(debts ?? {})) {
+      const gold = Math.max(0, Math.floor(Number(owed) || 0));
+      const receipt = `${entry.id}_${projectId}`;
+      try {
+        const changes = { [`refundsDue.${actorId}.${projectId}`]: undefined };
+        if (!actor) changes.treasury = (Number(getRecord(entry).treasury) || 0) + gold;
+        else await withActorLock(actor, async () => {
+          if (actor.getFlag(MODULE_ID, `refundReceipts.${receipt}`) !== undefined) return;
+          await actor.update({ "system.currency.gp": (actor.system?.currency?.gp ?? 0) + gold,
+            [`flags.${MODULE_ID}.refundReceipts.${receipt}`]: gold });
+        });
+        await patchRecord(entry, changes);
+      } catch (err) {
+        console.warn(`${MODULE_ID} | a refund couldn't be paid yet; it stays owed`, err);
+      }
+    }
+    if (!Object.keys(getRecord(entry)?.refundsDue?.[actorId] ?? {}).length && getRecord(entry)?.refundsDue?.[actorId]) {
+      await patchRecord(entry, { [`refundsDue.${actorId}`]: undefined }).catch(() => {});
+    }
+  }
+}
+
+/** On world load: pays any refunds still owed (responsible GM). */
+export async function settleAllRefunds() {
+  if (!isResponsibleGM()) return;
+  for (const entry of allBastions()) {
+    if (Object.keys(getRecord(entry)?.refundsDue ?? {}).length) await withBastionLock(entry.id, () => settleRefunds(entry));
+  }
 }
 
 /** Creates or updates the dnd5e basic facility item for a finished room project. */
@@ -200,6 +263,8 @@ async function postSummary(entry, record, report, event) {
       <tr><td>${t("Chat.Income")}</td><td>${gp(report.income)}</td></tr>
       <tr><td>${t("Chat.Upkeep")}</td><td>−${gp(report.upkeep)}</td></tr>
       ${report.tax ? `<tr><td>${t("Chat.Tax")}</td><td>−${gp(report.tax)}</td></tr>` : ""}
+      ${report.foodCost ? `<tr><td>${t("Chat.FoodBought")}</td><td>−${gp(report.foodCost)}</td></tr>` : ""}
+      ${report.merchantGold ? `<tr><td>${t("Chat.MerchantGold")}</td><td>+${gp(report.merchantGold)}</td></tr>` : ""}
       ${report.dividend ? `<tr><td>${t("Chat.DividendShare")}</td><td>${gp(report.dividend)}</td></tr>` : ""}
       <tr><th>${t("Chat.Treasury")}</th><th>${gp(record.treasury)}</th></tr>
       <tr><td>${t("Chat.Food")}</td><td>${report.foodDelta >= 0 ? "+" : ""}${report.foodDelta}</td></tr>
@@ -216,7 +281,7 @@ async function postSummary(entry, record, report, event) {
 }
 
 /** One day of a live siege (GM button). */
-export async function runSiegeDay(entry) {
+async function runSiegeDayNow(entry) {
   const record = getRecord(entry);
   if (!record?.siege) return { ok: false };
   const { stats } = statsFor(record);

@@ -3,7 +3,8 @@
   <p class="dxpb-empty">{{localize "DXPB.Missing"}}</p>
 {{else}}
   <nav class="dxpb-tabs">
-    {{#each tabs}}<a class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}">{{label}}</a>{{/each}}
+    {{#each tabs}}<button type="button" class="dxpb-tab {{#if active}}active{{/if}}" data-action="dxpbTab" data-tab="{{key}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">{{label}}</button>{{/each}}
+    {{#if embedded}}<button type="button" class="dxpb-linkbtn dxpb-popout" data-action="popOut" data-tooltip="{{localize 'DXPB.PopOut'}}" aria-label="{{localize 'DXPB.PopOut'}}"><i class="fa-solid fa-arrow-up-right-from-square" inert></i></button>{{/if}}
   </nav>
   <section class="dxpb-tab-body">
 
@@ -126,13 +127,48 @@
 
   {{!-- ================= FACILITIES ================= --}}
   {{#if (eq tab "facilities")}}
-  <p class="dxpb-muted">{{localize "DXPB.FacilitiesHint"}}</p>
-  <table class="dxpb-table">
-    <thead><tr><th>{{localize "DXPB.FacilityCol"}}</th><th>{{localize "DXPB.Owner"}}</th><th>{{localize "DXPB.Type"}}</th><th>{{localize "DXPB.Order"}}</th><th>{{localize "DXPB.Progress"}}</th><th></th></tr></thead>
-    <tbody>{{#each facilities}}<tr class="{{#if disabled}}dxpb-bad{{/if}}"><td>{{name}}</td><td>{{actorName}}</td><td>{{typeLabel}}</td><td>{{orderLabel}}</td><td>{{progressText}}{{#if disabled}} {{localize "DXPB.Disabled"}}{{/if}}</td>
-      <td><button type="button" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-up-right-from-square"></i></button></td></tr>
-    {{else}}<tr><td colspan="6" class="dxpb-muted">{{localize "DXPB.NoFacilities"}}</td></tr>{{/each}}</tbody>
-  </table>
+  <div class="dxpb-facpage">
+    <p class="dxpb-fac-top"><span><i class="fa-solid fa-ruler-combined" inert></i> {{page.grounds}}</span>
+      {{#each page.slots}}<span class="{{#if mine}}dxpb-strong{{/if}}"><i class="fa-solid fa-building-columns" inert></i> {{text}}</span>{{/each}}</p>
+
+    <section class="dxpb-fac-section {{#if @root.collapsed.defenders}}dxpb-collapsed{{/if}}" data-section="defenders">
+      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if @root.collapsed.defenders}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down dxpb-fac-chevron" inert></i> <i class="fa-solid fa-shield" inert></i> <span class="roboto-upper">{{localize "DXPB.Fac.Defenders"}}</span></button></h3>
+      <p class="dxpb-fac-summary"><span>{{page.defenders.summary}}</span></p>
+      <ul class="dxpb-def-list" style="--cols: {{page.defenders.cols}}">
+        <li class="dxpb-def dxpb-def-head"><span></span><span></span>{{#each page.defenders.columns}}<span class="dxpb-cell">{{label}}</span>{{/each}}<span></span></li>
+        {{#each page.defenders.rows}}
+        <li class="dxpb-def" data-defenders="{{key}}" {{#if codex}}data-codex="{{codex}}"{{/if}}>
+          {{#if img}}<img class="dxpb-def-img" src="{{img}}" alt="">{{else}}<span class="dxpb-def-img dxpb-def-icon"><i class="fa-solid {{icon}}" inert></i></span>{{/if}}
+          <span class="dxpb-def-main">
+            <button type="button" class="dxpb-linkbtn dxpb-def-name" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{label}}</strong><span class="subtitle dxpb-muted">{{note}}</span></button>
+            <span class="dxpb-fac-slots">
+              {{#each portraits}}<button type="button" class="dxpb-linkbtn dxpb-def-portrait-btn" data-action="openFacility" data-uuid="{{uuid}}" data-tooltip="{{name}}" aria-label="{{name}}"><img class="dxpb-def-portrait" src="{{img}}" alt=""></button>{{/each}}
+              {{#if tab}}{{#if @root.mine}}<button type="button" class="dxpb-def-hire" data-action="dxpbTab" data-tab="{{tab}}" data-tooltip="{{localize 'DXPB.Fac.Def.Manage'}}" aria-label="{{localize 'DXPB.Fac.Def.Manage'}}"><i class="fa-solid fa-user-plus" inert></i></button>{{/if}}{{/if}}
+            </span>
+          </span>
+          {{#each cells}}<span class="dxpb-cell" {{#if @first}}data-count="{{../count}}"{{/if}}>{{value}}</span>{{/each}}
+          <button type="button" class="dxpb-linkbtn dxpb-def-go" data-action="openCodex" data-codex="{{codex}}" data-tooltip="{{localize 'DXPB.Codex.Open'}}" aria-label="{{localize 'DXPB.Codex.Open'}}"><i class="fa-solid fa-chevron-right" inert></i></button>
+        </li>
+        {{/each}}
+        <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each page.defenders.totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>
+      </ul>
+    </section>
+
+    {{#each page.sections}}
+    <section class="dxpb-fac-section {{#if (lookup @root.collapsed key)}}dxpb-collapsed{{/if}}" data-section="{{key}}">
+      <h3 class="icon"><button type="button" class="dxpb-linkbtn dxpb-fac-toggle" data-action="toggleSection" data-tooltip="{{localize 'DXPB.Fac.Toggle'}}" aria-expanded="{{#if (lookup @root.collapsed key)}}false{{else}}true{{/if}}"><i class="fa-solid fa-chevron-down dxpb-fac-chevron" inert></i> <i class="fa-solid {{icon}}" inert></i> <span class="roboto-upper">{{label}}</span>{{#if count}} <span class="dxpb-fac-count">{{count}}</span>{{/if}}</button>
+        {{#if @root.mine}}<button type="button" class="dxpb-fac-plan" data-action="planSection" data-group="{{key}}"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Fac.Plan"}}</button>{{/if}}</h3>
+      <p class="dxpb-fac-summary">{{#each summary}}<span>{{this}}</span>{{/each}}</p>
+      <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{limit}}</p>
+      {{#if cards.length}}<ul class="dxpb-def-list dxpb-fac-list" style="--cols: {{cols}}">
+        <li class="dxpb-def dxpb-def-head"><span></span><span></span>{{#each columns}}<span class="dxpb-cell">{{label}}</span>{{/each}}<span></span></li>
+        {{#each cards}}{{> dxpbFacilityCard}}{{/each}}
+        <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>
+      </ul>
+      {{else}}<p class="dxpb-muted">{{localize "DXPB.Fac.None"}}</p>{{/if}}
+    </section>
+    {{/each}}
+  </div>
   {{/if}}
 
   {{!-- ================= PROJECTS ================= --}}
@@ -198,16 +234,6 @@
   {{else}}<p class="dxpb-muted">{{localize "DXPB.NoProjects"}}</p>{{/if}}
   {{#unless isGM}}<p class="dxpb-muted"><i class="fa-solid fa-circle-info"></i> {{localize "DXPB.GMBuilds"}}</p>{{/unless}}
 
-  <h3>{{localize "DXPB.Built"}}</h3>
-  <table class="dxpb-table dxpb-built">
-    {{#each features}}<tr><td>{{name}}{{#if size}} ({{size}}){{/if}}{{#if count}} ×{{count}}{{/if}}{{#if tier}} · {{tier}}{{/if}}{{#if damaged}} <span class="dxpb-tag dxpb-bad">{{localize "DXPB.Damaged"}}</span>{{/if}}{{#if busy}} <span class="dxpb-tag dxpb-busy-tag">{{busy}}</span>{{/if}}</td><td class="dxpb-muted">{{group}}</td><td class="dxpb-muted">{{#if squares}}{{squares}} {{localize "DXPB.Sq"}}{{/if}}</td>
-      <td class="dxpb-actions">{{#if @root.mine}}
-        {{#if canUpgrade}}<button type="button" data-action="featureProject" data-kind="upgrade" data-fid="{{fid}}" data-tooltip="{{upgradeLabel}}"><i class="fa-solid fa-angles-up"></i></button>{{/if}}
-        {{#if canEnlarge}}<button type="button" data-action="featureProject" data-kind="enlarge" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Enlarge'}}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>{{/if}}
-        {{#if canRepair}}<button type="button" data-action="featureProject" data-kind="repair" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Repair'}}"><i class="fa-solid fa-screwdriver-wrench"></i></button>{{/if}}
-      {{/if}}</td></tr>{{/each}}
-  </table>
-
   <h3>{{localize "DXPB.Catalog"}}</h3>
   {{#if everything.n}}
   <details class="dxpb-everything">
@@ -219,22 +245,34 @@
     </table>
   </details>
   {{/if}}
-  <input type="search" class="dxpb-search" data-catalog-filter value="{{catalogFilter}}" placeholder="{{localize 'DXPB.Search'}}">
+  <div class="dxpb-inline"><input type="search" class="dxpb-search" data-catalog-filter value="{{catalogFilter}}" placeholder="{{localize 'DXPB.Search'}}">
+    {{#if catalogGroup}}<span class="dxpb-chip">{{catalogGroup.label}} <button type="button" class="dxpb-linkbtn" data-action="clearCatalogGroup" data-tooltip="{{localize 'DXPB.Fac.ShowAll'}}" aria-label="{{localize 'DXPB.Fac.ShowAll'}}"><i class="fa-solid fa-xmark" inert></i></button></span>{{/if}}</div>
   {{#each catalog}}
   <details class="dxpb-group" open>
     <summary>{{label}}</summary>
     <table class="dxpb-table dxpb-catalog">
-      {{#each items}}<tr class="{{#unless ok}}dxpb-locked{{/unless}}">
+      {{#each items}}{{#if system}}<tr class="dxpb-system-facility {{#unless ok}}dxpb-locked{{/unless}}" data-uuid="{{uuid}}">
+        <td><img class="dxpb-catalog-img" src="{{img}}" alt=""> <strong>{{name}}</strong> <span class="dxpb-tag">dnd5e</span><br><span class="dxpb-muted">{{summary}}</span></td>
+        <td class="dxpb-muted">{{localize "DXPB.Fac.SysCost"}}</td>
+        <td class="dxpb-perks"><button type="button" class="dxpb-linkbtn" data-action="openFacility" data-uuid="{{uuid}}"><i class="fa-solid fa-book-open" inert></i> {{localize "DXPB.Fac.Read"}}</button></td>
+        <td>{{#if ok}}{{#if @root.mine}}<div class="dxpb-inline"><select name="facilityOwner">{{#each owners}}<option value="{{id}}">{{name}}</option>{{/each}}</select>
+          <button type="button" data-action="addFacility"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Fac.Add"}}</button></div>{{/if}}
+          {{else}}<span class="dxpb-muted" data-tooltip="{{missing}}"><i class="fa-solid fa-lock" inert></i> {{missing}}</span>{{/if}}</td>
+      </tr>{{else}}<tr class="{{#unless ok}}dxpb-locked{{/unless}}" data-exp="{{id}}">
         <td><strong>{{name}}</strong>{{#if dmg}} <span class="dxpb-tag">DMG</span>{{/if}}<br><span class="dxpb-muted">{{summary}}</span>{{#if tiers}}<br><span class="dxpb-muted"><i class="fa-solid fa-stairs"></i> {{tiers}}</span>{{/if}}</td>
         <td>{{cost}}<br><span class="dxpb-muted">{{days}}</span><br><span class="dxpb-muted"><i class="fa-solid fa-ruler-combined"></i> {{space}}</span>{{#if upkeep}}<br><span class="dxpb-muted">{{localize "DXPB.UpkeepShort" v=upkeep}}</span>{{/if}}</td>
-        <td class="dxpb-perks">{{perks}}</td>
+        <td class="dxpb-perks">{{perks}}{{#if warn}}<br><span class="dxpb-warn"><i class="fa-solid fa-triangle-exclamation" inert></i> {{warn}}</span>{{/if}}</td>
         <td>{{#if ok}}{{#if @root.mine}}<button type="button" data-action="plan" data-id="{{id}}"><i class="fa-solid fa-plus"></i> {{localize "DXPB.PlanIt"}}</button>{{/if}}
           {{else}}<span class="dxpb-muted" data-tooltip="{{missing}}"><i class="fa-solid fa-lock"></i> {{missing}}</span>{{/if}}</td>
-      </tr>{{/each}}
+      </tr>{{/if}}{{/each}}
     </table>
   </details>
   {{else}}<p class="dxpb-muted">{{localize "DXPB.NothingToPlan"}}</p>
   {{/each}}
+  {{#if impossible.length}}<details class="dxpb-group dxpb-impossible">
+    <summary class="dxpb-muted"><i class="fa-solid fa-mountain" inert></i> {{localize "DXPB.Impossible" n=impossible.length}}</summary>
+    <ul class="dxpb-list">{{#each impossible}}<li>{{name}} <span class="dxpb-muted">— {{localize "DXPB.NeedsSite" why=why}}</span></li>{{/each}}</ul>
+  </details>{{/if}}
   {{#if done.length}}<h3>{{localize "DXPB.Finished"}}</h3><ul class="dxpb-list">{{#each done}}<li>{{label}}{{#if when}} <span class="dxpb-muted">{{when}}</span>{{/if}}</li>{{/each}}</ul>{{/if}}
   {{/if}}
 
@@ -294,12 +332,55 @@
     <label>{{localize "DXPB.PayFrom"}}</label><select name="buyFrom"><option value="actor">{{localize "DXPB.FromCharacter"}}</option><option value="treasury">{{localize "DXPB.FromTreasury"}}</option></select>
   </div>{{/if}}
   <table class="dxpb-table">
-    {{#each merchant.stock}}<tr data-ware="{{i}}" class="{{#if sold}}dxpb-locked{{/if}}"><td><a class="dxpb-ware" data-action="viewWare" data-uuid="{{uuid}}" data-tooltip="{{localize 'DXPB.ViewWare'}}"><img class="dxpb-icon" src="{{img}}"><span>{{name}}</span></a></td><td class="dxpb-muted">{{rarity}}</td><td>{{priceText}}</td>
+    {{#each merchant.stock}}<tr data-ware="{{i}}" class="{{#if sold}}dxpb-locked{{/if}}"><td><button type="button" class="dxpb-linkbtn dxpb-ware" data-action="viewWare" data-uuid="{{uuid}}" data-tooltip="{{localize 'DXPB.ViewWare'}}"><img class="dxpb-icon" src="{{img}}" alt=""><span>{{name}}</span></button></td><td class="dxpb-muted">{{rarity}}</td><td>{{priceText}}</td>
       <td>{{#if sold}}{{localize "DXPB.SoldTo" name=buyer}}{{else}}{{#if @root.mine}}<button type="button" data-action="buy"><i class="fa-solid fa-cart-shopping"></i></button>{{/if}}{{/if}}</td></tr>
     {{else}}<tr><td class="dxpb-muted">{{localize "DXPB.NoStock"}}</td></tr>{{/each}}
   </table>
   {{else}}<p class="dxpb-muted">{{localize "DXPB.NoMerchant"}}</p>{{/if}}
   {{/if}}
+
+  {{!-- ================= TRADE ROUTES ================= --}}
+  {{#if (eq tab "routes")}}{{#with routes as |routes|}}
+  <div class="dxpb-facpage">
+    <section class="dxpb-fac-section dxpb-routes" data-section="routes">
+      <h3 class="icon"><i class="fa-solid fa-route" inert></i> <span class="roboto-upper">{{localize "DXPB.Trade.Title"}}</span>{{#if routes.count}} <span class="dxpb-fac-count">{{routes.count}}</span>{{/if}}
+        {{#if @root.isGM}}{{#unless routes.needPost}}<button type="button" class="dxpb-fac-plan" data-action="tradeRequest"><i class="fa-solid fa-envelope-open-text" inert></i> {{localize "DXPB.Trade.NewRequest"}}</button>{{/unless}}{{/if}}</h3>
+      {{#if routes.needPost}}<p class="dxpb-warn"><i class="fa-solid fa-triangle-exclamation" inert></i> {{localize "DXPB.Trade.NeedPost"}}</p>{{/if}}
+      <p class="dxpb-fac-summary">{{#each routes.summary}}<span>{{this}}</span>{{/each}}</p>
+      <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{routes.limit}}</p>
+      {{#if routes.rows.length}}<ul class="dxpb-def-list dxpb-fac-list" style="--cols: {{routes.cols}}">
+        <li class="dxpb-def dxpb-def-head"><span></span><span></span>{{#each routes.columns}}<span class="dxpb-cell">{{label}}</span>{{/each}}<span></span></li>
+        {{#each routes.rows}}
+        <li class="dxpb-def dxpb-fac dxpb-route dxpb-route-{{state}}" data-route="{{id}}" data-codex="{{routes.codex}}">
+          <img class="dxpb-def-img dxpb-settle-icon" src="{{icon}}" alt="" data-tooltip="{{sizeLabel}}">
+          <span class="dxpb-def-main">
+            <button type="button" class="dxpb-linkbtn dxpb-def-name" data-action="openCodex" data-tooltip="{{localize 'DXPB.Codex.Open'}}"><strong class="title">{{name}}</strong><span class="subtitle dxpb-muted">{{subtitle}}</span></button>
+            <span class="dxpb-fac-slots">{{#each buttons}}<button type="button" class="dxpb-route-op {{cls}}" data-action="{{action}}" {{#if op}}data-op="{{op}}"{{/if}} data-tooltip="{{tip}}" aria-label="{{tip}}"><i class="fa-solid {{icon}}" inert></i></button>{{/each}}</span>
+          </span>
+          {{#each cells}}<span class="dxpb-cell">{{value}}</span>{{/each}}
+          <button type="button" class="dxpb-linkbtn dxpb-def-go" data-action="openCodex" data-tooltip="{{localize 'DXPB.Codex.Open'}}" aria-label="{{localize 'DXPB.Codex.Open'}}"><i class="fa-solid fa-chevron-right" inert></i></button>
+        </li>
+        {{/each}}
+        <li class="dxpb-def dxpb-def-total"><span></span><span class="dxpb-muted">{{localize "DXPB.Total"}}</span>{{#each routes.totals}}<span class="dxpb-cell">{{value}}</span>{{/each}}<span></span></li>
+      </ul>
+      {{else}}<p class="dxpb-muted">{{localize "DXPB.Trade.None"}}</p>{{/if}}
+      <h4 class="dxpb-places-head"><i class="fa-solid fa-map-location-dot" inert></i> {{localize "DXPB.Trade.Settlements"}}
+        {{#if routes.canEdit}}<button type="button" class="dxpb-fac-plan" data-action="settlementEdit"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Trade.AddSettlement"}}</button>{{/if}}</h4>
+      {{#if routes.places.length}}<ul class="dxpb-places">
+        {{#each routes.places}}<li class="dxpb-place" data-key="{{key}}" data-id="{{id}}">
+          <img class="dxpb-place-icon" src="{{icon}}" alt="" data-tooltip="{{sizeLabel}}">
+          <span class="dxpb-place-name"><strong>{{name}}</strong> <span class="dxpb-muted">{{detail}}</span></span>
+          {{#if status}}<span class="dxpb-place-status">{{status}}</span>{{/if}}
+          <span class="dxpb-place-actions">
+            {{#if seek}}<button type="button" class="dxpb-ok" data-action="tradeSeek" data-tooltip="{{localize 'DXPB.Trade.Seek'}}" aria-label="{{localize 'DXPB.Trade.Seek'}}"><i class="fa-solid fa-handshake" inert></i> {{localize "DXPB.Trade.SeekShort"}}</button>{{/if}}
+            {{#if gm}}<button type="button" data-action="settlementEdit" data-tooltip="{{localize 'DXPB.Trade.EditSettlement'}}" aria-label="{{localize 'DXPB.Trade.EditSettlement'}}"><i class="fa-solid fa-pen" inert></i></button>
+            <button type="button" data-action="settlementRemove" data-tooltip="{{localize 'DXPB.Trade.RemoveSettlement'}}" aria-label="{{localize 'DXPB.Trade.RemoveSettlement'}}"><i class="fa-solid fa-trash" inert></i></button>{{/if}}
+          </span>
+        </li>{{/each}}
+      </ul>{{else}}<p class="dxpb-muted">{{localize "DXPB.Trade.NoSettlements"}}</p>{{/if}}
+    </section>
+  </div>
+  {{/with}}{{/if}}
 
   {{!-- ================= HISTORY ================= --}}
   {{#if (eq tab "history")}}

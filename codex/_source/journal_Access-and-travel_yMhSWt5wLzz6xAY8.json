@@ -1,0 +1,458 @@
+{
+  "_id": "yMhSWt5wLzz6xAY8",
+  "name": "Access and travel",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 400000,
+  "pages": [
+    {
+      "_id": "RTewETiWgU7B3XsK",
+      "name": "Build a Road",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "build-road",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/build-road.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/build-road.webp",
+        "description": "<p>A proper road with a gravel bed and ditches, wide enough for carts.</p><p>A road along the whole route improves Accessibility further. It follows a cleared trail.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.RTewETiWgU7B3XsK"
+    },
+    {
+      "_id": "ncoZOxx38ujB9shM",
+      "name": "Caravan Depot",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "caravan-depot",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/caravan-depot.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/caravan-depot.webp",
+        "description": "<p>Wagon sheds, stables, a drovers' inn and loading yards on the road: the Bastion's harbour on dry land.</p><p>A Bastion with no river or coast to trade by builds a depot instead: it brings the Bastion closer to the world (Accessibility +2), and more merchants. Grown into a caravan town it earns more still, and exotic traders come by caravan as they would by sea. It needs a Bastion with no river and no coast.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.ncoZOxx38ujB9shM"
+    },
+    {
+      "_id": "8dZFWBfCZE58JcoA",
+      "name": "Clear a Trail",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "clear-trail",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/clear-trail.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/clear-trail.webp",
+        "description": "<p>A narrow way cut through forest and hill to the nearest settlement.</p><p>A trail along the whole route makes the Bastion easier to reach: travel is faster, merchants come more often and income from visitors grows. Built per mile.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.8dZFWBfCZE58JcoA"
+    },
+    {
+      "_id": "56eQqrOZSwnXlQqq",
+      "name": "Coach House and Remounts",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "coach-house",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/coach-house.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/coach-house.webp",
+        "description": "<p>A carriage house and stables of fresh remounts kept ready.</p><p>Envoys ride far faster carrying the party's orders home, faster still with a Waystation.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.56eQqrOZSwnXlQqq"
+    },
+    {
+      "_id": "5jnxqamPcOUY5MqW",
+      "name": "Deep Road Gate",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "deep-road-gate",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/deep-road-gate.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/deep-road-gate.webp",
+        "description": "<p>A great carved gate onto the ancient roads that run under the world, guarded day and night.</p><p>An underground Bastion is hard to reach from above; the deep roads bring traders from below (Accessibility +2, more merchants) and tolls. Grown into a deep road market, exotic traders come out of the dark to sell. Underground only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.5jnxqamPcOUY5MqW"
+    },
+    {
+      "_id": "8wIXGVkzj16NlYQn",
+      "name": "Harbor",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "harbor",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/harbor.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/harbor.webp",
+        "description": "<p>Quays, cranes and warehouses for sea or river trade.</p><p>A harbor draws exotic traders and earns income that grows with Accessibility. It can be upgraded to a trading port.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.8wIXGVkzj16NlYQn"
+    },
+    {
+      "_id": "VYjAMM3PWef4xeHE",
+      "name": "Hidden Approach",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "hidden-approach",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/hidden-approach.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/hidden-approach.webp",
+        "description": "<p>An overgrown way through trees and rocks, so the Bastion is hard to find from the road.</p><p>Concealment rises a lot, but the Bastion is a little harder for friends to reach too.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.VYjAMM3PWef4xeHE"
+    },
+    {
+      "_id": "F8D0a0iDsXtvPVAU",
+      "name": "Mountain Pass Toll",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "mountain-pass-toll",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/mountain-pass-toll.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mountain-pass-toll.webp",
+        "description": "<p>A tower and a barrier across the one good way through the hills or mountains, with a hostel for travellers.</p><p>Everyone who crosses pays, and the road the Bastion keeps makes it easier to reach (Accessibility +1). Grown into a pass fort and hostel it takes more in tolls and makes the Bastion's name known. Hills or mountains only.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.F8D0a0iDsXtvPVAU"
+    },
+    {
+      "_id": "tey7oe3lysep7vq7",
+      "name": "Pave the Road",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "pave-road",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/pave-road.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/pave-road.webp",
+        "description": "<p>A paved highway: stone laid on a deep bed, built to last centuries.</p><p>The best road there is: the highest Accessibility a road can give. Once the road is paved, there is nothing more to build on it.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.tey7oe3lysep7vq7"
+    },
+    {
+      "_id": "c7m1ejde9NDbfJvH",
+      "name": "Pier",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1000000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "pier",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/pier.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/pier.webp",
+        "description": "<p>A timber pier where boats can tie up and unload.</p><p>Boats can land at the Bastion, which raises Accessibility.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.c7m1ejde9NDbfJvH"
+    },
+    {
+      "_id": "Flfmkno3WTpfn3uK",
+      "name": "Stone Bridge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "stone-bridge",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/stone-bridge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/stone-bridge.webp",
+        "description": "<p>An arched stone bridge that floods and years won't take.</p><p>It raises Accessibility further than a timber bridge.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.Flfmkno3WTpfn3uK"
+    },
+    {
+      "_id": "lEUbo47UQNexdU2d",
+      "name": "Timber Bridge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "timber-bridge",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/timber-bridge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/timber-bridge.webp",
+        "description": "<p>A sturdy timber bridge over the river on the road to the Bastion.</p><p>The bridge raises Accessibility.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.lEUbo47UQNexdU2d"
+    },
+    {
+      "_id": "BTXkQN4JImwQtywc",
+      "name": "Waystation",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "waystation",
+        "category": "access",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/waystation.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/waystation.webp",
+        "description": "<p>A roadside station with stables and fresh horses.</p><p>Relay riders change horses here: Accessibility rises, and with a Coach House envoys ride even faster.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!yMhSWt5wLzz6xAY8.BTXkQN4JImwQtywc"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "access"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!yMhSWt5wLzz6xAY8"
+}

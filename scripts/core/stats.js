@@ -4,7 +4,8 @@ import {
 } from "../data/location.js";
 import { STRUCTURES } from "../data/structures.js";
 import { MERCHANT_TIERS } from "../data/tables.js";
-import { features, featureEffects, roadTier, MULT_KEYS } from "./catalog.js";
+import { features, featureEffects, roadTier, MULT_KEYS, projectMaterial } from "./catalog.js";
+import { routeCapacity, routeTotals, routesOf } from "./trade.js";
 import { groundsOf } from "./grounds.js";
 
 /**
@@ -37,10 +38,24 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const flags = {};     // boolean and string effects
   const incomeDice = [];
   let accessIncome = 0;
+  // Workers (industries): those who moved away leave their buildings short-handed, earning that much less.
+  const workersNeeded = features(record, catalog).reduce((n, [, f, exp]) => n + (Number(featureEffects(exp, f).workers) || 0), 0);
+  const workersAway = Math.min(workersNeeded, Math.max(0, Math.floor(Number(record?.people?.workersAway) || 0)));
+  const workforce = workersNeeded > 0 ? (workersNeeded - workersAway) / workersNeeded : 1;
+  // The Quarry and the Lumber Camp sell what no project under way is using: their income × rules.surplusSaleMult.
+  const usedNow = new Set(Object.values(record?.projects ?? {}).filter(p => p?.state === "building").map(p => projectMaterial(p, catalog)));
+  const surplus = {};
   for (const [, f, exp] of features(record, catalog)) {
     const e = featureEffects(exp, f);
+    const share = e.workers ? workforce : 1;
+    if (share < 1 && typeof e.income === "number") e.income = Math.round(e.income * share);
+    const material = e.stoneDiscount ? "stone" : e.timberDiscount ? "timber" : null;
+    if (material) {
+      surplus[material] = !usedNow.has(material);
+      if (surplus[material] && typeof e.income === "number") e.income = Math.round(e.income * (rules.surplusSaleMult ?? 2));
+    }
     for (const [k, v] of Object.entries(e)) {
-      if (k === "incomeDice") { incomeDice.push({ formula: v, source: exp.name, id: exp.id }); continue; }
+      if (k === "incomeDice") { incomeDice.push({ formula: v, source: exp.name, id: exp.id, share }); continue; }
       if (k === "wall" || k === "roadTier") continue;
       if (typeof v === "number") {
         if (MULT_KEYS.has(k)) fx[k] = (fx[k] ?? 1) * v;
@@ -101,7 +116,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const guests = Math.max(0, Number(record?.people?.guests) || 0);
   const refugees = Math.max(0, Number(record?.people?.refugees) || 0);
   const ownersPresent = Math.max(0, Number(ctx.ownersPresent) || 0);
-  const population = ownersPresent + hirelings + dmgDefenders + guards + mercenaries + servants + guests + refugees;
+  const workers = workersNeeded - workersAway;
+  const population = ownersPresent + hirelings + dmgDefenders + guards + mercenaries + servants + guests + refugees + workers;
 
   const housing = sum("housing");
   if (housing > 0 && population > housing) {
@@ -152,7 +168,10 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const farmMult = (LANDS[loc.land]?.farm ?? 1) * (climate.farm ?? 1) * (fx.farmMult ?? 1);
   const resourceFood = (loc.resources ?? []).reduce((n, r) => n + (RESOURCES[r]?.effects?.food ?? 0), 0);
   const foodInside = fx.foodPerDay ?? 0;
-  const foodOutside = Math.round((fx.foodOutside ?? 0) * farmMult) + resourceFood;
+  const trade = { ...routeTotals(record, rules.turnDays), capacity: routeCapacity(fx, rules), waiting: routesOf(record, ["requested", "accepted"]).length,
+    accepted: routesOf(record, ["accepted"]).length };
+  // Farms (fields, orchards, pasture) grow with the land and climate; hunting, fishing, herding and foraging don't.
+  const foodOutside = Math.round((fx.foodFarm ?? 0) * farmMult) + (fx.foodOutside ?? 0) + resourceFood + trade.food;
   const foodCap = Math.round(((fx.foodStock ?? 0) + 500) * (1 + (fx.foodStockPct ?? 0) / 100));
   const foodStock = Math.max(0, Math.min(Number(record?.food ?? 0), foodCap));
   const perDay = population * rules.foodPerPerson;
@@ -170,17 +189,21 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const accessFactor = rules.incomeAccessBase + rules.incomeAccessPer * accessibility;
   let incomeFlat = (fx.income ?? 0) - accessIncome + Math.round(accessIncome * accessFactor);
   incomeFlat += (fx.tollPerAccess ?? 0) * accessibility;
+  incomeFlat += trade.income;
   const gems = (loc.resources ?? []).includes("gems");
   const dice = incomeDice.map(d => {
-    let mult = 1;
+    let mult = d.share ?? 1;
     if (d.id === "inn") mult *= fx.innMult ?? 1;
-    if (d.id === "mine" && gems) mult *= 2;
-    return { ...d, mult, average: Math.round(averageFormula(d.formula) * mult) };
+    if (d.id === "mine" && gems) mult *= rules.gemsMult ?? 1.25;
+    const { share, ...rest } = d;
+    void share;
+    return { ...rest, mult, average: Math.round(averageFormula(d.formula) * mult) };
   });
   const incomeAverage = incomeFlat + dice.reduce((n, d) => n + d.average, 0);
   const tax = political.tax ? Math.round(incomeAverage * political.tax) : 0;
   const upkeep = (structure?.upkeep ?? 0) + (fx.upkeep ?? 0) + guards * rules.guardUpkeep + servants * rules.servantUpkeep
-    + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) * (rules.crewUpkeep ?? 0);
+    + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) * (rules.crewUpkeep ?? 0) + trade.cost
+    + workers * (rules.workerWage ?? 0);
   const net = incomeAverage - tax - upkeep;
   const prosperity = clamp(Math.floor(Math.max(0, incomeAverage) / rules.prosperityPer));
 
@@ -195,6 +218,12 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const exotic = !!flags.exotic || !!ctx.teleportCircle;
   const maxTier = exotic ? MERCHANT_TIERS.length - 1 : MERCHANT_TIERS.length - 2;
   tierIndex = Math.max(0, Math.min(maxTier, tierIndex));
+  // A visiting merchant pays stall fees, tolls and trade into the treasury: by the merchant's tier, times the market's
+  // (Market Square, Market Hall, Market Town); nothing without a market.
+  const marketTier = Object.values(record?.features ?? {}).filter(f => f?.id === "market-square" && !f.damaged)
+    .reduce((n, f) => Math.max(n, Number(f.tier) || 1), 0);
+  const marketMult = marketTier ? (rules.merchantMarketMult?.[marketTier - 1] ?? rules.merchantMarketMult?.at?.(-1) ?? 1) : 0;
+  const visitGold = Math.round((rules.merchantVisitGold?.[MERCHANT_TIERS[tierIndex].key] ?? 0) * marketMult);
 
   /* ---------- travel ---------- */
   const distance = Number(loc.settlement?.distance) || 0;
@@ -210,7 +239,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     wards: Math.min(100, fx.wards ?? 0),
     housing,
     population,
-    people: { ownersPresent, hirelings, dmgDefenders, guards, mercenaries, servants, guests, refugees },
+    surplus,
+    people: { ownersPresent, hirelings, dmgDefenders, guards, mercenaries, servants, guests, refugees, workers, workersAway, workersNeeded },
     garrison: Math.round(garrison * 100) / 100,
     wall: { type: wallType, enclosed, partial, mult: wallMult, integrity },
     defense: { walled, breached, bonusMult, siteMult, towers: towerCount },
@@ -219,14 +249,16 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     lightHalve: !!flags.lightHalve,
     noSapping: !!flags.noSapping,
     siegeFood: siegeFoodMult,
-    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays },
+    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, farmMult, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays,
+      buyPrice: Math.round((rules.foodBuyGp ?? 0.2) * (accessRow.material ?? 1) * 100) / 100 },
     water: { unlimited: waterUnlimited, cistern, days: waterDays },
     economy: { incomeFlat, dice, incomeAverage, tax, upkeep, net, accessFactor,
       dividend: net > 0 ? Math.floor(net * (record?.dividendPct ?? rules.dividendPct) / 100) : 0 },
     merchant: { chance: merchantChance, tierIndex, tier: MERCHANT_TIERS[tierIndex], score: tierScore, exotic,
-      stockMult: fx.merchantStock ?? 1 },
+      stockMult: fx.merchantStock ?? 1, marketTier, visitGold, visitGoldAverage: Math.round(visitGold * merchantChance / 100) },
     visitors: { chanceBonus: fx.visitors ?? 0, payMult: fx.visitorPay ?? 1 },
     travel: { distance, milesPerDay: accessRow.milesPerDay, days: travelDays, roadTier: tier },
+    trade,
     materialFactor: accessRow.material,
     crews: 1 + Math.max(0, Math.floor(Number(record?.garrison?.crews) || 0)) + (fx.crews ?? 0),
     grounds: groundsOf(record, catalog, rules),

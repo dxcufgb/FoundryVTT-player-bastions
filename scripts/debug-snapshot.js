@@ -81,6 +81,7 @@ function bastionState(entry, index) {
     treasury: Number(r.treasury) || 0,
     food: Number(r.food) || 0,
     dispatches: countBy(Object.values(r.dispatches ?? {}), "status", DISPATCH),
+    tradeRoutes: countBy(Object.values(r.tradeRoutes ?? {}), "state", ["requested", "accepted", "active"]),
     eventsPending: Object.values(r.events ?? {}).filter(x => x?.state === "pending").length,
     siege: !!r.siege,
     merchant: !!r.merchant,

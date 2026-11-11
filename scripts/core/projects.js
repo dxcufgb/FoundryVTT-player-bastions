@@ -54,8 +54,22 @@ export function unpaceDays(days, pace) {
 const samePace = (a, b) => (Number(a?.scale) || 1) === (Number(b?.scale) || 1) && (Number(a?.power) || 1) === (Number(b?.power) || 1);
 
 /**
+ * Progress on a job that now takes `newDays` instead of `oldDays` (more or fewer crews, another build pace): the share
+ * of the work still to do stays the same, and the days left round down (a job never goes from unfinished to finished,
+ * so at least one day stays left). 2 of 8 done, then 3 crews on a 3-day job: 6/8 × 3 = 2.25 → 2 left, so 1 of 3 done.
+ */
+export function rescaleProgress(progress, oldDays, newDays) {
+  const done = Math.max(0, Number(progress) || 0);
+  if (!oldDays || newDays <= 0) return 0;
+  if (done >= oldDays) return newDays;
+  if (done <= 0) return 0;
+  const left = Math.max(1, Math.floor((oldDays - done) / oldDays * newDays + 1e-9));
+  return Math.max(0, newDays - left);
+}
+
+/**
  * Re-times the unfinished projects for a new build pace (projects from before paces existed were planned at the
- * DMG's). Work already done keeps its share of the job. Returns { projects, changed } with new objects.
+ * DMG's). The share of the work still to do stays the same (`rescaleProgress`). Returns { projects, changed } with new objects.
  */
 export function repaceProjects(projectsIn, pace) {
   const projects = structuredClone(projectsIn ?? {});
@@ -64,9 +78,9 @@ export function repaceProjects(projectsIn, pace) {
     if (["complete", "cancelled"].includes(p.state)) continue;
     const from = p.pace ?? BUILD_PACES.dmg;
     if (samePace(from, pace)) continue;
-    const share = p.days ? Math.min(1, (p.progress ?? 0) / p.days) : 0;
+    const oldDays = p.days;
     p.days = Math.max(1, paceDays(Math.round(unpaceDays(p.days, from)), pace));
-    p.progress = Math.min(p.days, Math.floor(share * p.days));
+    p.progress = rescaleProgress(p.progress, oldDays, p.days);
     p.pace = { scale: Number(pace?.scale) || 1, power: Number(pace?.power) || 1 };
     changed = true;
   }
@@ -142,7 +156,7 @@ export function quote(record, exp, opts, stats, rules) {
   if (stats?.materialFactor && stats.materialFactor !== 1) factors.push({ label: "Hauling (Accessibility)", mult: stats.materialFactor });
   const region = DANGERS[loc.danger]?.effects?.buildCost ?? 1;
   if (region !== 1) factors.push({ label: "Dangerous region", mult: region });
-  if (material === "stone" && stats?.fx?.stoneDiscount) factors.push({ label: "Quarry", mult: stats.fx.stoneDiscount });
+  if (material === "stone" && stats?.fx?.stoneDiscount) factors.push({ label: "Quarry or brickworks", mult: stats.fx.stoneDiscount });
   if (material === "timber" && stats?.fx?.timberDiscount) factors.push({ label: "Lumber camp", mult: stats.fx.timberDiscount });
   const wardCost = (loc.resources ?? []).reduce((m, r) => m * (RESOURCES[r]?.effects?.wardCost ?? 1), 1);
   if (material === "magic" && wardCost !== 1) factors.push({ label: "Magical site", mult: wardCost });
@@ -197,7 +211,8 @@ export function planProject(record, catalog, stats, rules, opts, { id, userId, n
   if (kind === "build") {
     const pre = prerequisites(record, exp, catalog, stats);
     if (!pre.ok) return { ok: false, reason: `Needs ${pre.missing.join(", ")}` };
-    if (exp.unit === "flat" && Object.values(record.projects ?? {}).some(p => p.expansionId === exp.id && p.kind === "build"
+    // One at a time: a one-off building, and each step of the road (a trail, a road, paving), which covers the route.
+    if ((exp.unit === "flat" || exp.effects?.roadTier) && Object.values(record.projects ?? {}).some(p => p.expansionId === exp.id && p.kind === "build"
       && !["complete", "cancelled"].includes(p.state))) return { ok: false, reason: "Already planned" };
   }
   // Room inside the walls: a new building, a bigger room or a bigger tier needs free ground.
@@ -372,6 +387,45 @@ export function foldLegacyWalls(featuresIn, projectsIn) {
   return { features, projects, changed };
 }
 
+/** Road steps that end a Hidden Approach: a road leads anyone straight to the Bastion. */
+export const ROADS_END_HIDDEN = ["build-road", "pave-road"];
+
+/**
+ * A finished road also ends any Hidden Approach still planned or under way: it could never be built beside the road.
+ * Those projects are cancelled like a cancel by the party (cancelRefund: unspent funding back, a share of what was
+ * spent): the treasury's share goes back into the treasury, the characters' shares are owed in refundsDue
+ * ({ actorId: { projectId: gp } }, kept until the Foundry side has paid each one). The record isn't changed: returns
+ * { projects, treasury, refundsDue, cancelled: [{projectId, label, refunded}], refunds: { actorId: gp }, lines }.
+ */
+export function cancelHiddenApproach(record, rules = {}) {
+  const projects = { ...(record?.projects ?? {}) };
+  let treasury = Number(record?.treasury) || 0;
+  const refundsDue = structuredClone(record?.refundsDue ?? {});
+  const out = { cancelled: [], refunds: {}, lines: [] };
+  for (const p of Object.values(projects)) {
+    if (p?.expansionId !== "hidden-approach" || ["complete", "cancelled"].includes(p.state)) continue;
+    const res = transition(p, "cancel");
+    if (!res.ok) continue;
+    const refund = cancelRefund(p, { cancelRefundPct: rules.cancelRefundPct ?? 50 });
+    for (const [payer, gold] of Object.entries(refund.byPayer)) {
+      if (payer === "treasury") treasury += gold;
+      else if (gold > 0) {
+        out.refunds[payer] = (out.refunds[payer] ?? 0) + gold;
+        // One debt per character and project (refundsDue.<actorId>.<projectId>): its receipt on the character
+        // (settleRefunds) keeps it from being paid twice.
+        refundsDue[payer] = { ...(refundsDue[payer] ?? {}), [p.id]: gold };
+      }
+    }
+    res.project.refunded = refund.total;
+    res.project.cancelledBy = "road";
+    delete res.project.queuePos;
+    projects[p.id] = res.project;
+    out.cancelled.push({ projectId: p.id, label: p.label, refunded: refund.total });
+    out.lines.push(`Cancelled: ${p.label} (the road leads straight to the Bastion now; ${refund.total} GP back).`);
+  }
+  return { projects, treasury, refundsDue, ...out };
+}
+
 export function applyCompletion(featuresIn, project, newId) {
   const features = structuredClone(featuresIn ?? {});
   if (project.kind === "grounds") {
@@ -396,6 +450,11 @@ export function applyCompletion(featuresIn, project, newId) {
     return { features, featureId: newId };
   }
   if (project.kind === "build") {
+    // A road to the Bastion ends the Hidden Approach.
+    const removed = [];
+    if (ROADS_END_HIDDEN.includes(project.expansionId)) {
+      for (const [fid, x] of Object.entries(features)) if (x?.id === "hidden-approach") { delete features[fid]; removed.push(fid); }
+    }
     const f = { id: project.expansionId, builtAt: project.completedAt };
     if (project.size) f.size = project.size;
     if (project.count && project.count > 1) f.count = project.count;
@@ -403,7 +462,7 @@ export function applyCompletion(featuresIn, project, newId) {
     f.tier = 1;
     if (project.enclosed === false) f.enclosed = false;
     features[newId] = f;
-    return { features, featureId: newId };
+    return { features, featureId: newId, removed };
   }
   const f = features[project.featureId];
   if (!f) return { features, featureId: null };

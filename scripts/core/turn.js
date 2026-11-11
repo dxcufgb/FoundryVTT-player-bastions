@@ -1,5 +1,6 @@
+import { advanceTrade, rollTradeRequest, routeTotals, rememberSize } from "./trade.js";
 import { rollFormula } from "./stats.js";
-import { advanceProjects, applyCompletion, fund } from "./projects.js";
+import { advanceProjects, applyCompletion, fund, cancelHiddenApproach, ROADS_END_HIDDEN } from "./projects.js";
 import { syncLayout } from "./layout.js";
 import { assignCrews } from "./crews.js";
 import { arrivedBy, mergeOrders } from "./dispatch.js";
@@ -72,38 +73,64 @@ export function advanceTurn(recordIn, opts) {
     report.completed.push(...done.completed);
     report.lines.push(...done.lines);
     if (done.layoutChanged) report.layoutChanged = true;
+    if (done.cancelled?.length) { report.cancelled = done.cancelled; report.refunds = done.refunds; }
+  }
+
+  /* 3b. Trade routes: lapsed offers, raided caravans, a new request from a settlement (opts.settlements) */
+  const trade = advanceTrade(record, rules, { rng, turn: report.turn, danger: record.location?.danger, siege, days });
+  report.lines.push(...trade.lines);
+  report.tradeLapsed = trade.lapsed;
+  const request = rollTradeRequest(record, stats, rules, opts.settlements, { rng, turn: report.turn, id: newId() });
+  if (request) {
+    record.tradeRoutes[request.id] = request;
+    rememberSize(record, request);
+    report.tradeRequest = request;
+    report.lines.push(`${request.name} asks for a trade route (${request.kind === "food" ? `${request.food} food a day` : `${request.income} GP a turn`}). Answer by turn ${request.deadline}.`);
   }
 
   /* 4. Economy */
   const econ = stats.economy;
-  let income = econ.incomeFlat;
+  let income = econ.incomeFlat - trade.lostIncome;
   for (const dce of econ.dice) income += Math.round(rollFormula(dce.formula, rng) * (dce.mult ?? 1));
   if (siege) income = 0;
   const tax = econ.tax ? Math.round(income * (econ.tax / Math.max(1, econ.incomeAverage))) : 0;
-  const upkeep = econ.upkeep;
-  const net = income - tax - upkeep;
+  // Food routes pay for the days of food this turn brings (stats priced a turn of rules.turnDays).
+  const routeCost = routeTotals(record, days).cost - (Number(stats.trade?.cost) || 0);
+  const upkeep = econ.upkeep + routeCost - trade.savedCost;
+  let net = income - tax - upkeep;
   record.treasury = (record.treasury ?? 0) + net;
+  // Food routes are paid on delivery: what the treasury can't pay for isn't delivered (that share of the food).
+  let unpaidFood = 0;
+  const routeCharge = Math.max(0, routeTotals(record, days).cost - trade.savedCost);
+  if (record.treasury < 0 && routeCharge > 0) {
+    const unpaid = Math.min(-record.treasury, routeCharge);
+    const brought = Math.max(0, routeTotals(record, days).food - trade.lostFood);
+    unpaidFood = Math.round(brought * unpaid / routeCharge);
+    record.treasury += unpaid;
+    net += unpaid;
+    report.unpaidRoutes = unpaid;
+    report.lines.push(`The treasury couldn't pay the food caravans ${unpaid} GP: they kept back ${unpaidFood} food a day.`);
+  }
   record.unpaidUpkeep = record.treasury < 0;
   if (record.treasury < 0) {
     report.lines.push(`The treasury could not cover upkeep (${-record.treasury} GP short).`);
     record.treasury = 0;
   }
+
+  /* 5. Food: what the stores can't cover is bought with the treasury; who can't be fed moves away. */
+  const food = feedBastion(record, stats, rules, { days, siege, lostFood: trade.lostFood + unpaidFood });
+  Object.assign(report, { foodDelta: food.delta, foodBought: food.bought, foodCost: food.cost, left: food.left, returned: food.returned });
+  report.lines.push(...food.lines);
+  net -= food.cost;
+
   let dividend = 0;
   const pct = record.dividendPct ?? rules.dividendPct;
-  if (net > 0 && pct > 0 && !record.unpaidUpkeep) {
-    dividend = Math.floor(net * pct / 100);
+  if (net > 0 && pct > 0 && !record.unpaidUpkeep && !record.hungry) {
+    dividend = Math.min(record.treasury, Math.floor(net * pct / 100));
     record.treasury -= dividend;
     record.dividends = (record.dividends ?? 0) + dividend;
   }
   Object.assign(report, { income, upkeep, tax, dividend, net });
-
-  /* 5. Food */
-  const daily = stats.food.inside + (siege ? 0 : stats.food.outside) - stats.food.perDay;
-  const before = record.food ?? 0;
-  record.food = Math.max(0, Math.min(stats.food.cap, before + daily * days));
-  report.foodDelta = record.food - before;
-  record.hungry = record.food <= 0 && daily < 0;
-  if (record.hungry) report.lines.push("The stores are empty: people go hungry.");
 
   /* 6. Merchant */
   if (record.merchant && (record.merchant.leavesAt ?? 0) <= now) {
@@ -116,6 +143,12 @@ export function advanceTurn(recordIn, opts) {
       record.merchant = { ...m, id: newId(), arrivedAt: now, leavesAt: now + m.stayDays * 86400, stock: [] };
       report.merchant = record.merchant;
       report.lines.push(`A ${m.label.toLowerCase()} arrived (stays ${m.stayDays} day${m.stayDays === 1 ? "" : "s"}).`);
+      const fees = stats.merchant?.visitGold ?? 0;
+      if (fees > 0) {
+        record.treasury = (record.treasury ?? 0) + fees;
+        report.merchantGold = fees;
+        report.lines.push(`Market fees, tolls and trade from the ${m.label.toLowerCase()}: ${fees} GP into the treasury.`);
+      }
     }
   }
 
@@ -161,8 +194,37 @@ export function finishProject(record, projectId, opts = {}) {
   // Only this project moves: give it the rest of its days on its own.
   record.projects = { [projectId]: { ...p, state: "building" } };
   const done = workDays(record, Math.max(1, (p.days ?? 0) - (p.progress ?? 0)), { ...opts, payAsYouBuild: false, crews: undefined });
+  // Not finished (a siege stops all work): everything stays as it was.
+  if (!done.completed.some(c => c.projectId === projectId)) {
+    record.projects = others;
+    return { ok: false, reason: record.siege ? "No work during a siege" : "Couldn't finish", completed: [], lines: [], layoutChanged: false };
+  }
   record.projects = { ...others, ...record.projects };
+  // The others weren't in view while it finished: a finished road ends their Hidden Approach too.
+  if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) endHiddenApproach(record, done, opts.rules);
   return { ok: true, ...done };
+}
+
+/** Folds cancelled projects (cancelHiddenApproach's shape) into a workDays-shaped result. */
+function addCancelled(out, res) {
+  if (!res?.cancelled?.length) return;
+  out.cancelled = [...(out.cancelled ?? []), ...res.cancelled];
+  out.refunds ??= {};
+  for (const [id, gold] of Object.entries(res.refunds)) out.refunds[id] = (out.refunds[id] ?? 0) + gold;
+  out.lines.push(...res.lines);
+}
+
+/**
+ * A finished road: open Hidden Approach projects are cancelled (cancelHiddenApproach). Like workDays, in place on
+ * `record` (the turn's own copy): its projects, treasury and refunds owed; `out` gets the cancellations.
+ */
+function endHiddenApproach(record, out, rules) {
+  const res = cancelHiddenApproach(record, rules);
+  if (!res.cancelled.length) return;
+  record.projects = res.projects;
+  record.treasury = res.treasury;
+  record.refundsDue = res.refundsDue;
+  addCancelled(out, res);
 }
 
 /** The GM finishes every open project at once, in the order they were planned. Same result shape as workDays. */
@@ -175,6 +237,7 @@ export function finishAllProjects(record, opts = {}) {
     out.completed.push(...res.completed);
     out.lines.push(...res.lines);
     if (res.layoutChanged) out.layoutChanged = true;
+    addCancelled(out, { cancelled: res.cancelled ?? [], refunds: res.refunds ?? {}, lines: [] });
   }
   return out;
 }
@@ -217,6 +280,11 @@ export function workDays(record, days, opts = {}) {
       if (res.grounds) record.grounds = res.grounds;
       out.completed.push({ projectId: p.id, featureId: res.featureId, label: p.label, kind: p.kind, expansionId: p.expansionId });
       out.lines.push(`Finished: ${p.label}.`);
+      if (res.removed?.length) {
+        out.lines.push("The Hidden Approach is gone: the new road leads anyone straight to the Bastion.");
+        out.removedFeatures = [...(out.removedFeatures ?? []), ...res.removed];
+      }
+      if (p.kind === "build" && ROADS_END_HIDDEN.includes(p.expansionId)) endHiddenApproach(record, out, opts.rules);
     }
     finished += completed.length;
     if (completed.length && left > 0) assign();
@@ -229,5 +297,66 @@ export function workDays(record, days, opts = {}) {
     const lay = syncLayout(record, opts.catalog, opts.rules);
     if (lay.changed) { record.layout = lay.layout; out.layoutChanged = true; }
   }
+  return out;
+}
+
+/** Who moves away first when the Bastion can't feed them (record.people and record.garrison keys). */
+export const LEAVE_ORDER = [["people", "refugees"], ["people", "guests"], ["garrison", "servants"], ["workers", "workers"],
+  ["garrison", "guards"], ["garrison", "mercenaries"]];
+
+/**
+ * A turn's food (mutates the record): the stores take the day's balance; a shortfall is bought from the treasury at
+ * stats.food.buyPrice a person-day; what the treasury can't buy leaves people unfed, and that many move away
+ * (LEAVE_ORDER; workers who leave are counted in record.people.workersAway and come back on fed turns).
+ */
+export function feedBastion(record, stats, rules, { days, siege = false, lostFood = 0 } = {}) {
+  const out = { delta: 0, bought: 0, cost: 0, left: [], returned: 0, lines: [] };
+  const daily = stats.food.inside + (siege ? 0 : stats.food.outside - lostFood) - stats.food.perDay;
+  const before = Number(record.food) || 0;
+  let after = before + daily * days;
+  record.hungry = false;
+  if (after < 0) {
+    const short = Math.ceil(-after);
+    // buyPrice is a person-day's food: a unit of food costs that over foodPerPerson.
+    const price = siege ? Infinity : Math.max(0, Number(stats.food.buyPrice) || 0) / Math.max(0.01, Number(rules.foodPerPerson ?? 1) || 1);
+    const affordable = price > 0 ? Math.floor((record.treasury ?? 0) / price) : (Number.isFinite(price) ? short : 0);
+    out.bought = Math.min(short, affordable);
+    out.cost = Number.isFinite(price) ? Math.ceil(out.bought * price) : 0;
+    record.treasury = Math.max(0, (record.treasury ?? 0) - out.cost);
+    if (out.bought) out.lines.push(`The stores ran dry: ${out.bought} days of food bought for ${out.cost} GP.`);
+    const unfed = short - out.bought;
+    after = 0;
+    if (unfed > 0) {
+      record.hungry = true;
+      out.lines.push("The stores are empty and the treasury can't buy more: people go hungry.");
+      // Those who couldn't be fed all turn leave (not in a siege: nobody gets out).
+      let leaving = siege ? 0 : Math.ceil(unfed / Math.max(1, days * (rules.foodPerPerson ?? 1)));
+      record.people ??= {};
+      record.garrison ??= {};
+      for (const [where, key] of LEAVE_ORDER) {
+        if (leaving <= 0) break;
+        if (where === "workers") {
+          const here = Math.max(0, (stats.people.workersNeeded ?? 0) - (Number(record.people.workersAway) || 0));
+          const n = Math.min(here, leaving);
+          if (n) { record.people.workersAway = (Number(record.people.workersAway) || 0) + n; out.left.push({ key, n }); leaving -= n; }
+          continue;
+        }
+        const have = Math.max(0, Number(record[where][key]) || 0);
+        const n = Math.min(have, leaving);
+        if (n) { record[where][key] = have - n; out.left.push({ key, n }); leaving -= n; }
+      }
+      if (out.left.length) out.lines.push(`Moved away for want of food: ${out.left.map(l => `${l.n} ${l.key}`).join(", ")}.`);
+    }
+  }
+  // Fed: workers who left come back, a share each turn.
+  const away = Math.max(0, Number(record.people?.workersAway) || 0);
+  if (!record.hungry && away > 0 && !siege) {
+    const share = Math.max(0, Number(rules.workersReturn ?? 0.5) || 0);
+    out.returned = share > 0 ? Math.min(away, Math.max(1, Math.ceil(away * share))) : 0;
+    record.people.workersAway = away - out.returned;
+    if (out.returned) out.lines.push(`${out.returned} workers came back.`);
+  }
+  record.food = Math.max(0, Math.min(stats.food.cap, after));
+  out.delta = record.food - before;
   return out;
 }

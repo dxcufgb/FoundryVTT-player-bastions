@@ -43,5 +43,43 @@
       "name": "English",
       "path": "lang/en.json"
     }
+  ],
+  "documentTypes": {
+    "JournalEntryPage": {
+      "facility": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "inhabitant": {
+        "htmlFields": [
+          "description"
+        ]
+      }
+    }
+  },
+  "packs": [
+    {
+      "name": "codex",
+      "label": "Bastion Codex",
+      "path": "packs/codex",
+      "type": "JournalEntry",
+      "system": "dnd5e",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "flags": {}
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "Dxcufgb's Player Bastions",
+      "sorting": "m",
+      "color": "#5c3a1e",
+      "packs": [
+        "codex"
+      ]
+    }
   ]
 }

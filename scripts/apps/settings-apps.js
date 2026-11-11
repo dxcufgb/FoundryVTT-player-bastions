@@ -49,11 +49,14 @@ export class RulesConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
+  /** How a file is handed to the browser (the self-tests put a stand-in here; foundry.utils can't be changed). */
+  static saveFile = (data, type, name) => foundry.utils.saveDataToFile(data, type, name);
+
   /** Downloads one of the JSON files (data-file: a key of rulesFiles()). */
   static #onDownload(event, target) {
     const file = rulesFiles()[target.dataset.file];
     if (!file) return;
-    foundry.utils.saveDataToFile(JSON.stringify(file.data, null, 2), "application/json", file.name);
+    RulesConfig.saveFile(JSON.stringify(file.data, null, 2), "application/json", file.name);
   }
 
   /** Loads a JSON file from the computer into the rules or catalog box (data-target), after checking it parses. */

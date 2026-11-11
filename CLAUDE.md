@@ -12,8 +12,8 @@ The README stays short (intro, installation, links); the user guide, settings, A
 fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
-- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (69 expansions plus legacy wall entries,
-  tiers, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
+- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (93 expansions plus legacy wall entries,
+  tiers, `levels()` / `MAX_LEVELS` for industries, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
   `rules.js` (every number, `mergeRules`), `grounds.js` (grounds sizes, footprint per expansion, wall layers),
   `map-style.js` (textures by terrain, floors and furnishings by building, wall-band crops).
 - `scripts/core/` – the pure engine (no Foundry globals; Node-testable): `catalog.js` (overrides, prerequisites,
@@ -22,7 +22,7 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `turn.js` (`advanceTurn`), `record.js` (`createRecord`), `grounds.js` (room used, held and free; `extendGroundsBase`),
   `coins.js` (`payFromPurse`), `layout.js` (`syncLayout`: where each building stands, `record.layout`),
   `mapplan.js` (`mapPlan`: the battle map as geometry: rings, roads, furnished buildings, Foundry wall segments),
-  `index.js` (api.core).
+  `fullbuild.js` (`fullBuild`: everything a site allows at top tier, max guards, beds for all; `RIVER_KEEP`), `index.js` (api.core).
 - `scripts/store.js` – one JournalEntry per Bastion, record in `flags.dxcufgbs-player-bastions.record`; owners' players
   get Observer; every write is a dot-path update by the responsible GM (`patchRecord`, `writeRecordKeys`).
 - `scripts/context.js` – reads DMG defenders/hirelings/Armory/War Room/Teleportation Circle from the owners' facilities.
@@ -31,9 +31,43 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `dnd5e.bastion.advanceAllFacilities`, neglect, DMG event, restore idled facilities, summary card, `postTurn` hook.
 - `scripts/events.js` – the 11 DMG events (DMG roll table if found, else module table) with decision buttons.
 - `scripts/map-render.js` – paints a map plan on any 2D canvas (browser or Node); `scripts/map.js` – Foundry side:
-  paint, upload to `worlds/<world>/bastions/`, create/update the scene, replace our flagged walls, redraw hooks.
+  paint, upload to `worlds/<world>/bastions/`, create/update the scene (in the Scene folder "Bastions", `mapFolder`, flag `mapFolder`;
+  `fileMaps` on ready files loose ones), replace our flagged walls, redraw hooks.
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
-- `scripts/apps/` – `BastionSheet` (8 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
+- `scripts/apps/` – `BastionSheet` (9 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
+  `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab
+  (under the system's name field; the system's `.contents` (defenders, facility lists) is always hidden, the Facilities
+  page replaces it; `.description` shows on sub-tab "facilities" only, through the tab's `dxpb-has-bastion` /
+  `dxpb-sub-facilities` classes). Its element is moved back in on every `renderCharacterActorSheet`; it stops click (on `[data-action]`), change, input and submit from reaching the sheet,
+  and its controls get `form="dxpb-none"`. `showTabForOwners` wraps `CharacterActorSheet#_prepareTabsContext` so an
+  owner gets the tab at any level and with the system's Bastion setting off. The system name field shows the record's
+  name (players read-only; the GM's edit renames the Bastion); `syncBastionNames` (responsible GM) writes
+  `system.bastion.name` on the owners. Players have no scene-control group or journal button: the sheet is their way
+  in; the group sheet keeps a header rook.
+- `scripts/apps/facilities-page.js` – the Facilities page context (window and sheet alike): `facilitiesPage` (defenders by kind,
+  SECTIONS with summary + limit, cards for features, building projects and the owners' dnd5e facilities; a dnd5e basic
+  facility made from a room (flag `featureId`) is that room's card; upgrade arrow from tiers / ENLARGE / next road step /
+  `system.enlargeable`) and `systemFacilityCatalog` (special facilities in world items and compendiums whose loaded index
+  has a facility; added by the `addSystemFacility` action). Pure parts in `core/sections.js` (`SYSTEM_SECTION` by dnd5e
+  subtype, `specialSlots`, `canTakeFacility`). Row partial `dxpbFacilityCard` (templates/facility-card.hbs): a building is a
+  row like a defender's (`.dxpb-def`: picture, name and subtitle, action buttons, stat cells, chevron). Stat columns per
+  section: `SECTION_COLUMNS` / `DEFENDER_COLUMNS` (head row, a `.dxpb-cell` per column, total row; the grid's `--cols`).
+  A row's name and chevron open its Codex page (`openCodex`; a warning when the pack isn't loaded); the upgrade arrow
+  (`upgradeAt`, owners only) plans the project at once (`kind` upgrade / enlarge, or `road` with the next step's id).
+  The Projects page has no list of built buildings: the Facilities page is that list.
+- The Codex: pack `packs/codex` (JournalEntry, compiled LevelDB, committed: `.gitignore` keeps `packs/**/*.log`).
+  `core/codex.js` (pure: journals, INHABITANTS, stable FNV ids `journalId`/`pageId`/`folderId`, `codexUuid`, `codexArt`)
+  is shared with the builder, so the module knows every page's uuid without loading the pack. Page types
+  `facility` / `inhabitant` (module.json `documentTypes`; changing them needs a server restart): `apps/codex-page.js`
+  (`CodexPageData`, `CodexPageSheet` with live rows from catalog + rules via `codexRows`, `openCodex`). Source in
+  `codex/` (not shipped): `entries-facilities.json`, `entries-inhabitants.json` (HTML text, our own words),
+  `art-prompts.json`, `art-nodes.json` (ElevenLabs flow `1HPLljyyT4e06qNUmflb`). Rebuild with
+  `node codex/build-pack.mjs <path to @foundryvtt/foundryvtt-cli/index.mjs>` (writes `codex/_source`, compiles the pack).
+  Art: `assets/codex/<ref>.webp` (540×960) and `assets/codex/icons/<ref>.webp` (256 px crop of the same picture). A new
+  expansion needs an entry, a prompt, its art and a rebuild (the Quench Codex test checks every page and file).
+- `scripts/system-rules.js` – the system's Bastion rules (`dnd5e.bastionConfiguration`): never switched on silently;
+  `postSystemRulesNotice` (responsible GM, ready) whispers the GMs one card when they are off, hidden setting
+  `systemRulesNotice` ("", posted, enabled, dismissed); its Turn on sets `enabled: true, button: false`.
 - `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a
   dependency): `registerDebugRecorder` (init and ready; also listens for `dxcufgbs-debug-recorder.ready` from import
   time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action
@@ -62,7 +96,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   makes one more after. `.projectFinished` always redraws; `.postTurn` / `.restCounted` when anything completed.
 - Building crews (core/crews.js): `stats.crews` = 1 + `record.garrison.crews` (hired, `hireCrews` action) + `fx.crews`
   (Workers' Lodge). A project holds `projectTeams(p)` = 1 + extraCrews only while "building". `quote()` divides days
-  by the project's own crews (not the Bastion's). `construction` checks `canAssign` on start/resume/crews; after any
+  by the project's own crews (not the Bastion's); new crews or a new pace re-time progress with `rescaleProgress`
+  (core/projects.js: same share of work left, days left rounded down, at least 1 left if unfinished). `construction` checks `canAssign` on start/resume/crews; after any
   change `startWaiting` (actions.js) runs `assignCrews`, which starts queued projects (the party's order: `queuePos`, see `queueOrder` / `nextQueuePos` / `moveInQueue`; then queuedAt; funded unless
   pay-as-you-build) and requeues the latest-started when over the count. `workDays(record, days, { crews })` goes day
   by day and reassigns after completions; the turn passes `stats.crews`, `finishProject` passes none.
@@ -73,6 +108,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - Build pace: `paceDays` (core/projects.js) applies `rules.pace` to base days inside `quote()`; the "Build pace"
   setting sets `rules().pace` unless the house rules set `pace`. DEFAULT_RULES keeps the DMG pace so the engine tests
   check DMG numbers; the module's default setting is "adventure".
+- One of a kind: `once: true` (parlor, courtyard, wall, spike-barricade) is built once; `unit: "flat"` and road steps can't be
+  planned twice; `roadUnpaved` closes the road once it is a highway. Road steps aren't `once` (a partial-mile road must stay open).
 - Walls: no structure brings a wall. One expansion `wall` with `tiers` (palisade → stone → reinforced → wall walk;
   each tier has its own `material`), upgrades priced per square × the wall's count in `quote()`; only one wall can be
   built. `palisade`, `stone-wall`, `reinforce-wall`, `wall-walk` are `legacy: true` (not plannable, hidden);
@@ -93,7 +130,62 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - Quench tests set the clock to "calendar" in `before()` and restore the GM's settings in `after()`.
 - Layout coordinates are squares from the centre of the grounds (every grounds side is even), so extending never moves
   a building. A stored placement is never moved; only a building that grew may relocate (`moved: true`).
+- A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
+  Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
+- One change at a time (`scripts/lock.js`): `request()` (socket.js) sends every action to the responsible GM (other GMs
+  relay too); `runAction` takes `withBastionLock(entryId)` except for RUNS_ITSELF actions, whose turn-runner entry
+  points (`runTurn`, `runRest`, `runFinish`, `runSiegeDay`) take it themselves. Not reentrant. Coins: `takeGold` /
+  `giveGold` take `withActorLock`.
+- A finished road cancels an open Hidden Approach (`cancelHiddenApproach`, core/projects.js): cancel refund; the
+  characters' shares are owed in `record.refundsDue.<actorId>.<projectId>` and paid by `settleRefunds` (turn-runner.js) with a receipt flag on the character (`refundReceipts.<entryId>_<projectId>`, never paid twice), each cleared once paid;
+  `settleAllRefunds` runs on ready.
+- Map notes keep the size their first route rolled: `record.tradeSizes.<key>` (`rememberSize`, core/trade.js).
+- Hidden Approach: `ROADS_END_HIDDEN` (core/projects.js) road steps remove it in `applyCompletion` (`removed`); its
+  `roadBelowRoad` check (`ROAD_PASSED_CHECKS`) keeps it off the catalog once there's a road. `hiddenApproachWarning`
+  (bastion-sheet.js) warns in the catalog and on the road arrow; `confirmHiddenApproach` asks before planning.
+- Facilities rows: `mergeSameKind` (core/sections.js) folds cards of one kind (`group`: `exp:<id>` or `sys:<type>:<name>`)
+  into one row (`many`, summed stats; acts on a damaged one, else an upgradable one). Sections fold
+  (`toggleSection`, localStorage `<module>.collapsedSections`, `c.collapsed`).
+- Catalog (Projects): an expansion is listed when it can be planned now, or locked when `possibleHere` (core/catalog.js:
+  `SITE_CHECKS` — terrain, land, water, resources — and, recursively, the buildings it needs) says it can be built here
+  later; one-ofs built or planned, maxed "each", road steps and walls aren't listed locked. `c.impossible` lists what the
+  site rules out, with the reason; the "everything" estimate skips those.
+- Workers: an expansion's `workers` effect (industries, per level) counts in `stats.population` (beds, food) and
+  `rules.workerWage` each a turn in `economy.upkeep` (present workers only; the Upkeep column adds them per building).
+  From level 3 every building with workers earns more than wages + their food at the dearest buy price + upkeep
+  (engine test checks every level).
+  `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
+  dice of every building with workers by the share still there (`workforce` in stats.js).
+- Balance band (engine test "every site, fully built…"): `fullBuild` of the poorest choices (no resources, far hamlet,
+  grant, barren/arid, no river or coast, keep or cave, every terrain) earns ≥ RIVER_KEEP − 750 GP a turn (gold = net
+  − food bought + average merchant fees) with food net ≥ 0. Site buildings (checks `underground`, `landlocked` (none,
+  stream, lake), `dryLand`, `frozen`, `swampland`, `hardLand`, `mountainPass`, `plainsLand`, `urbanSite`, `seaside`,
+  `forestLand`, `noStone`; all SITE_CHECKS) make up for what a site lacks. Farm food is `foodFarm` (× land, climate,
+  Mill); `foodOutside` (hunting, fishing, herds, foraging) is not scaled. `timber`/`stone` checks also pass for forest /
+  hills, mountains, underground. A new site building needs Codex art like any other. Tune with `node tools/balance-sweep.mjs [--all]`
+  (not shipped).
+- Merchant fees: `stats.merchant.visitGold` = `rules.merchantVisitGold[tier.key]` × `rules.merchantMarketMult[market tier − 1]`
+  (0 without a Market Square); `advanceTurn` adds it to the treasury when a merchant arrives (`report.merchantGold`).
+- Surplus: `stats.surplus` { stone, timber } (computeStats): a feature with `stoneDiscount` / `timberDiscount` (Quarry,
+  Lumber Camp) earns income × `rules.surplusSaleMult` while no "building" project uses that material
+  (`projectMaterial`, core/catalog.js: an upgrade's target tier material, else the first tier's / the expansion's).
+- Food in a turn: `feedBastion` (core/turn.js) after upkeep and before the dividend: the shortfall is bought at
+  `stats.food.buyPrice` (`rules.foodBuyGp` × the access's material factor); unfed people leave in `LEAVE_ORDER`
+  (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.
+- Trade routes: pure rules in `core/trade.js` (`quoteRoute`, `rollTradeRequest`, `transitionRoute`, `advanceTrade`,
+  `routeCapacity` = 0 without a Trading Post (`fx.tradePosts`), else `rules.tradeBaseRoutes` (0) + fx.tradeRoutes; no
+  requests, seeking or accepting at 0, and players don't get the tab; `settlementRoom`: routes per settlement by size,
+  `rules.tradeRoutesPerSettlement` 3/6/9/12/15, a map note keeps the size its first route rolled); `record.tradeRoutes.<id>` (requested → accepted → active;
+  ended routes are deleted). `stats.trade` adds active routes' gold to `incomeFlat`, food to `food.outside` and food routes' `cost` (the Bastion pays for its food, `rules.tradeFoodPrice` × the buy price) to `economy.upkeep`; a turn
+  lapses offers past `deadline`, rolls raids (lost gold / food that turn) and maybe a request from `opts.settlements`
+  (`tradeSettlements`, scripts/trade.js → core `settlementList`: "home", the GM's `record.settlements.<id>` as key `gm:<id>`
+  (any distance), then map notes near the marker; a name once). GM actions `saveSettlement` / `removeSettlement`; owners'
+  `proposeTradeRoute` makes a route that starts accepted (`proposed: true`). Actions `tradeRoute` (owners: accept,
+  decline, withdraw, cancel), `signTradeRoute` / `requestTradeRoute` (GM). Quest Log (`dxcufgbs-quest-log`, optional):
+  `createRouteQuest` on accept, `closeRouteQuest` completed on sign, failed on lapse / withdraw. Tab "routes" (Trade
+  Routes, after Trade): `c.routes` = `tradeRoutesPage` (facilities-page.js; `data-section="routes"`), icons by size from
+  `settlementIcon` (`assets/settlements/<size>.svg`, placeholders; `unknown.svg` for a map note without a size).
 - Map art lives in `assets/map/tex` (tileable, 512 px, one tile = 4 squares unless `TILE_OVERRIDE`) and
   `assets/map/props` (transparent, cropped, back of the object at the top of the picture).
 

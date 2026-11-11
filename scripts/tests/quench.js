@@ -12,7 +12,10 @@ import { FoundingWizard, defaultMapScene } from "../apps/wizard.js";
 import { BastionDashboard } from "../apps/dashboard.js";
 import { sceneDistance, settlementsNear } from "../marker.js";
 import { computeStats } from "../core/stats.js";
-import { buildMap, planFor, wallData, lightData, mapScene } from "../map.js";
+import { syncLayout } from "../core/layout.js";
+import { buildMap, planFor, wallData, lightData, mapScene, fileMaps } from "../map.js";
+import { EXPANSIONS } from "../data/catalog.js";
+import { INHABITANTS, codexUuid, CODEX_PACK } from "../core/codex.js";
 
 /**
  * Self-verification. Two Quench batches:
@@ -29,7 +32,8 @@ export function registerQuench(quench) {
 
   quench.registerBatch(`${MODULE_ID}.integration`, (context) => {
     const { describe, it, assert, before, after } = context;
-    const made = { actors: [], scenes: [], entries: [], users: [] };
+    const made = { actors: [], scenes: [], entries: [], users: [], messages: [] };
+    let messageHook = null;
     let entryId;
     let group;
     let hero;
@@ -43,6 +47,8 @@ export function registerQuench(quench) {
       this.timeout(120000);
 
       before(async () => {
+        // The chat messages this client writes while the batch runs: only those are ever cleaned up.
+        messageHook = Hooks.on("createChatMessage", m => { if (m.author?.id === game.user.id) made.messages.push(m.id); });
         if (!game.user.isGM) throw new Error("Run as GM");
         for (const k of ["clock", "timePrompt", "buildPrice"]) saved[k] = game.settings.get(MODULE_ID, k);
         await game.settings.set(MODULE_ID, "clock", "calendar");
@@ -82,8 +88,11 @@ export function registerQuench(quench) {
         }
         for (const id of made.actors) await game.actors.get(id)?.delete();
         for (const id of made.scenes) await game.scenes.get(id)?.delete();
+        // Turn and event cards of the test Bastions, and every other card the batch wrote about its test documents.
         const msgs = game.messages.filter(m => m.getFlag(MODULE_ID, "turn")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "turn").entryId)
-          || m.getFlag(MODULE_ID, "event")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "event").entryId));
+          || m.getFlag(MODULE_ID, "event")?.entryId && made.entries.includes(m.getFlag(MODULE_ID, "event").entryId)
+          || (made.messages.includes(m.id) && String(m.content ?? "").includes(PREFIX)));
+        Hooks.off("createChatMessage", messageHook);
         if (msgs.length) await ChatMessage.deleteDocuments(msgs.map(m => m.id));
       });
 
@@ -122,14 +131,456 @@ export function registerQuench(quench) {
         assert.isTrue(canAct(record, game.user), "the GM can act");
       });
 
-      it("a party member's sheet finds the Bastion and shows the rook button", async () => {
+      it("a party member's character sheet shows the Bastion in the system's own Bastion tab, like official content", async () => {
         const { bastionForActor } = await import("../store.js");
+        const { BastionTabPanel } = await import("../apps/bastion-tab.js");
         assert.equal(bastionForActor(hero)?.id, entryId, "a member of the group owns it");
         assert.equal(bastionForActor(group)?.id, entryId, "the group owns it");
-        await hero.sheet.render({ force: true });
-        for (let i = 0; i < 20 && !hero.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));
-        assert.ok(hero.sheet.element.querySelector(".window-header .dxpb-open-bastion"), "rook button in the sheet header");
-        await hero.sheet.close();
+        const sheet = hero.sheet;
+        await sheet.render({ force: true });
+        const el = () => sheet.element;
+        const tab = () => el()?.querySelector(".tab[data-tab=bastion]");
+        const panel = () => tab()?.querySelector(".dxpb-embedded");
+        for (let i = 0; i < 60 && !panel()?.querySelector(".dxpb-tabs"); i++) await new Promise(r => setTimeout(r, 50));
+        try {
+          // The tab is there whatever the character's level or the system's Bastion setting.
+          assert.ok(el().querySelector('[data-tab="bastion"][data-action="tab"], nav [data-tab="bastion"]'), "the Bastion tab in the sheet's tab list");
+          assert.ok(tab(), "the system's Bastion tab");
+          assert.ok(panel(), "the Bastion page inside it");
+          assert.notOk(el().querySelector(".window-header .dxpb-open-bastion"), "no extra button in the window header");
+          assert.equal(getComputedStyle(tab().querySelector(":scope > .contents")).display, "none", "the Facilities page replaces the system's lists");
+          const record = getRecord(getEntry(entryId));
+          const nameInput = tab().querySelector(":scope > .name input");
+          const shown = nameInput ? nameInput.value : tab().querySelector(":scope > .name .document-name")?.textContent;
+          assert.equal(shown, record.name, "the name field shows the Bastion's name");
+          const subTabs = [...panel().querySelectorAll(".dxpb-tabs .dxpb-tab")].map(a => a.dataset.tab);
+          assert.sameMembers(subTabs, ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "routes", "history"]);
+          // Our clicks and changes stay ours: the character isn't updated and the sheet isn't submitted.
+          let updates = 0;
+          // The system Bastion name the GM keeps in step with the Bastion's (syncBastionNames) may land late, and other
+          // modules write their own flags on a new character: neither is the page.
+          const hook = Hooks.on("updateActor", (a, changes) => {
+            const keys = Object.keys(foundry.utils.flattenObject(changes ?? {})).filter(k => !k.startsWith("_") && k !== "system.bastion.name"
+              && !(k.startsWith("flags.") && !k.startsWith(`flags.${MODULE_ID}.`)));
+            if (a.id === hero.id && keys.length) { updates++; console.warn("dxpb test: hero updated", keys); }
+          });
+          const go = async key => {
+            panel().querySelector(`.dxpb-tabs [data-tab="${key}"]`).click();
+            for (let i = 0; i < 40 && !panel()?.querySelector(`.dxpb-tab.active[data-tab="${key}"]`); i++) await new Promise(r => setTimeout(r, 50));
+          };
+          try {
+            await go("projects");
+            assert.ok(panel().querySelector(".dxpb-crews"), "the Projects page with its building crews");
+            const select = panel().querySelector("select");
+            if (select) {
+              assert.equal(select.getAttribute("form"), "dxpb-none", "the page's inputs belong to no form");
+              select.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            await new Promise(r => setTimeout(r, 400));
+          } finally {
+            Hooks.off("updateActor", hook);
+          }
+          assert.equal(updates, 0, "nothing on the page updates the character");
+          await go("facilities");
+          assert.notEqual(getComputedStyle(tab().querySelector(":scope > .description")).display, "none", "the system's description under the page");
+          await checkFacilitiesPage(() => BastionTabPanel.panels.get(sheet.id), () => go("facilities"));
+          // A re-render of the sheet keeps the page and its sub-tab.
+          const before = BastionTabPanel.panels.get(sheet.id);
+          await sheet.render();
+          for (let i = 0; i < 40 && !panel(); i++) await new Promise(r => setTimeout(r, 50));
+          assert.equal(BastionTabPanel.panels.get(sheet.id), before, "the same page");
+          assert.ok(panel()?.querySelector('.dxpb-tab.active[data-tab="facilities"]'), "on the same sub-tab");
+          // The pop-out opens the full window, on the same page (Facilities included).
+          panel().querySelector("[data-action=popOut]").click();
+          for (let i = 0; i < 40 && !BastionSheet.instances.get(entryId)?.rendered; i++) await new Promise(r => setTimeout(r, 50));
+          assert.ok(BastionSheet.instances.get(entryId)?.rendered, "the Bastion window");
+          assert.equal(BastionSheet.instances.get(entryId).tab, "facilities");
+          await BastionSheet.instances.get(entryId).close();
+        } finally {
+          await sheet.close();
+        }
+        assert.notOk(BastionTabPanel.panels.get(sheet.id), "the page goes with the sheet");
+        assert.equal(hero.system.bastion.name, getRecord(getEntry(entryId)).name, "the owners' system Bastion name follows the Bastion");
+      });
+
+      /**
+       * The Facilities page, in the window or a character sheet: the defenders by kind, a section per kind of building
+       * with a summary and a limit, the Bastion's buildings and the owners' dnd5e facilities as cards, upgrade arrows,
+       * and a section's Plan button opening the catalog on that section only. `reopen` comes back to the page.
+       */
+      async function checkFacilitiesPage(app, reopen) {
+        const { patchRecord } = await import("../store.js");
+        const el = () => app().element;
+        const wait = async test => { for (let i = 0; i < 60 && !test(); i++) await new Promise(r => setTimeout(r, 50)); };
+        const guardsBefore = getRecord(getEntry(entryId)).garrison?.guards ?? 0;
+        await patchRecord(getEntry(entryId), { "garrison.guards": 3 });
+        await wait(() => el()?.querySelector('[data-defenders="guards"] [data-count]')?.dataset.count === "3");
+        try {
+          assert.ok(el().querySelector(".dxpb-facpage"), "the Facilities page");
+          assert.equal(el().querySelector('[data-defenders="guards"] [data-count]').dataset.count, "3", "hired guards in the defenders list");
+          assert.ok(el().querySelector('[data-defenders="mercenaries"]'), "mercenaries listed");
+          assert.equal(el().querySelector('[data-defenders="system"] [data-count]').dataset.count, "2", "the Barrack's defenders");
+          assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portrait').length, 2, "with their portraits");
+          const sections = [...el().querySelectorAll(".dxpb-fac-section[data-section]")].map(x => x.dataset.section);
+          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "staff", "arcane"]);
+          for (const sec of el().querySelectorAll('.dxpb-fac-section:not([data-section="defenders"])')) {
+            assert.ok(sec.querySelector(".dxpb-fac-summary span")?.textContent.trim(), `${sec.dataset.section}: a summary`);
+            assert.ok(sec.querySelector(".dxpb-fac-limit")?.textContent.trim(), `${sec.dataset.section}: a limit`);
+          }
+          const titles = key => [...el().querySelectorAll(`[data-section="${key}"] .dxpb-fac .title`)].map(x => x.textContent.trim());
+          assert.include(titles("fortifications"), "Gatehouse");
+          assert.include(titles("fortifications"), `${PREFIX} Barrack`, "a system special facility in its section");
+          assert.include(titles("rooms"), "Kitchen");
+          assert.notInclude(titles("fortifications"), "Kitchen");
+          const kitchen = [...el().querySelectorAll('[data-section="rooms"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Kitchen");
+          assert.ok(kitchen.querySelector(".dxpb-fac-up"), "a roomy kitchen can be enlarged: double arrow up");
+          const wall = [...el().querySelectorAll('[data-section="fortifications"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Wall");
+          assert.ok(wall?.querySelector(".dxpb-fac-up"), "a stone wall can be raised");
+          // Stat columns: a head row with the labels, every row as many cells, a total row.
+          for (const list of el().querySelectorAll(".dxpb-facpage .dxpb-def-list")) {
+            const cols = list.querySelectorAll(".dxpb-def-head .dxpb-cell").length;
+            assert.isAtLeast(cols, 1, "column labels");
+            for (const row of list.querySelectorAll(".dxpb-def:not(.dxpb-def-head)")) {
+              assert.equal(row.querySelectorAll(":scope > .dxpb-cell").length, cols, "a cell per column");
+            }
+            assert.ok(list.querySelector(".dxpb-def-total"), "a total row");
+          }
+          // One row per kind of building in every table (three watchtowers are one row "× 3").
+          for (const sec of el().querySelectorAll(".dxpb-facpage .dxpb-fac-section")) {
+            const titles = [...sec.querySelectorAll(".dxpb-fac:not(.building) .title")].map(x => x.textContent.trim());
+            assert.equal(new Set(titles).size, titles.length, `${sec.dataset.section}: one row per kind`);
+          }
+          // Sections fold away and stay folded across a redraw.
+          {
+            const sec = () => el().querySelector('.dxpb-fac-section[data-section="arcane"]');
+            const before = localStorage.getItem(`${MODULE_ID}.collapsedSections`);
+            try {
+              // From an open section, whatever the GM had folded before.
+              if (sec().classList.contains("dxpb-collapsed")) sec().querySelector('[data-action="toggleSection"]').click();
+              assert.isFalse(sec().classList.contains("dxpb-collapsed"), "open to start with");
+              sec().querySelector('[data-action="toggleSection"]').click();
+              assert.isTrue(sec().classList.contains("dxpb-collapsed"), "folded");
+              assert.equal(getComputedStyle(sec().querySelector(".dxpb-fac-summary")).display, "none", "its contents hidden");
+              await reopen();
+              await wait(() => el()?.querySelector(".dxpb-facpage"));
+              assert.isTrue(sec().classList.contains("dxpb-collapsed"), "still folded after a redraw");
+              sec().querySelector('[data-action="toggleSection"]').click();
+              assert.isFalse(sec().classList.contains("dxpb-collapsed"), "open again");
+            } finally {
+              // The GM's own folded sections, whatever happened above.
+              if (before === null) localStorage.removeItem(`${MODULE_ID}.collapsedSections`);
+              else localStorage.setItem(`${MODULE_ID}.collapsedSections`, before);
+            }
+          }
+          // Every row of this module's own has its Codex page and icon.
+          for (const row of el().querySelectorAll(".dxpb-facpage [data-defenders], .dxpb-facpage .dxpb-fac:not(.dxpb-fac-system)")) {
+            assert.ok(row.dataset.codex?.startsWith(`Compendium.${MODULE_ID}.codex.`), "a Codex page");
+            assert.ok(row.querySelector("img.dxpb-def-img")?.getAttribute("src").includes("/assets/codex/icons/"), "the Codex icon");
+          }
+          // A building's name opens its Codex page.
+          const gate = [...el().querySelectorAll('[data-section="fortifications"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Gatehouse");
+          const page = await fromUuid(gate.dataset.codex);
+          assert.equal(page?.type, `${MODULE_ID}.facility`, "the gatehouse's Codex page");
+          const openSheet = () => foundry.applications.instances.get(page.parent.sheet.id);
+          gate.querySelector('.dxpb-fac-name[data-action="openCodex"]').click();
+          await wait(() => openSheet()?.rendered && openSheet().element.querySelector(".dxpb-codex"));
+          assert.ok(openSheet()?.element.querySelector(".dxpb-codex-hero img"), "the Codex page with its painting");
+          assert.ok(openSheet().element.querySelector(".dxpb-codex-table tr"), "and its contributions");
+          await openSheet().close();
+          // The upgrade arrow plans the upgrade: a project in the constructions list, and the arrow gives way to it.
+          const wallFid = wall.dataset.fid;
+          const openUpgrade = () => Object.values(getRecord(getEntry(entryId)).projects ?? {})
+            .find(p => p.featureId === wallFid && p.kind === "upgrade" && !["complete", "cancelled"].includes(p.state));
+          wall.querySelector('.dxpb-fac-up[data-action="upgradeAt"]').click();
+          await wait(() => openUpgrade() && !el()?.querySelector(`[data-fid="${wallFid}"] .dxpb-fac-up`));
+          const planned = openUpgrade();
+          assert.ok(planned, "the wall's upgrade is planned");
+          assert.equal(planned.state, "planned");
+          assert.notOk(el().querySelector(`[data-fid="${wallFid}"] .dxpb-fac-up`), "no arrow while the upgrade is planned");
+          assert.ok(el().querySelector(".dxpb-facpage"), "still on the Facilities page");
+          await ACTIONS.removeProject({ entryId, projectId: planned.id }, game.user);
+          await wait(() => !openUpgrade());
+          // A section's Plan button: the catalog on the Projects page, only that section.
+          el().querySelector('[data-section="rooms"] [data-action="planSection"]').click();
+          await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-chip"));
+          assert.ok(el().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the Projects page");
+          assert.ok(el().querySelector(".dxpb-chip"), "the catalog shows one section");
+          assert.isAtMost(el().querySelectorAll(".dxpb-group").length, 1, "only that section's group");
+          el().querySelector('[data-action="clearCatalogGroup"]').click();
+          await wait(() => !el()?.querySelector(".dxpb-chip"));
+          assert.notOk(el().querySelector(".dxpb-chip"), "every group again");
+          await reopen();
+        } finally {
+          await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
+        }
+      }
+
+      it("the Codex has a page with a painting and an icon for every building and inhabitant", async () => {
+        const pack = game.packs.get(`${MODULE_ID}.${CODEX_PACK}`);
+        assert.ok(pack, "the Codex pack");
+        const journals = await pack.getDocuments();
+        const pages = new Map(journals.flatMap(j => j.pages.contents.map(p => [p.uuid, p])));
+        const wanted = [...EXPANSIONS.filter(e => !e.legacy).map(e => ["facility", e.id, e.group]),
+          ...Object.keys(INHABITANTS).map(k => ["inhabitant", k, null])];
+        const files = new Set();
+        for (const [kind, ref, group] of wanted) {
+          const page = pages.get(codexUuid(MODULE_ID, kind, ref, group));
+          assert.ok(page, `${kind} ${ref}: a page`);
+          assert.equal(page.type, `${MODULE_ID}.${kind}`);
+          assert.equal(page.system.ref, ref);
+          assert.ok(page.system.description?.length > 40, `${ref}: a description`);
+          files.add(page.system.image);
+          files.add(page.system.icon);
+        }
+        assert.equal(pages.size, wanted.length, "no stray pages");
+        const missing = [];
+        for (const f of files) if (!(await fetch(foundry.utils.getRoute(f), { method: "HEAD" })).ok) missing.push(f);
+        assert.deepEqual(missing, [], "every painting and icon is in the module");
+      });
+
+      /** Gives the test Bastion a Trading Post (trade routes need one) unless it has one; remove() undoes it. */
+      async function addTradingPost() {
+        const { patchRecord } = await import("../store.js");
+        const has = Object.values(getRecord(getEntry(entryId)).features ?? {}).some(f => f?.id === "trading-post");
+        if (has) return { added: false, remove: async () => {} };
+        const fid = `qtp${Date.now().toString(36)}`;
+        const feature = { id: "trading-post", count: 1, label: "Trading Post" };
+        await patchRecord(getEntry(entryId), { [`features.${fid}`]: feature });
+        return { added: true, fid, feature, remove: async () => patchRecord(getEntry(entryId), { [`features.${fid}`]: undefined }) };
+      }
+
+      it("trade routes: a settlement asks, the owners accept (a Quest Log quest), the GM signs, the route pays, then is cancelled", async () => {
+        const { patchRecord } = await import("../store.js");
+        const { tradeSettlements, questLog } = await import("../trade.js");
+        const entry = () => getEntry(entryId);
+        const gold = getRecord(entry()).treasury ?? 0;
+        const home = tradeSettlements(getRecord(entry())).find(s => s.key === "home");
+        assert.ok(home, "the Bastion's own settlement can ask");
+        const post = await addTradingPost();
+        let id = null;
+        const route = () => getRecord(entry()).tradeRoutes?.[id];
+        let questId = null;
+        try {
+          if (post.added) {
+            await patchRecord(entry(), { [`features.${post.fid}`]: undefined });
+            const no = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
+            assert.isFalse(no.ok, "no Trading Post, no trade routes");
+            assert.equal(no.reason, t("Trade.NeedPost"));
+            await patchRecord(entry(), { [`features.${post.fid}`]: post.feature });
+          }
+          let res = await ACTIONS.requestTradeRoute({ entryId, key: "home", goods: "cloth" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          id = res.routeId;
+          assert.equal(route().state, "requested");
+          assert.equal(route().kind, "coin");
+          const app = BastionSheet.open(entryId, { tab: "routes" });
+          await app.render({ force: true });
+          const row = () => app.element.querySelector(`[data-section="routes"] [data-route="${id}"]`);
+          assert.ok(row(), "the request on the Trade Routes tab");
+          assert.include(row().querySelector(".dxpb-settle-icon")?.getAttribute("src") ?? "", "assets/settlements/", "a settlement icon");
+          assert.ok(row().querySelector('[data-action="tradeRoute"][data-op="accept"]'), "an Accept button");
+          await app.close();
+          res = await ACTIONS.tradeRoute({ entryId, routeId: id, op: "accept" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.equal(route().state, "accepted");
+          questId = route().questId;
+          if (questLog()) {
+            assert.ok(questId, "a quest in Dxcufgb's Quest Log");
+            assert.equal(questLog().getQuest(questId)?.status, "active");
+          }
+          res = await ACTIONS.signTradeRoute({ entryId, routeId: id, from: "treasury" }, game.user);
+          if ((gold ?? 0) < route().setup) assert.isFalse(res.ok, "not enough gold in the treasury");
+          await patchRecord(entry(), { treasury: Math.max(gold, route().setup) });
+          res = await ACTIONS.signTradeRoute({ entryId, routeId: id, from: "treasury" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.equal(route().state, "active");
+          assert.equal(getRecord(entry()).treasury, Math.max(gold, route().setup ?? 0) - route().setup, "the setup is paid");
+          if (questId) assert.equal(questLog().getQuest(questId)?.status, "completed");
+          const { stats } = statsFor(getRecord(entry()));
+          assert.equal(stats.trade.active, 1);
+          assert.equal(stats.trade.income, route().income);
+          res = await ACTIONS.tradeRoute({ entryId, routeId: id, op: "cancel" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          assert.notOk(route(), "a cancelled route is gone");
+        } finally {
+          if (id && route()) await patchRecord(entry(), { [`tradeRoutes.${id}`]: undefined });
+          await patchRecord(entry(), { treasury: gold });
+          await post.remove();
+          // The quest this test made in the Quest Log's store.
+          if (questId) {
+            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${questId}`));
+            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${questId}`]: null });
+          }
+        }
+      });
+
+      it("trade routes: the GM lists a settlement with its distance; the owners seek a route there", async () => {
+        const { patchRecord } = await import("../store.js");
+        const entry = () => getEntry(entryId);
+        let res = await ACTIONS.saveSettlement({ entryId, settlement: { name: `${PREFIX} Port`, distance: 240, size: "city" } }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        const sid = res.id;
+        let routeId = null, questId = null, routeId2 = null, questId2 = null;
+        const post = await addTradingPost();
+        try {
+          assert.deepEqual(getRecord(entry()).settlements[sid], { id: sid, name: `${PREFIX} Port`, distance: 240, size: "city" });
+          const app = BastionSheet.open(entryId, { tab: "routes" });
+          await app.render({ force: true });
+          const place = app.element.querySelector(`[data-section="routes"] .dxpb-place[data-key="gm:${sid}"]`);
+          assert.ok(place, "the settlement in the list");
+          assert.include(place.querySelector(".dxpb-place-icon")?.getAttribute("src") ?? "", "assets/settlements/city.svg", "the city icon");
+          assert.include(place.textContent, "240");
+          assert.ok(place.querySelector('[data-action="tradeSeek"]'), "owners can seek a route there");
+          assert.ok(place.querySelector('[data-action="settlementEdit"]'), "the GM can edit it");
+          await app.close();
+          res = await ACTIONS.saveSettlement({ entryId, settlement: { id: sid, name: `${PREFIX} Port`, distance: 260, size: "city" } }, game.user);
+          assert.equal(getRecord(entry()).settlements[sid].distance, 260, "edited");
+          res = await ACTIONS.proposeTradeRoute({ entryId, key: `gm:${sid}`, goods: "spices" }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          routeId = res.routeId;
+          questId = res.questId;
+          const route = getRecord(entry()).tradeRoutes[routeId];
+          assert.equal(route.state, "accepted", "sought routes start as being negotiated");
+          assert.equal(route.distance, 260);
+          assert.equal(route.size, "city");
+          assert.isTrue(route.proposed);
+          res = await ACTIONS.proposeTradeRoute({ entryId, key: `gm:${sid}`, goods: "wine" }, game.user);
+          assert.isTrue(res.ok, "a city holds several routes");
+          routeId2 = res.routeId;
+          questId2 = res.questId;
+          const app2 = BastionSheet.open(entryId, { tab: "routes" });
+          await app2.render({ force: true });
+          assert.include(app2.element.querySelector(`.dxpb-place[data-key="gm:${sid}"]`)?.textContent ?? "", t("Trade.PlaceRoutes", { n: 2, max: 12 }));
+          await app2.close();
+          res = await ACTIONS.removeSettlement({ entryId, id: sid }, game.user);
+          assert.isTrue(res.ok);
+          assert.notOk(getRecord(entry()).settlements?.[sid]);
+          assert.ok(getRecord(entry()).tradeRoutes[routeId], "the route goes on");
+        } finally {
+          if (getRecord(entry()).settlements?.[sid]) await patchRecord(entry(), { [`settlements.${sid}`]: undefined });
+          for (const r of [routeId, routeId2]) if (r) await patchRecord(entry(), { [`tradeRoutes.${r}`]: undefined });
+          for (const q of [questId, questId2]) {
+            if (!q) continue;
+            const store = game.journal.find(j => j.getFlag("dxcufgbs-quest-log", `quests.${q}`));
+            await store?.update({ [`flags.dxcufgbs-quest-log.quests.-=${q}`]: null });
+          }
+          await post.remove();
+        }
+      });
+
+      it("the Bastion window has the same Facilities page", async () => {
+        const app = BastionSheet.open(entryId, { tab: "facilities" });
+        await app.render({ force: true });
+        try {
+          await checkFacilitiesPage(() => app, async () => { app.tab = "facilities"; await app.render(); });
+        } finally {
+          await app.close();
+        }
+      });
+
+      it("the world's dnd5e special facilities can be added from the Projects page, by level and free slots", async () => {
+        let cls = null, smithy = null, vault = null, app = null;
+        try {
+          [cls] = await hero.createEmbeddedDocuments("Item", [{ name: `${PREFIX} Fighter`, type: "class", system: { identifier: "fighter", levels: 5 } }]);
+          smithy = await Item.create({ name: `${PREFIX} Smithy`, type: "facility",
+            system: { type: { value: "special", subtype: "smithy" }, level: 5, size: "roomy" } });
+          vault = await Item.create({ name: `${PREFIX} Demiplane`, type: "facility",
+            system: { type: { value: "special", subtype: "demiplane" }, level: 17, size: "roomy" } });
+          app = BastionSheet.open(entryId, { tab: "projects" });
+          await app.render({ force: true });
+          const row = id => app.element.querySelector(`.dxpb-system-facility[data-uuid="${id}"]`);
+          assert.ok(row(smithy.uuid), "listed in the catalog");
+          assert.ok(row(smithy.uuid).closest(".dxpb-group"), "under a group");
+          assert.ok(row(vault.uuid)?.classList.contains("dxpb-locked"), "a level 17 facility is locked");
+          // Too high a level: refused by the GM side too.
+          let res = await ACTIONS.addSystemFacility({ entryId, uuid: vault.uuid, actorId: hero.id }, game.user);
+          assert.isFalse(res.ok);
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: smithy.uuid, actorId: hero.id }, game.user);
+          assert.isTrue(res.ok, res.reason);
+          const added = hero.itemTypes.facility.find(i => i.name === `${PREFIX} Smithy`);
+          assert.ok(added, "on the character's sheet");
+          assert.equal(added.getFlag(MODULE_ID, "entryId"), entryId);
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: smithy.uuid, actorId: hero.id }, game.user);
+          assert.isFalse(res.ok, "not twice");
+          app.tab = "facilities";
+          await app.render();
+          const titles = [...app.element.querySelectorAll('[data-section="trade"] .dxpb-fac .title')].map(x => x.textContent.trim());
+          assert.include(titles, `${PREFIX} Smithy`, "a smithy is trade and crafting");
+          // Never from another actor's sheet, even a special facility (only world and compendium items).
+          res = await ACTIONS.addSystemFacility({ entryId, uuid: added.uuid, actorId: ally.id }, game.user);
+          assert.isFalse(res.ok, "an item on an actor is no catalog source");
+          await added.delete();
+        } finally {
+          await app?.close();
+          await smithy?.delete();
+          await vault?.delete();
+          await cls?.delete();
+        }
+      });
+
+      it("with the system's Bastion rules off, the GMs get one chat card that can turn them on (turn button off)", async () => {
+        const { postSystemRulesNotice: post, resolveSystemRulesNotice } = await import("../system-rules.js");
+        // As if this GM were the responsible one (another GM may be logged in too).
+        const postSystemRulesNotice = () => post({ responsible: true });
+        const savedCfg = game.settings.get("dnd5e", "bastionConfiguration");
+        const plainCfg = typeof savedCfg?.toObject === "function" ? savedCfg.toObject() : { ...savedCfg };
+        const savedState = game.settings.get(MODULE_ID, "systemRulesNotice");
+        const messages = [];
+        try {
+          await game.settings.set("dnd5e", "bastionConfiguration", { ...plainCfg, enabled: false, button: true });
+          await game.settings.set(MODULE_ID, "systemRulesNotice", "");
+          const msg = await postSystemRulesNotice();
+          assert.ok(msg, "a card");
+          messages.push(msg);
+          assert.isTrue(msg.getFlag(MODULE_ID, "systemRules"));
+          assert.sameMembers(msg.whisper, game.users.filter(u => u.isGM).map(u => u.id), "whispered to the GMs only");
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "posted");
+          assert.isNull(await postSystemRulesNotice(), "once per world");
+          assert.isTrue(await resolveSystemRulesNotice("enable", msg));
+          const cfg = game.settings.get("dnd5e", "bastionConfiguration");
+          assert.isTrue(cfg.enabled, "the system's rules are on");
+          assert.isFalse(cfg.button, "the system's turn button stays off");
+          assert.equal(cfg.duration, plainCfg.duration ?? 7, "the turn length is kept");
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "enabled");
+          assert.notInclude(game.messages.get(msg.id).content, "data-dxpb-system-rules", "the card's buttons are gone");
+          // Kept off: remembered, and nothing changes in the system.
+          await game.settings.set("dnd5e", "bastionConfiguration", { ...plainCfg, enabled: false });
+          await game.settings.set(MODULE_ID, "systemRulesNotice", "");
+          const again = await postSystemRulesNotice();
+          messages.push(again);
+          await resolveSystemRulesNotice("dismiss", again);
+          assert.isFalse(game.settings.get("dnd5e", "bastionConfiguration").enabled);
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "dismissed");
+          assert.isNull(await postSystemRulesNotice(), "not asked again");
+        } finally {
+          await game.settings.set("dnd5e", "bastionConfiguration", plainCfg);
+          await game.settings.set(MODULE_ID, "systemRulesNotice", savedState);
+          for (const m of messages) await m?.delete();
+        }
+      });
+
+      it("opening the Bastion's journal opens the Bastion page without drawing the journal sheet first", async () => {
+        const entry = getEntry(entryId);
+        await BastionSheet.instances.get(entryId)?.close();
+        let drawn = false;
+        const hook = Hooks.on("renderJournalEntrySheet", app => { if (app.document?.id === entryId) drawn = true; });
+        try {
+          await entry.sheet.render(true);
+          for (let i = 0; i < 40 && !BastionSheet.instances.get(entryId)?.rendered; i++) await new Promise(r => setTimeout(r, 50));
+          assert.ok(BastionSheet.instances.get(entryId)?.rendered, "the Bastion page");
+          assert.isFalse(drawn, "the journal sheet never drew");
+          assert.isFalse(entry.sheet.rendered);
+        } finally {
+          Hooks.off("renderJournalEntrySheet", hook);
+          await BastionSheet.instances.get(entryId)?.close();
+        }
+      });
+
+      it("the party's group sheet keeps a rook button in its header", async () => {
+        await group.sheet.render({ force: true });
+        for (let i = 0; i < 20 && !group.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));
+        assert.ok(group.sheet.element.querySelector(".window-header .dxpb-open-bastion"));
+        await group.sheet.close();
       });
 
       it("reads DMG defenders and hirelings from the dnd5e facilities", () => {
@@ -278,6 +729,11 @@ export function registerQuench(quench) {
         assert.equal(scene.width, plan.total * 100);
         assert.equal(scene.grid.size, 100);
         assert.include(scene.background.src, "/bastions/");
+        assert.equal(scene.folder?.name, t("FolderName"), "the map is in the Bastions scene folder");
+        assert.equal(scene.folder?.type, "Scene");
+        await scene.update({ folder: null });
+        assert.equal(await fileMaps([scene]), 1, "a map outside any folder is filed (only the test's own scene)");
+        assert.equal(scene.folder?.name, t("FolderName"));
         const ours = scene.walls.filter(w => w.getFlag(MODULE_ID, "generated"));
         assert.equal(ours.length, wallData(plan).length);
         assert.ok(ours.some(w => w.door === CONST.WALL_DOOR_TYPES.DOOR), "doors, the gate among them");
@@ -484,8 +940,8 @@ export function registerQuench(quench) {
         res = await ACTIONS.hireCrews({ entryId, crews: 0 }, game.user);
         assert.isFalse(res.ok);
 
-        // The rookery finishes on a turn; the chapel goes on; nothing waits.
-        await patchRecord(entry(), { [`projects.${b}.progress`]: getRecord(entry()).projects[b].days - 1 });
+        // The rookery finishes on a turn; the chapel (made long here) goes on; nothing waits.
+        await patchRecord(entry(), { [`projects.${b}.progress`]: getRecord(entry()).projects[b].days - 1, [`projects.${a}.days`]: 1000 });
         await runTurn(entry(), { systemAdvance: false });
         const rec = getRecord(entry());
         assert.equal(rec.projects[b].state, "complete");
@@ -570,7 +1026,7 @@ export function registerQuench(quench) {
           await patchRecord(getEntry(entryId), { merchant: { id: "m", label: "Peddler", arrivedAt: turnTime, leavesAt: turnTime + 3 * 86400, stock: [] } });
           const app = BastionSheet.open(entryId);
           const dates = new Set([formatGameTime(turnTime), formatGameTime(turnTime + 3 * 86400), ...(rec.history ?? []).map(h => formatGameTime(h.time ?? 0))]);
-          for (const tab of ["overview", "projects", "trade", "history", "dispatches"]) {
+          for (const tab of ["overview", "projects", "trade", "routes", "history", "dispatches"]) {
             app.tab = tab;
             await app.render({ force: true });
             for (const d of dates) assert.notInclude(app.element.textContent, d, `${tab}: no date`);
@@ -672,61 +1128,74 @@ export function registerQuench(quench) {
         assert.isTrue(res.ok, res.reason);
         const pid = res.projectId;
         const dmgCost = getRecord(entry()).projects[pid].cost;
-        await patchRecord(entry(), { [`projects.${pid}.funded`]: dmgCost });
         const gold = getRecord(entry()).treasury ?? 0;
-        assert.equal(rules().crewHireCost, 50, "DMG crew price");
-        await game.settings.set(MODULE_ID, "buildPrice", "fair");
-        let p;
-        for (let i = 0; i < 60 && (p = getRecord(entry()).projects[pid]).price?.scale !== 1.2; i++) await new Promise(r => setTimeout(r, 100));
-        assert.equal(p.price?.scale, 1.2, "re-priced at Fair");
-        assert.isBelow(p.cost, dmgCost, "cheaper");
-        assert.equal(p.funded, p.cost, "paid in full at the new price");
-        assert.equal(getRecord(entry()).treasury, gold + dmgCost - p.cost, "the rest went into the treasury");
-        assert.equal(rules().crewHireCost, 40, "Fair crew price");
-        // The catalog shows the Fair price too.
-        const app = BastionSheet.open(entryId);
-        app.tab = "projects";
-        await app.render({ force: true });
-        assert.include(app.element.querySelector(`[data-project="${pid}"]`).textContent, p.cost.toLocaleString());
-        await app.close();
-        await game.settings.set(MODULE_ID, "buildPrice", "dmg");
-        for (let i = 0; i < 60 && getRecord(entry()).projects[pid].price?.scale !== 1; i++) await new Promise(r => setTimeout(r, 100));
-        assert.equal(getRecord(entry()).projects[pid].cost, dmgCost, "back at the DMG's price");
-        await patchRecord(entry(), { treasury: gold, [`projects.${pid}.funded`]: 0 });
-        await ACTIONS.removeProject({ entryId, projectId: pid }, game.user);
+        try {
+          await patchRecord(entry(), { [`projects.${pid}.funded`]: dmgCost });
+          assert.equal(rules().crewHireCost, 50, "DMG crew price");
+          await game.settings.set(MODULE_ID, "buildPrice", "fair");
+          let p;
+          for (let i = 0; i < 60 && (p = getRecord(entry()).projects[pid]).price?.scale !== 1.2; i++) await new Promise(r => setTimeout(r, 100));
+          assert.equal(p.price?.scale, 1.2, "re-priced at Fair");
+          assert.isBelow(p.cost, dmgCost, "cheaper");
+          assert.equal(p.funded, p.cost, "paid in full at the new price");
+          assert.equal(getRecord(entry()).treasury, gold + dmgCost - p.cost, "the rest went into the treasury");
+          assert.equal(rules().crewHireCost, 40, "Fair crew price");
+          // The catalog shows the Fair price too.
+          const app = BastionSheet.open(entryId);
+          app.tab = "projects";
+          await app.render({ force: true });
+          assert.include(app.element.querySelector(`[data-project="${pid}"]`).textContent, p.cost.toLocaleString());
+          await app.close();
+          await game.settings.set(MODULE_ID, "buildPrice", "dmg");
+          for (let i = 0; i < 60 && getRecord(entry()).projects[pid].price?.scale !== 1; i++) await new Promise(r => setTimeout(r, 100));
+          assert.equal(getRecord(entry()).projects[pid].cost, dmgCost, "back at the DMG's price");
+        } finally {
+          if (game.settings.get(MODULE_ID, "buildPrice") !== "dmg") await game.settings.set(MODULE_ID, "buildPrice", "dmg");
+          await patchRecord(entry(), { treasury: gold, [`projects.${pid}.funded`]: 0 });
+          await ACTIONS.removeProject({ entryId, projectId: pid }, game.user);
+        }
       });
 
-      it("a room with an enlarge project planned shows that instead of its Enlarge button, until the project goes", async () => {
+      it("a room with an enlarge project planned shows that instead of its upgrade arrow, until the project goes", async () => {
         const { ENLARGE } = await import("../data/catalog.js");
         const rec = getRecord(getEntry(entryId));
         const [fid] = Object.entries(rec.features).find(([, f]) => catalog().get(f.id)?.unit === "sized" && ENLARGE[f.size]) ?? [];
         assert.ok(fid, "the test Bastion has a room that can be enlarged");
+        const app = BastionSheet.open(entryId, { tab: "facilities" });
+        await app.render({ force: true });
+        const row = () => app.element.querySelector(`.dxpb-facpage [data-fid="${fid}"]`);
+        assert.equal(row()?.querySelector(".dxpb-fac-up")?.dataset.kind, "enlarge", "an enlarge arrow");
         const res = await ACTIONS.planProject({ entryId, opts: { kind: "enlarge", featureId: fid } }, game.user);
         assert.isTrue(res.ok, res.reason);
-        const app = BastionSheet.open(entryId);
-        app.tab = "projects";
         await app.render({ force: true });
-        const button = () => app.element.querySelector(`.dxpb-built [data-action=featureProject][data-kind=enlarge][data-fid="${fid}"]`);
-        assert.notExists(button(), "no Enlarge button while the enlarge project is planned");
-        const row = app.element.querySelector(`.dxpb-built [data-fid="${fid}"]`)?.closest("tr")
-          ?? [...app.element.querySelectorAll(".dxpb-built tr")].find(tr => tr.textContent.includes(t("Busy.enlarge", { state: t("State.planned") })));
-        assert.include(row?.textContent ?? "", t("Busy.enlarge", { state: t("State.planned") }));
+        assert.notExists(row().querySelector(".dxpb-fac-up"), "no arrow while the enlarge project is planned");
+        assert.include(row().textContent, t("Busy.enlarge", { state: t("State.planned") }));
         await ACTIONS.removeProject({ entryId, projectId: res.projectId }, game.user);
         await app.render({ force: true });
-        assert.exists(button(), "the Enlarge button is back");
+        assert.exists(row().querySelector(".dxpb-fac-up"), "the arrow is back");
+        app.tab = "projects";
+        await app.render();
+        assert.notExists(app.element.querySelector(".dxpb-built"), "no Built list on the Projects page");
         await app.close();
       });
 
       it("finishing a project always redraws the battle map, even one that adds no building to the layout", async () => {
         const { patchRecord } = await import("../store.js");
         if (!mapScene(getRecord(getEntry(entryId)))) await buildMap(getEntry(entryId), { notify: false });
+        // A layout already in step with the buildings, so nothing else moves when this one finishes.
+        const lay = syncLayout(getRecord(getEntry(entryId)), catalog(), rules());
+        if (lay.changed) {
+          const { writeRecordKeys } = await import("../store.js");
+          await writeRecordKeys(getEntry(entryId), { ...getRecord(getEntry(entryId)), layout: lay.layout }, ["layout"]);
+        }
+        assert.isFalse(syncLayout(getRecord(getEntry(entryId)), catalog(), rules()).changed, "the layout is in step");
         const before = getRecord(getEntry(entryId)).map?.builtAt ?? 0;
         // The spike barricade is a ring along the wall: no layout item.
         const res = await ACTIONS.planProject({ entryId, opts: { expansionId: "spike-barricade" } }, game.user);
         assert.isTrue(res.ok, res.reason);
         const out = await ACTIONS.finishProject({ entryId, projectId: res.projectId }, game.user);
         assert.isTrue(out.ok, out.reason);
-        assert.isFalse(!!out.layoutChanged, "nothing new in the layout");
+        assert.isFalse(out.layoutChanged, "the finish changed nothing on the layout");
         let after = before;
         for (let i = 0; i < 200 && after === before; i++) {
           await new Promise(r => setTimeout(r, 100));
@@ -874,7 +1343,7 @@ export function registerQuench(quench) {
         const app = BastionSheet.open(entryId);
         app.tab = "trade";
         await app.render({ force: true });
-        const links = app.element.querySelectorAll("a.dxpb-ware[data-action=viewWare]");
+        const links = app.element.querySelectorAll("button.dxpb-ware[data-action=viewWare]");
         assert.equal(links.length, stock.length, "every ware is a link");
         links[0].click();
         // A compendium document can come back as a new object each time: look for any open page of it.
@@ -923,7 +1392,7 @@ export function registerQuench(quench) {
         for (const tab of ["stats", "defense", "facilities", "projects", "dispatches", "trade", "history", "overview"]) {
           // Click the real tab link, the way a user does.
           app.element.querySelector(`.dxpb-tab[data-tab="${tab}"]`).click();
-          for (let i = 0; i < 20 && app.element.querySelector(".dxpb-tab.active")?.dataset.tab !== tab; i++) {
+          for (let i = 0; i < 60 && app.element.querySelector(".dxpb-tab.active")?.dataset.tab !== tab; i++) {
             await new Promise(r => setTimeout(r, 50));
           }
           assert.equal(app.element.querySelector(".dxpb-tab.active")?.dataset.tab, tab, `clicking the ${tab} tab`);
@@ -955,13 +1424,13 @@ export function registerQuench(quench) {
         assert.ok(app.element.querySelector("button[type=submit]").getBoundingClientRect().bottom <= app.element.getBoundingClientRect().bottom + 1,
           "Save stays in the window");
         const saved = [];
-        const orig = foundry.utils.saveDataToFile;
-        foundry.utils.saveDataToFile = (data, type, name) => saved.push({ data, type, name });
+        const orig = RulesConfig.saveFile;
+        RulesConfig.saveFile = (data, type, name) => saved.push({ data, type, name });
         try {
           for (const file of ["default-rules", "rules-in-use", "default-catalog", "catalog-in-use"]) {
             app.element.querySelector(`[data-action=download][data-file="${file}"]`).click();
           }
-        } finally { foundry.utils.saveDataToFile = orig; }
+        } finally { RulesConfig.saveFile = orig; }
         assert.equal(saved.length, 4);
         assert.deepEqual(JSON.parse(saved[0].data), JSON.parse(JSON.stringify(DEFAULT_RULES)), "the default rules, every key");
         assert.equal(saved[0].type, "application/json");
@@ -981,7 +1450,8 @@ export function registerQuench(quench) {
         if (controls.notes) assert.equal(group.order, controls.notes.order + 1, "right after Journal Notes");
         const orders = Object.values(controls).map(c => c.order);
         assert.equal(new Set(orders).size, orders.length, "no two groups share a place");
-        assert.ok(group.tools.list?.button && group.tools.found?.button, "list and (GM) found buttons");
+        assert.ok(group.tools.list?.button && group.tools.found?.button, "list and found buttons");
+        assert.notOk(group.tools.mine, "players find their Bastion in their character sheet, not here");
         assert.ok(canvas.dxpbBastions, "the group has its own canvas layer");
         const btn = document.querySelector('#scene-controls [data-control="dxpbBastions"]');
         assert.ok(btn, "the group's button is on the screen");
@@ -1120,6 +1590,25 @@ export function registerQuench(quench) {
         if (mapScene) assert.notOk(game.scenes.get(mapScene.id), "the battle map is gone");
         assert.notOk(hero.items.get(room.id), "the room facility is gone");
         assert.notOk(BastionSheet.instances.get?.(id)?.rendered, "the page closed");
+      });
+
+      it("deleting one of two Bastions with the same owners gives their sheets the other one's name", async () => {
+        const res = await ACTIONS.found({ answers: {
+          name: `${PREFIX} Second`, description: "Test", groupUuid: group.uuid, ownerUuids: [],
+          location: { terrain: "hills", site: "hilltop", settlement: { name: "Town", size: "village", distance: 20 }, road: "trail",
+            waterway: "river", waterOnSite: "table", climate: "temperate", land: "fertile", resources: ["stone"],
+            danger: "frontier", visibility: "ordinary", political: "freehold" },
+          structure: { type: "keep", acquisition: "reward" }, included: [], food: 100, treasury: 100, guards: 0, servants: 0
+        } }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        made.entries.push(res.entryId);
+        const main = getRecord(getEntry(entryId)).name;
+        // The sheet shows the Bastion about to go.
+        await hero.update({ "system.bastion.name": `${PREFIX} Second` });
+        const del = await ACTIONS.deleteBastion({ entryId: res.entryId, confirm: "DELETE" }, game.user);
+        assert.isTrue(del.ok, del.reason);
+        for (let i = 0; i < 60 && hero.system.bastion?.name !== main; i++) await new Promise(r => setTimeout(r, 50));
+        assert.equal(hero.system.bastion?.name, main, "the remaining Bastion's name");
       });
 
       it("an open Bastion list shows a new Bastion as soon as it is founded and drops it as soon as it is deleted", async () => {

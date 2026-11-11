@@ -1,0 +1,161 @@
+{
+  "_id": "rhLg031Nc1JAJsXh",
+  "name": "Staff and household",
+  "folder": "g8h9QAv3ju4rdsfu",
+  "sort": 900000,
+  "pages": [
+    {
+      "_id": "lwSoIDGeSaa3bx7Q",
+      "name": "Building crews",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "building-crews",
+        "category": "household",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/building-crews.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/building-crews.webp",
+        "description": "<p>Masons, carpenters and labourers who raise everything the Bastion builds.</p><p>A Bastion starts with one crew and can hire more, or house one in a Workers' Lodge. Each crew works on one project at a time, and extra crews on a project finish it sooner. Hired crews are paid every turn.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!rhLg031Nc1JAJsXh.lwSoIDGeSaa3bx7Q"
+    },
+    {
+      "_id": "XXbTgYa6INbVBWpU",
+      "name": "Hirelings",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "hirelings",
+        "category": "household",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/hirelings.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/hirelings.webp",
+        "description": "<p>Skilled people who work the owners' facilities: a smith at the forge, a scribe in the library, a groom in the stables.</p><p>Hirelings come with the dnd5e facilities on the owners' sheets. They live at the Bastion and count toward its people.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!rhLg031Nc1JAJsXh.XXbTgYa6INbVBWpU"
+    },
+    {
+      "_id": "4PpHA48DRjXADl8U",
+      "name": "Refugees",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "refugees",
+        "category": "household",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/refugees.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/refugees.webp",
+        "description": "<p>Families fleeing war, famine or worse, who arrive at the gate with what they could carry.</p><p>Refugees who are taken in live at the Bastion and eat from its stores. A Guest Wing gives them somewhere to stay.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!rhLg031Nc1JAJsXh.4PpHA48DRjXADl8U"
+    },
+    {
+      "_id": "0mWvYqaZzRjQvxA1",
+      "name": "Servants",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "servants",
+        "category": "household",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/servants.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/servants.webp",
+        "description": "<p>The cooks, maids, grooms and porters who keep the Bastion running from dawn to dark.</p><p>Servants are hired once there are Servants' Quarters for them, paid a little each turn, and they live and eat at the Bastion.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!rhLg031Nc1JAJsXh.0mWvYqaZzRjQvxA1"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "household"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!rhLg031Nc1JAJsXh"
+}

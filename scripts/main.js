@@ -19,7 +19,7 @@
  *   .bastionDeleted ({entryId, name}) just before a Bastion is deleted,
  *   .projectFinished ({entryId, projectId (null for Finish all), completed, layoutChanged}) when the GM finishes projects at once.
  */
-import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode } from "./util.js";
+import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode, catalog } from "./util.js";
 import { registerSocket, request } from "./socket.js";
 import { registerDebugRecorder, crumb } from "./debug-recorder.js";
 import { debugSnapshot } from "./debug-snapshot.js";
@@ -27,6 +27,7 @@ import { ACTIONS } from "./actions.js";
 import { allBastions, getEntry, getRecord, bastionForActor, isBastionEntry, ownerActors, canAct } from "./store.js";
 import { statsFor } from "./context.js";
 import { BastionSheet } from "./apps/bastion-sheet.js";
+import { registerBastionTab, syncBastionNames } from "./apps/bastion-tab.js";
 import { FoundingWizard } from "./apps/wizard.js";
 import { BastionDashboard } from "./apps/dashboard.js";
 import { RulesConfig, SelfTestMenu } from "./apps/settings-apps.js";
@@ -37,6 +38,8 @@ import { holdout } from "./core/siege.js";
 import { FORCES, EVENTS } from "./data/tables.js";
 import * as engine from "./core/index.js";
 import { registerQuench, runSelfTests } from "./tests/quench.js";
+import { registerSystemRulesSetting, postSystemRulesNotice, bindSystemRulesCard } from "./system-rules.js";
+import { registerCodex } from "./apps/codex-page.js";
 
 function registerSettings() {
   game.settings.register(MODULE_ID, "rules", { scope: "world", config: false, type: Object, default: {}, onChange: () => { clearCaches(); repaceAll(); refreshAll(); } });
@@ -81,10 +84,12 @@ function registerSettings() {
   game.settings.register(MODULE_ID, "processSystemTurns", {
     name: "DXPB.Settings.SystemTurns.Name", hint: "DXPB.Settings.SystemTurns.Hint", scope: "world", config: true, type: Boolean, default: true
   });
+  registerSystemRulesSetting();
 }
 
 function refreshAll() {
   for (const app of BastionSheet.instances.values()) if (app.rendered) app.render();
+  for (const panel of BastionSheet.embeddedPanels) if (panel.rendered) panel.render();
   refreshDashboards();
 }
 
@@ -102,16 +107,15 @@ function registerBastionLayer() {
   CONFIG.Canvas.layers[BASTION_LAYER] = { layerClass: BastionLayer, group: "interface" };
 }
 
-const canActOn = entry => { try { return canAct(getRecord(entry)); } catch { return false; } };
 
 function registerUI() {
-  // A scene-control group of its own, right after the Journal Notes group: the Bastion list, the player's own
-  // Bastion and (GM) founding a new one. It has its own (empty) canvas layer: a group on the token layer would hand
+  // The GM's scene-control group of its own, right after the Journal Notes group: the Bastion list and founding a new
+  // one. Players find their Bastion in their character sheet's Bastion tab (apps/bastion-tab.js). It has its own (empty) canvas layer: a group on the token layer would hand
   // the controls straight back to the Token group when that layer activates.
   Hooks.on("getSceneControlButtons", controls => {
+    if (!game.user.isGM) return;
     const after = controls.notes?.order ?? Math.max(0, ...Object.values(controls).map(c => c?.order ?? 0));
     for (const c of Object.values(controls)) if (c && c.order > after) c.order++;
-    const mine = allBastions().filter(e => !game.user.isGM && canActOn(e));
     controls.dxpbBastions = {
       name: "dxpbBastions", title: "DXPB.Controls.Group", icon: "fa-solid fa-chess-rook", order: after + 1, layer: BASTION_LAYER,
       visible: true, activeTool: "bastions",
@@ -120,9 +124,7 @@ function registerUI() {
         bastions: { name: "bastions", title: "DXPB.Controls.Group", icon: "fa-solid fa-chess-rook", order: 1 },
         list: { name: "list", title: "DXPB.Dashboard.Title", icon: "fa-solid fa-list", order: 2, button: true,
           onChange: () => new BastionDashboard().render({ force: true }) },
-        mine: { name: "mine", title: "DXPB.Controls.Mine", icon: "fa-solid fa-chess-rook", order: 3, button: true, visible: mine.length > 0,
-          onChange: () => (mine.length === 1 ? BastionSheet.open(mine[0].id) : new BastionDashboard().render({ force: true })) },
-        found: { name: "found", title: "DXPB.Controls.Found", icon: "fa-solid fa-flag", order: 4, button: true, visible: game.user.isGM,
+        found: { name: "found", title: "DXPB.Controls.Found", icon: "fa-solid fa-flag", order: 3, button: true,
           onChange: () => new FoundingWizard().render({ force: true }) }
       }
     };
@@ -136,7 +138,27 @@ function registerUI() {
     return false;
   });
 
-  // The journal of a Bastion opens the Bastion page too.
+  // The journal of a Bastion opens the Bastion page instead, before its own sheet draws anything (no flash of a
+  // second window): a forced first render of any journal sheet on a Bastion's entry is cancelled in _canRender.
+  const DocSheet = foundry.applications.api.DocumentSheetV2;
+  const canRender = DocSheet?.prototype?._canRender;
+  if (canRender && !canRender.dxpbWrapped) {
+    const wrapped = function (options) {
+      const doc = this.document;
+      // Only the journal's content sheet: its ownership and other configuration windows open as usual.
+      const JournalSheet = foundry.applications.sheets?.journal?.JournalEntrySheet;
+      const contentSheet = JournalSheet ? this instanceof JournalSheet
+        : !(this instanceof (foundry.applications.apps?.DocumentOwnershipConfig ?? class {}));
+      if (contentSheet && options?.force && !this.rendered && doc?.documentName === "JournalEntry" && isBastionEntry(doc)) {
+        BastionSheet.open(doc.id);
+        return false;
+      }
+      return canRender.call(this, options);
+    };
+    wrapped.dxpbWrapped = true;
+    DocSheet.prototype._canRender = wrapped;
+  }
+  // A journal sheet that draws anyway (its class skips the check above): close it and open the Bastion page.
   Hooks.on("renderJournalEntrySheet", (app) => {
     if (!isBastionEntry(app.document)) return;
     const id = app.document.id;
@@ -144,40 +166,29 @@ function registerUI() {
     BastionSheet.open(id);
   });
 
-  // A button on the dnd5e character and group sheets.
-  const addButton = (app, html) => {
+  // Character sheets show the Bastion in the system's own Bastion tab (apps/bastion-tab.js). The party's group sheet
+  // has no such tab: a rook in its window header opens the Bastion page.
+  Hooks.on("renderGroupActorSheet", (app, html) => {
     const actor = app.document ?? app.actor;
     const entry = bastionForActor(actor);
     if (!entry) return;
     const root = html instanceof HTMLElement ? html : html[0];
-    const label = t("OpenBastion", { name: getRecord(entry).name });
-    // A rook in the window header: always visible, even when the system's Bastion tab is hidden.
     const header = root.closest(".application")?.querySelector(".window-header") ?? root.querySelector(".window-header");
-    if (header && !header.querySelector(".dxpb-open-bastion")) {
-      const icon = document.createElement("button");
-      icon.type = "button";
-      icon.className = "header-control icon fa-solid fa-chess-rook dxpb-open-bastion";
-      icon.dataset.tooltip = label;
-      icon.setAttribute("aria-label", label);
-      icon.addEventListener("click", () => BastionSheet.open(entry.id));
-      const first = header.querySelector(".header-control");
-      if (first) first.before(icon); else header.append(icon);
-    }
-    // And a full button at the top of the system's Bastion tab when that tab is in use.
-    const tab = root.querySelector(".tab[data-tab=bastion]");
-    if (!tab || tab.querySelector(".dxpb-open-bastion-tab")) return;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "dxpb-open-bastion-tab";
-    btn.innerHTML = `<i class="fa-solid fa-chess-rook"></i> ${escapeHTML(label)}`;
-    btn.addEventListener("click", () => BastionSheet.open(entry.id));
-    tab.prepend(btn);
-  };
-  Hooks.on("renderCharacterActorSheet", addButton);
-  Hooks.on("renderGroupActorSheet", addButton);
+    if (!header || header.querySelector(".dxpb-open-bastion")) return;
+    const label = t("OpenBastion", { name: getRecord(entry).name });
+    const icon = document.createElement("button");
+    icon.type = "button";
+    icon.className = "header-control icon fa-solid fa-chess-rook dxpb-open-bastion";
+    icon.dataset.tooltip = label;
+    icon.setAttribute("aria-label", label);
+    icon.addEventListener("click", () => BastionSheet.open(entry.id));
+    const first = header.querySelector(".header-control");
+    if (first) first.before(icon); else header.append(icon);
+  });
 
   // A "Bastions" button in the journal sidebar.
   Hooks.on("renderJournalDirectory", (app, html) => {
+    if (!game.user.isGM) return;
     const root = html instanceof HTMLElement ? html : html[0];
     if (root.querySelector(".dxpb-dir-button")) return;
     const header = root.querySelector(".header-actions") ?? root.querySelector(".directory-header");
@@ -192,6 +203,7 @@ function registerUI() {
 
   // Chat card buttons: event decisions, dividends, executing orders that arrived by dispatch.
   Hooks.on("renderChatMessageHTML", (message, html) => {
+    bindSystemRulesCard(message, html);
     html.querySelectorAll("[data-dxpb-event]").forEach(btn => btn.addEventListener("click", async () => {
       let count;
       if (btn.dataset.count) {
@@ -303,8 +315,12 @@ function onInit() {
     `modules/${MODULE_ID}/templates/wizard.hbs`,
     `modules/${MODULE_ID}/templates/dashboard.hbs`
   ]);
-  foundry.applications.handlebars.loadTemplates({ dxpbQueueButtons: `modules/${MODULE_ID}/templates/queue-buttons.hbs` });
+  foundry.applications.handlebars.loadTemplates({ dxpbQueueButtons: `modules/${MODULE_ID}/templates/queue-buttons.hbs`,
+    dxpbFacilityCard: `modules/${MODULE_ID}/templates/facility-card.hbs` });
   registerUI();
+  if (game.system?.id === "dnd5e") registerBastionTab();
+  // The Bastion Codex: the module's own journal page types for its compendium.
+  try { registerCodex(); } catch (err) { console.error(`${MODULE_ID} | Bastion Codex`, err); }
   registerTime();
   const mod = game.modules.get(MODULE_ID);
   const api = {
@@ -350,13 +366,10 @@ function onReady() {
   registerDebugRecorder({ snapshot: debugSnapshot });
   registerSocket(ACTIONS);
   registerMapHooks();
-  // The system's own Bastion rules can be off in a world: the module still works, but say what that hides.
-  if (game.user.isGM && allBastions().length) {
-    let cfg = null;
-    try { cfg = game.settings.get("dnd5e", "bastionConfiguration"); } catch { cfg = null; }
-    if (cfg && cfg.enabled === false) ui.notifications.info(t("Notify.SystemBastionsOff"));
-  }
+  // The system's own Bastion rules can be off in a world: the GMs get one chat card offering to turn them on.
+  postSystemRulesNotice().catch(err => console.warn(`${MODULE_ID} | system Bastion rules notice`, err));
   repaceAll();
+  if (isResponsibleGM()) for (const entry of allBastions()) syncBastionNames(entry);
 }
 
 /**
@@ -382,15 +395,32 @@ function registerDebugCrumbs() {
   on("siegeStarted", entry => ({ docId: id(entry) }));
   on("siegeEnded", entry => ({ docId: id(entry) }));
   on("bastionDeleted", ({ entryId } = {}) => ({ docId: entryId }));
+  const routeCrumb = (entry, r) => ({ docId: id(entry), kind: r?.kind ?? null, state: r?.state ?? null, ended: r?.ended ?? null,
+    quest: !!r?.questId });
+  for (const name of ["tradeRouteRequested", "tradeRouteAccepted", "tradeRouteSigned", "tradeRouteEnded"]) on(name, routeCrumb);
   Hooks.once("ready", () => crumb("module.ready", { responsibleGM: isResponsibleGM(), bastions: allBastions().length, clock: clockMode() }));
 }
 
 /**
  * Unfinished projects follow the build pace: re-time any planned at another pace. Old saves also get their separate
- * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers. Responsible GM.
+ * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers, battle maps outside any folder go into
+ * the Bastions scene folder, and refunds still owed are paid. Responsible GM.
  */
 async function repaceAll() {
   if (!isResponsibleGM()) return;
+  try {
+    const { fileMaps } = await import("./map.js");
+    await fileMaps();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Could not file the Bastion maps`, err);
+  }
+  // Refunds a finished road left owed (a payment that failed last time) are paid now.
+  try {
+    const { settleAllRefunds } = await import("./turn-runner.js");
+    await settleAllRefunds();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Could not pay the refunds still owed`, err);
+  }
   const { patchRecord, writeRecordKeys } = await import("./store.js");
   for (const entry of allBastions()) {
     const record = getRecord(entry);
@@ -439,30 +469,50 @@ function refreshDashboards() {
   for (const app of foundry.applications.instances.values()) if (app instanceof BastionDashboard && app.rendered) app.render();
 }
 
-/** The Bastion control group's "My Bastion" button follows which Bastions the player has. */
-function refreshControls() {
-  if (ui.controls?.rendered) ui.controls.render({ reset: true });
+/**
+ * Open character sheets show or drop the Bastion tab (and its page) when a Bastion is founded, deleted or changes
+ * owners.
+ */
+function refreshCharacterSheets() {
+  for (const app of foundry.applications.instances.values()) {
+    if (app.rendered && app.document?.documentName === "Actor" && app.document.type === "character") app.render();
+  }
 }
 
-Hooks.on("updateJournalEntry", (entry) => {
+Hooks.on("updateJournalEntry", (entry, changes) => {
   if (!isBastionEntry(entry)) return;
   BastionSheet.refresh(entry.id);
   refreshDashboards();
+  const flat = foundry.utils.flattenObject(changes?.flags?.[MODULE_ID] ?? {});
+  if (Object.keys(flat).some(k => /(^|\.)(ownerUuids|groupUuid)(\.|$)/.test(k) || k === "record")) refreshCharacterSheets();
+  // The system's Bastion name on the owners' sheets follows the Bastion's name.
+  if (isResponsibleGM()) syncBastionNames(entry);
 });
 
 // A Bastion founded or deleted (by anyone) shows up in or leaves the Bastion list at once; a deleted one's sheet closes.
 Hooks.on("createJournalEntry", (entry) => {
   if (!isBastionEntry(entry)) return;
   refreshDashboards();
-  refreshControls();
+  refreshCharacterSheets();
+  if (isResponsibleGM()) syncBastionNames(entry);
 });
 Hooks.on("deleteJournalEntry", (entry) => {
   if (!isBastionEntry(entry)) return;
   const sheet = BastionSheet.instances.get(entry.id);
   BastionSheet.instances.delete(entry.id);
   if (sheet?.rendered) sheet.close();
+  for (const panel of [...BastionSheet.embeddedPanels]) if (panel.entryId === entry.id) panel.close();
   refreshDashboards();
-  refreshControls();
+  refreshCharacterSheets();
+});
+
+// A group's members are its Bastion's owners: a change of members is a change of owners (sheets, stored names).
+Hooks.on("updateActor", (actor, changes) => {
+  if (actor.type !== "group" || !foundry.utils.hasProperty(changes, "system.members")) return;
+  const owned = allBastions().filter(e => getRecord(e).groupUuid === actor.uuid);
+  if (!owned.length) return;
+  refreshCharacterSheets();
+  if (isResponsibleGM()) for (const entry of owned) syncBastionNames(entry);
 });
 
 // Facility and actor changes (defenders, hirelings, gold) change the stats too.

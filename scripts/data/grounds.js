@@ -35,16 +35,19 @@ export const FOOTPRINTS = {
   gatehouse: 9, barbican: 0, portcullis: 0, drawbridge: 0, "arrow-slits": 0,
   watchtower: 4, "dry-ditch": 0, "wet-moat": 0, ballista: 4, postern: 1, "lesser-wards": 0, "greater-wards": 0,
   // Supplies
-  granary: "sized", well: 1, "deep-well": 1, cistern: 9, smokehouse: 9, "kitchen-garden": 16, orchard: 36,
-  fields: 0, livestock: 0, mill: 0, "hunting-lodge": 0, "workers-lodge": 16,
+  granary: "sized", well: 1, "deep-well": 1, cistern: 9, smokehouse: 9, "kitchen-garden": [16, 25, 36], orchard: [36, 49, 64], greenhouse: [25, 36, 49],
+  fields: 0, livestock: 0, fishery: 0, "highland-herds": 0, "mushroom-cellars": 0, "hunters-guild": 0, mill: 0, "hunting-lodge": 0, "workers-lodge": 16,
+  "fungus-farms": 0, "cavern-fish-pools": 0, "oasis-gardens": [25, 36, 49], "sealing-camp": 0, "eel-weirs": 0, "foragers-lodge": 0,
+  "caravan-depot": 0, "deep-road-gate": 16, "mountain-pass-toll": 0, caravanserai: 0, "fur-trading-lodge": 16, "peat-cutters": 0,
+  "crystal-galleries": 0, "horse-breeders": 0, townhouses: 0, saltworks: 0, "charcoal-burners": 0, brickworks: 0,
   // Access and travel: all of it is out on the route, except the coach house
   "clear-trail": 0, "build-road": 0, "pave-road": 0, "timber-bridge": 0, "stone-bridge": 0, pier: 0, harbor: 0,
   waystation: 0, "coach-house": 16, "hidden-approach": 0,
   // Trade and income
-  "market-square": [36, 49, 64], inn: 25, brewery: 16, "craftsmens-row": 36, warehouse: 25, "merchant-charter": 0,
-  tollgate: 0, "lumber-camp": 0, quarry: 0, mine: 0, "trading-company": 16, strongroom: 4,
+  "market-square": [36, 49, 64], inn: 25, brewery: [16, 16, 16, 25, 25, 25, 36, 36, 36, 49], "craftsmens-row": 36, warehouse: 25, "merchant-charter": 0,
+  tollgate: 0, "lumber-camp": 0, quarry: 0, mine: 0, "trading-company": 16, "trading-post": 16, strongroom: 4,
   // Staff and prestige
-  "servants-quarters": 16, bathhouse: 16, chapel: 16, infirmary: 16, "training-yard": 36, "garrison-hall": 36,
+  "servants-quarters": 16, bathhouse: 16, chapel: 16, infirmary: 16, "training-yard": 36, "garrison-hall": [36, 49, 64, 100],
   "great-hall": 64, "guest-wing": 25, "stewards-office": 4, "pleasure-gardens": 36,
   // Communication and arcane
   rookery: 4, "beacon-tower": 0, "sending-station": 4, "scrying-pool": 9, "arcane-lanterns": 0

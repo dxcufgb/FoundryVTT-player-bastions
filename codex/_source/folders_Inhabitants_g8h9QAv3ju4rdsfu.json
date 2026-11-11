@@ -1,0 +1,22 @@
+{
+  "_id": "g8h9QAv3ju4rdsfu",
+  "name": "Inhabitants",
+  "type": "JournalEntry",
+  "sorting": "m",
+  "sort": 200000,
+  "color": null,
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!g8h9QAv3ju4rdsfu"
+}

@@ -32,7 +32,8 @@ function pick(value, feature) {
 }
 
 /** Keys added per unit when an expansion is built several times ("each"). */
-const PER_UNIT = new Set(["defensePct", "integrity", "security", "concealment", "engineCut", "garrison", "upkeep", "housing", "income"]);
+const PER_UNIT = new Set(["defensePct", "integrity", "security", "concealment", "engineCut", "garrison", "upkeep", "housing", "income",
+  "workers", "tradeRoutes", "tradePosts"]);
 /** Keys that multiply instead of add. */
 export const MULT_KEYS = new Set(["defenseMult", "farmMult", "innMult", "siegeFood", "merchantStock", "visitorPay", "defenderMult",
   "timberDiscount", "stoneDiscount", "palisadeTime"]);
@@ -64,6 +65,14 @@ export function featureEffects(exp, feature) {
   }
   if (exp.upkeep && !out.upkeep) out.upkeep = exp.upkeep * (exp.unit === "each" ? Math.max(1, Number(feature.count) || 1) : 1);
   return out;
+}
+
+/** What a project is built of ("stone", "timber", "magic" or ""): an upgrade's target tier can change it. */
+export function projectMaterial(project, catalog) {
+  const exp = catalog?.get?.(project?.expansionId);
+  if (!exp) return "";
+  const tier = project.kind === "upgrade" ? exp.tiers?.[(Number(project.tier) || 2) - 1] : exp.tiers?.[0];
+  return tier?.material ?? exp.material ?? "";
 }
 
 /** Features of the record as [featureId, feature, expansion] (unknown expansions skipped), excluding damaged ones when asked. */
@@ -105,18 +114,23 @@ export function roadTier(record, catalog) {
 export const CHECKS = {
   anyWall: (r, c) => features(r, c).some(([, , e]) => e.effects?.wall) || !!r?.structureWall,
   moatWater: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway) || r?.location?.waterOnSite === "spring",
+  fishing: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway),
+  highland: r => ["hills", "mountains"].includes(r?.location?.terrain) || r?.location?.land === "barren",
   wellSite: r => ["spring", "table"].includes(r?.location?.waterOnSite),
   rockSite: r => ["rock", "none"].includes(r?.location?.waterOnSite),
   notUnderground: r => r?.location?.terrain !== "underground",
   farmland: r => r?.location?.land !== "barren" && r?.location?.terrain !== "underground" && !r?.noFields,
   millSite: r => ["stream", "river"].includes(r?.location?.waterway) || ["plains", "hills"].includes(r?.location?.terrain),
   game: r => (r?.location?.resources ?? []).includes("game"),
-  timber: r => (r?.location?.resources ?? []).includes("timber"),
-  stone: r => (r?.location?.resources ?? []).includes("stone"),
+  // A forest has timber, and hills, mountains and caves have stone, whether or not the GM ticked the resource.
+  timber: r => (r?.location?.resources ?? []).includes("timber") || r?.location?.terrain === "forest",
+  stone: r => (r?.location?.resources ?? []).includes("stone") || ["hills", "mountains", "underground"].includes(r?.location?.terrain),
   ore: r => (r?.location?.resources ?? []).some(x => x === "ore" || x === "gems"),
   roadBelowTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 1,
   roadTrail: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 1,
+  roadBelowRoad: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) < 2,
   roadRoad: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) >= 2,
+  roadUnpaved: (r, c) => (ROADS[roadTier(r, c)]?.rank ?? 0) === 2,
   riverRoute: r => ["river", "lake"].includes(r?.location?.waterway) || !!r?.location?.riverOnRoute,
   pierWater: r => ["river", "lake", "coast"].includes(r?.location?.waterway),
   harborWater: r => ["coast", "river"].includes(r?.location?.waterway),
@@ -125,6 +139,18 @@ export const CHECKS = {
   access5: (r, c, s) => (s?.accessibility ?? 0) >= 5,
   marketTier2: r => Object.values(r?.features ?? {}).some(f => f?.id === "market-square" && (f.tier ?? 1) >= 2),
   courtyardRoomy: r => Object.values(r?.features ?? {}).some(f => f?.id === "courtyard" && ["roomy", "vast"].includes(f.size)),
+  landlocked: r => ["none", "stream", "lake"].includes(r?.location?.waterway ?? "none"),
+  forestLand: r => r?.location?.terrain === "forest",
+  noStone: (r, c) => !CHECKS.stone(r, c),
+  underground: r => r?.location?.terrain === "underground",
+  dryLand: r => r?.location?.terrain === "desert" || r?.location?.climate === "arid",
+  frozen: r => r?.location?.terrain === "arctic" || r?.location?.climate === "cold",
+  swampland: r => r?.location?.terrain === "swamp",
+  hardLand: r => ["barren", "poor"].includes(r?.location?.land),
+  mountainPass: r => ["hills", "mountains"].includes(r?.location?.terrain),
+  plainsLand: r => r?.location?.terrain === "plains",
+  urbanSite: r => r?.location?.terrain === "urban",
+  seaside: r => r?.location?.terrain === "coast" || r?.location?.waterway === "coast",
   anyWater: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway)
     || ["spring", "table"].includes(r?.location?.waterOnSite)
     || Object.values(r?.features ?? {}).some(f => ["well", "deep-well", "cistern"].includes(f?.id))
@@ -132,14 +158,48 @@ export const CHECKS = {
 
 /** Human labels for the checks, for "needs ..." messages. */
 export const CHECK_LABELS = {
-  anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", wellSite: "water on site (spring or high water table)",
+  anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", fishing: "a stream, river, lake or coast", highland: "hills, mountains or barren land", wellSite: "water on site (spring or high water table)",
   rockSite: "a rock site without water", notUnderground: "open sky (not underground)", farmland: "farmland (fertile or poor land)",
-  millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby", stone: "stone nearby",
-  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadRoad: "a road", riverRoute: "a river on the route",
+  millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby (or a forest)", stone: "stone nearby (or hills, mountains, a cave)",
+  ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadBelowRoad: "no road to the Bastion (a trail is fine)", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",
   pierWater: "a river, lake or coast", harborWater: "a coast or large river", access3: "Accessibility 3+", access4: "Accessibility 4+",
   access5: "Accessibility 5+", marketTier2: "a Market Hall (Market Square upgraded once)", courtyardRoomy: "a Roomy or Vast Courtyard",
-  anyWater: "a water source"
+anyWater: "a water source",
+  landlocked: "no river or coast (no water, a stream or a lake)", forestLand: "a forest", noStone: "no stone nearby (clay instead)", underground: "an underground site", dryLand: "desert or arid land",
+  frozen: "a cold or arctic land", swampland: "a swamp", hardLand: "poor or barren land", mountainPass: "hills or mountains",
+  plainsLand: "plains", urbanSite: "a town or city site", seaside: "the coast"
 };
+
+/**
+ * Checks fixed by where the Bastion stands (terrain, land, water, resources): building something can't change them.
+ * The others (a wall, the road, Accessibility, a Market Hall, water from a well) can change.
+ */
+/** Checks that stay failed once the road has passed them (roads are never torn up): not "later". */
+export const ROAD_PASSED_CHECKS = ["roadBelowTrail", "roadBelowRoad"];
+
+export const SITE_CHECKS = ["moatWater", "fishing", "highland", "wellSite", "rockSite", "notUnderground", "farmland", "millSite", "game",
+  "timber", "stone", "ore", "riverRoute", "pierWater", "harborWater", "landlocked", "underground", "dryLand", "frozen", "swampland",
+  "hardLand", "mountainPass", "plainsLand", "urbanSite", "seaside", "forestLand", "noStone"];
+
+/**
+ * Whether an expansion can ever be built at this Bastion: its site checks pass, and every building it needs can be
+ * built here too (any one of anyFeature). { ok, missing: [labels] } with the site's reasons.
+ */
+export function possibleHere(record, exp, catalog, path = new Set()) {
+  if (!exp) return { ok: false, missing: [] };
+  // A building that needs itself through its prerequisites (a cycle on this branch) can't be built.
+  if (path.has(exp.id)) return { ok: false, missing: [] };
+  const here = new Set(path).add(exp.id);
+  const missing = [];
+  const req = exp.requires ?? {};
+  for (const check of req.check ?? []) {
+    if (SITE_CHECKS.includes(check) && CHECKS[check] && !CHECKS[check](record, catalog, null)) missing.push(CHECK_LABELS[check] ?? check);
+  }
+  const can = id => hasFeature(record, id) || possibleHere(record, catalog.get(id), catalog, here).ok;
+  for (const id of req.features ?? []) if (!can(id)) missing.push(catalog.get(id)?.name ?? id);
+  if (req.anyFeature?.length && !req.anyFeature.some(can)) missing.push(req.anyFeature.map(id => catalog.get(id)?.name ?? id).join(" or "));
+  return { ok: missing.length === 0, missing };
+}
 
 /** Whether an expansion can be planned now: { ok, missing: [labels] }. Upgrades of tiered buildings use canUpgrade. */
 export function prerequisites(record, exp, catalog, stats) {

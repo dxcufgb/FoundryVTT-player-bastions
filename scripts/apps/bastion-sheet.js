@@ -9,7 +9,8 @@ import { GROUPS, SIZES, SIZE_LABELS, ENLARGE } from "../data/catalog.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { STRUCTURES } from "../data/structures.js";
 import { FORCES, QUALITY, ENGINES, DISPATCH_METHODS, BEACON_SIGNALS } from "../data/tables.js";
-import { prerequisites } from "../core/catalog.js";
+import { prerequisites, possibleHere, CHECKS, ROAD_PASSED_CHECKS } from "../core/catalog.js";
+import { ROADS_END_HIDDEN } from "../core/projects.js";
 import { quote, planProject, GROUNDS_PROJECT } from "../core/projects.js";
 import { footprintOf, extendGroundsBase, groundsInfo } from "../core/grounds.js";
 import { SIZE_FOOTPRINT } from "../data/grounds.js";
@@ -18,10 +19,14 @@ import { syncLayout } from "../core/layout.js";
 import { buildMap, viewMap, mapScene } from "../map.js";
 import { quoteDispatch, orderCount } from "../core/dispatch.js";
 import { partyDistance } from "../marker.js";
+import { facilitiesPage, systemFacilityCatalog, tradeRoutesPage } from "./facilities-page.js";
+import { tradeSettlements } from "../trade.js";
+import { routesOf } from "../core/trade.js";
+import { openCodex } from "./codex-page.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
-const TABS = ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"];
+const TABS = ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "routes", "history"];
 const STAT_KEYS = ["accessibility", "concealment", "security", "prosperity", "renown", "comfort"];
 
 /**
@@ -48,9 +53,13 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     return app;
   }
 
+  /** Frameless copies of the page inside character sheets' Bastion tabs (apps/bastion-tab.js). */
+  static embeddedPanels = new Set();
+
   static refresh(entryId) {
     const app = this.instances.get(entryId);
     if (app?.rendered) app.render();
+    for (const panel of BastionSheet.embeddedPanels) if (panel.entryId === entryId && panel.rendered) panel.render();
   }
 
   constructor(options = {}) {
@@ -60,6 +69,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     this.calc = { troops: 150, quality: "soldiers", monsterCR: 0, monsterCount: 0, casterLevel: 0, casterCount: 0, engine: "light" };
     this.draft = { method: "envoy", orders: {}, maintain: false, payments: [], note: "", gold: 0, distance: null, slotLevel: 2, signal: "" };
     this.catalogFilter = "";
+    /** A section of the Facilities page whose "Plan" button opened the catalog: only that group shows. */
+    this.catalogGroup = "";
   }
 
   static DEFAULT_OPTIONS = {
@@ -101,7 +112,21 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       buy: BastionSheet.#onBuy,
       openMap: BastionSheet.#onOpenMap,
       editBastion: BastionSheet.#onEdit,
-      dispatchStatus: BastionSheet.#onDispatchStatus
+      dispatchStatus: BastionSheet.#onDispatchStatus,
+      popOut: BastionSheet.#onPopOut,
+      planSection: BastionSheet.#onPlanSection,
+      clearCatalogGroup: BastionSheet.#onClearCatalogGroup,
+      useFacility: BastionSheet.#onUseFacility,
+      openCodex: BastionSheet.#onOpenCodex,
+      upgradeAt: BastionSheet.#onUpgradeAt,
+      tradeRoute: BastionSheet.#onTradeRoute,
+      toggleSection: BastionSheet.#onToggleSection,
+      tradeSign: BastionSheet.#onTradeSign,
+      tradeRequest: BastionSheet.#onTradeRequest,
+      tradeSeek: BastionSheet.#onTradeSeek,
+      settlementEdit: BastionSheet.#onSettlementEdit,
+      settlementRemove: BastionSheet.#onSettlementRemove,
+      addFacility: BastionSheet.#onAddFacility
     }
   };
 
@@ -114,7 +139,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _onClose(options) {
     super._onClose(options);
-    BastionSheet.instances.delete(this.entryId);
+    if (BastionSheet.instances.get(this.entryId) === this) BastionSheet.instances.delete(this.entryId);
+    BastionSheet.embeddedPanels.delete(this);
   }
 
   /* ---------------------------------------------------------------- */
@@ -131,8 +157,13 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     const myActors = ownerActors(record).filter(a => isGM || a.isOwner);
     const present = record.presence === "present";
 
+    // Trade routes need a Trading Post: players see the tab once there is one (or a route); the GM always does.
+    const routesOn = isGM || (stats.trade?.capacity ?? 0) > 0 || routesOf(record).length > 0;
+    const tabKeys = TABS.filter(k => k !== "routes" || routesOn);
+    if (!tabKeys.includes(this.tab)) this.tab = "overview";
     const c = {
-      entryId: this.entryId, isGM, mine, present, tab: this.tab, tabs: TABS.map(k => ({ key: k, label: t(`Tab.${k}`), active: k === this.tab })),
+      embedded: !!this.embedded,
+      entryId: this.entryId, isGM, mine, present, tab: this.tab, tabs: tabKeys.map(k => ({ key: k, label: t(`Tab.${k}`), active: k === this.tab })),
       record, name: record.name, description: record.description,
       image: bastionImage(record), terrain: TERRAINS[record.location?.terrain]?.label ?? "", site: SITES[record.location?.site]?.label ?? "",
       structure: STRUCTURES[record.structure?.type]?.label ?? "",
@@ -199,10 +230,12 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       food: Math.round(record.siege.food ?? 0), estimate: record.siege.estimate ?? "∞", fallen: record.siege.fallen ? t(`Reason.${record.siege.fallen}`) : null,
       force: record.siege.force?.label ?? t("Siege.Custom") };
 
-    /* Facilities (dnd5e) */
-    c.facilities = ctx.facilities.map(f => ({ ...f, typeLabel: f.type === "special" ? t("Facility.Special") : t("Facility.Basic"),
-      progressText: f.progress?.max ? `${f.progress.order}: ${f.progress.value}/${f.progress.max} ${t("Days")}` : "",
-      orderLabel: f.order ? game.i18n.localize(`DND5E.FACILITY.Orders.${f.order}.inf`) : "" }));
+    /* Facilities: defenders and a section per kind of building */
+    if (this.tab === "facilities") {
+      c.page = facilitiesPage({ record, stats, ctx, C, R, mine, actorId: this.embedded ? this.actorId : null });
+      c.collapsed = Object.fromEntries([...collapsedSections()].map(k => [k, true]));
+    }
+    if (this.tab === "routes") c.routes = tradeRoutesPage({ record, stats, R, mine, settlements: tradeSettlements(record) });
 
     /* Projects */
     const crew = crewStatus(record, stats);
@@ -267,7 +300,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       const groups = Object.entries(GROUPS).map(([g, label]) => {
         let gold = 0, work = 0, n = 0;
         for (const e of C.values()) {
-          if (e.group !== g || e.legacy || have.has(e.id)) continue;
+          if (e.group !== g || e.legacy || have.has(e.id) || !possibleHere(record, e, C).ok) continue;
           const count = e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1;
           const q = quote(record, e, { size: "cramped", count }, stats, R);
           if (!q.ok) continue;
@@ -280,13 +313,34 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       const gold = groups.reduce((a, x) => a + x.rawGold, 0), work = groups.reduce((a, x) => a + x.rawWork, 0);
       c.everything = { n: groups.reduce((a, x) => a + x.n, 0), gold: gp(gold), work: `${work} ${workUnit()}`, groups };
     }
-    c.catalog = Object.entries(GROUPS).map(([g, label]) => ({
+    c.catalogGroup = this.catalogGroup && GROUPS[this.catalogGroup] ? { key: this.catalogGroup, label: t(`Fac.Section.${this.catalogGroup}`) } : null;
+    // The system's special facilities defined in this world, each under its section.
+    const systemItems = this.tab === "projects" ? await systemFacilityCatalog({ record, isGM, actorId: this.embedded ? this.actorId : null, filter }) : [];
+    // What can be planned now, and what can be built here later (locked, with what it still needs). Buildings the site
+    // rules out for good (no ore, no water, no farmland…) are left out, and listed apart at the end.
+    const openIds = new Set(Object.values(record.projects ?? {}).filter(p => !["complete", "cancelled"].includes(p.state)).map(p => p.expansionId));
+    const plannable = e => planProject(record, C, stats, R, { expansionId: e.id, size: "cramped",
+      count: e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1 },
+      { id: "probe", now: 0 }).ok;
+    const listed = e => {
+      if (e.legacy || (filter && !e.name.toLowerCase().includes(filter))) return false;
+      if (plannable(e)) return true;
+      if (!possibleHere(record, e, C).ok) return false;
+      // Done or waiting already: a one-of that is built or planned, an "each" at its most, a road step (the road
+      // shows its next step when it can be planned).
+      if (e.effects?.roadTier || e.unit === "square") return false;
+      // Past the road it needed (a Hidden Approach once the road is built): never again.
+      if ((e.requires?.check ?? []).some(k => ROAD_PASSED_CHECKS.includes(k) && !CHECKS[k](record, C, stats))) return false;
+      if ((e.unit === "flat" || e.once) && (hasFeatureId(record, e.id) || openIds.has(e.id))) return false;
+      return !prerequisites(record, e, C, stats).missing.some(m => m.startsWith("at most") || m === "already built");
+    };
+    c.impossible = this.tab === "projects" ? [...C.values()].filter(e => !e.legacy && !hasFeatureId(record, e.id)
+        && (!c.catalogGroup || e.group === c.catalogGroup.key) && (!filter || e.name.toLowerCase().includes(filter)))
+      .map(e => ({ e, why: possibleHere(record, e, C) })).filter(x => !x.why.ok)
+      .map(x => ({ name: x.e.name, why: x.why.missing.join(", ") })).sort((a, b) => a.name.localeCompare(b.name)) : [];
+    c.catalog = Object.entries(GROUPS).filter(([g]) => !c.catalogGroup || g === c.catalogGroup.key).map(([g, label]) => ({
       label,
-      // Only what can be planned right now (the same checks as planning it: prerequisites, room, once-only, planned).
-      items: [...C.values()].filter(e => e.group === g && !e.legacy && (!filter || e.name.toLowerCase().includes(filter))
-        && planProject(record, C, stats, R, { expansionId: e.id, size: "cramped",
-          count: e.unit === "square" ? stats.grounds.perimeter : e.unit === "mile" ? Math.ceil(record.location?.settlement?.distance || 1) : 1 },
-          { id: "probe", now: 0 }).ok).map(e => {
+      items: [...C.values()].filter(e => e.group === g && listed(e)).map(e => {
         const pre = prerequisites(record, e, C, stats);
         const q = quote(record, e, { size: "cramped", count: 1 }, stats, R);
         // Room it needs (the smallest size for rooms); locked when even that doesn't fit.
@@ -294,32 +348,20 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
         const space = e.unit === "sized" ? `${SIZES.map(s => (e.footprint ?? SIZE_FOOTPRINT[s])).join(" / ")} ${t("Sq")}`
           : fp ? `${fp} ${t("Sq")}${e.unit === "each" ? ` ${t("Unit.each")}` : ""}` : t("OutsideWalls");
         if (pre.ok && fp > g.free) pre.missing.push(t("NoRoom", { need: fp, free: g.free }));
+        if (!pre.missing.length && !plannable(e)) pre.missing.push(t("NotNow"));
         pre.ok = pre.missing.length === 0;
         const unit = e.unit === "square" ? t("Unit.square") : e.unit === "mile" ? t("Unit.mile") : e.unit === "each" ? t("Unit.each") : "";
         const sized = e.unit === "sized";
         const sizedQ = sized ? SIZES.map(sz => quote(record, e, { size: sz, count: 1 }, stats, R)) : [];
         const sizedDays = sizedQ.map(x => x.days);
         return { id: e.id, name: e.name, summary: e.summary ?? "", ok: pre.ok, missing: pre.missing.join(", "), dmg: !!e.dmg, space,
+          warn: hiddenApproachWarning(record, e.id),
           cost: sized ? sizedQ.map(x => (x.cost ?? 0).toLocaleString()).join(" / ") + " GP" : `${gp(q.cost)}${unit ? ` ${unit}` : ""}`,
           days: sized ? `${sizedDays.join(" / ")} ${workUnit()}` : `${workText(q.days)}${unit ? ` ${unit}` : ""}`,
-          upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: (e.tiers ?? []).map(x => x.label).join(" → "),
+          upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: tierLine(e.tiers),
           perks: perksText(e) };
-      })
+      }).concat(systemItems.filter(x => x.section === g))
     })).filter(g => g.items.length);
-    c.features = Object.entries(record.features ?? {}).map(([fid, f]) => {
-      const e = C.get(f.id);
-      if (!e) return null;
-      const nextTier = e.tiers?.[(f.tier ?? 1)];
-      // A building with a project planned or under way (enlarge, upgrade, repair) shows that instead of the buttons.
-      const open = Object.values(record.projects ?? {}).find(p => p.featureId === fid && !["complete", "cancelled"].includes(p.state));
-      return { fid, name: e.name, busy: open ? t(`Busy.${open.kind}`, { state: t(`State.${open.state}`) }) : "", size: f.size ? SIZE_LABELS[f.size] : "", count: f.count && e.unit !== "flat" ? f.count : "",
-        squares: footprintOf(e, f),
-        tier: e.tiers ? e.tiers[(f.tier ?? 1) - 1]?.label : "", damaged: !!f.damaged,
-        canUpgrade: !!nextTier && !open, canRepair: !!f.damaged && !open,
-        upgradeLabel: nextTier ? `${nextTier.label} (${gp(quote(record, e, { kind: "upgrade", featureId: fid }, stats, R).cost ?? nextTier.cost)})` : "",
-        canEnlarge: e.unit === "sized" && !!ENLARGE[f.size] && !open, group: GROUPS[e.group] };
-    }).filter(Boolean).sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
-
     /* Dispatches */
     const dist = this.draft.distance ?? partyDistance(record);
     const draftOrders = this.draftOrders(record, ctx);
@@ -523,6 +565,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: { label: t("Plan.Add"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
     }).catch(() => null);
     if (!result) return;
+    if (!(await confirmHiddenApproach(record, exp.id))) return;
     await BastionSheet.#run("planProject", { entryId: this.entryId, opts: { expansionId: exp.id, size: result.size, count: result.count,
       rush: !!result.rush, enclosed: exp.effects?.wall ? !!result.enclosed : true } });
   }
@@ -643,6 +686,11 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       servants: box.querySelector("[name=servants]")?.value });
   }
 
+  /** From a character sheet's Bastion tab: the same page in a window of its own. */
+  static #onPopOut() {
+    BastionSheet.open(this.entryId, { tab: this.tab });
+  }
+
   /** The party's build queue: add, remove, up, down (data-op) for the project on this row. */
   static #onQueueProject(event, target) {
     const row = target.closest("[data-project]");
@@ -671,6 +719,184 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onSiegeEnd() {
     return BastionSheet.#run("endSiege", { entryId: this.entryId });
+  }
+
+  /** A section's "Plan" button: the catalog on the Projects page, showing only that section's buildings. */
+  static #onPlanSection(event, target) {
+    this.catalogGroup = target.dataset.group ?? "";
+    this.tab = "projects";
+    return this.render();
+  }
+
+  static #onClearCatalogGroup() {
+    this.catalogGroup = "";
+    return this.render();
+  }
+
+  /** A building or an inhabitant: its page in the Bastion Codex (a building without one opens the Projects page). */
+  static async #onOpenCodex(event, target) {
+    const uuid = target.closest("[data-codex]")?.dataset.codex;
+    if (await openCodex(uuid)) return;
+    // No page: the pack isn't loaded (a server restart after installing or updating) or the entry is new.
+    ui.notifications.warn(game.packs.get(`${MODULE_ID}.codex`) ? t("Codex.NoPage") : t("Codex.Missing"));
+  }
+
+  /** The upgrade arrow: plans the upgrade (a tier, a bigger room, the next road step) in the constructions list. */
+  static async #onUpgradeAt(event, target) {
+    const { kind, fid, id, count } = target.dataset;
+    if (kind === "road" && !(await confirmHiddenApproach(getRecord(getEntry(this.entryId)), id))) return;
+    const opts = kind === "road" ? { expansionId: id, count: Number(count) || 1 } : { kind, featureId: fid };
+    const res = await BastionSheet.#run("planProject", { entryId: this.entryId, opts });
+    if (res?.ok) {
+      const name = kind === "road" ? catalog().get(id)?.name : target.closest("[data-fid]")?.querySelector(".title")?.textContent.trim();
+      ui.notifications.info(t("Fac.Planned", { name: name ?? "" }));
+    }
+  }
+
+  /** Folds a Facilities section away or opens it again, without redrawing the page; remembered in this browser. */
+  static #onToggleSection(event, target) {
+    const section = target.closest("[data-section]");
+    const key = section?.dataset.section;
+    if (!key) return;
+    const folded = section.classList.toggle("dxpb-collapsed");
+    target.setAttribute("aria-expanded", folded ? "false" : "true");
+    const set = collapsedSections();
+    if (folded) set.add(key); else set.delete(key);
+    try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...set])); } catch { /* storage off: this page only */ }
+  }
+
+  /** Trade routes: accept or decline a request, withdraw an accepted route, cancel an active one (owners). */
+  static async #onTradeRoute(event, target) {
+    const routeId = target.closest("[data-route]")?.dataset.route;
+    const op = target.dataset.op;
+    if (!routeId || !op) return;
+    const route = getRecord(getEntry(this.entryId))?.tradeRoutes?.[routeId];
+    if (op === "cancel" && route) {
+      const ok = await DialogV2.confirm({ window: { title: t("Trade.Cancel") },
+        content: `<p>${t("Trade.CancelConfirm", { name: escapeHTML(route.name) })}</p>` });
+      if (!ok) return;
+    }
+    const res = await BastionSheet.#run("tradeRoute", { entryId: this.entryId, routeId, op });
+    if (res?.ok && op === "accept") announceRoute(res, route?.name ?? "");
+  }
+
+  /** The GM signs an accepted route: the setup from the treasury, or waived. */
+  static async #onTradeSign(event, target) {
+    if (!game.user.isGM) return;
+    const routeId = target.closest("[data-route]")?.dataset.route;
+    const record = getRecord(getEntry(this.entryId));
+    const route = record?.tradeRoutes?.[routeId];
+    if (!route) return;
+    const from = await DialogV2.wait({
+      window: { title: t("Trade.Sign") },
+      content: `<p>${t("Trade.SignText", { name: escapeHTML(route.name), setup: gp(route.setup), treasury: gp(record.treasury ?? 0) })}</p>`,
+      buttons: [
+        { action: "treasury", label: t("Trade.SignTreasury"), icon: "fa-solid fa-coins", default: true },
+        { action: "free", label: t("Trade.SignFree"), icon: "fa-solid fa-gift" }
+      ],
+      rejectClose: false
+    });
+    if (!from) return;
+    const res = await BastionSheet.#run("signTradeRoute", { entryId: this.entryId, routeId, from });
+    if (res?.ok) ui.notifications.info(t("Trade.Signed", { name: route.name }));
+  }
+
+  /** Owners seek a route with a settlement: they choose the goods, then the party travels there to negotiate. */
+  static async #onTradeSeek(event, target) {
+    const key = target.closest("[data-key]")?.dataset.key;
+    const record = getRecord(getEntry(this.entryId));
+    const { routeWorth } = await import("../trade.js");
+    const { quoteRoute } = await import("../core/trade.js");
+    const { TRADE_GOODS } = await import("../data/tables.js");
+    const place = tradeSettlements(record).find(s => s.key === key);
+    if (!place) return;
+    const { stats } = statsFor(record);
+    const worth = g => {
+      const q = quoteRoute({ size: place.size ?? "village", distance: place.distance, goods: g }, rules(),
+        { accessibility: stats.accessibility, foodPrice: stats.food.buyPrice });
+      return routeWorth({ ...q, goods: g });
+    };
+    const content = `<div class="dxpb-plan"><p>${t("Trade.SeekText", { name: escapeHTML(place.name), miles: place.distance })}</p>
+      <label>${t("Trade.GoodsLabel")}<select name="goods">${Object.keys(TRADE_GOODS)
+        .map(k => `<option value="${k}">${t(`Trade.Goods.${k}`)} (${worth(k)})</option>`).join("")}</select></label>
+      ${place.size ? "" : `<p class="dxpb-muted">${t("Trade.SeekSizeHint")}</p>`}</div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t("Trade.Seek") }, content,
+      ok: { label: t("Trade.SeekShort"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result?.goods) return;
+    const res = await BastionSheet.#run("proposeTradeRoute", { entryId: this.entryId, key, goods: result.goods });
+    if (res?.ok) announceRoute(res, place.name);
+  }
+
+  /** The GM adds a settlement to trade with, or edits one: name, distance in miles, size. */
+  static async #onSettlementEdit(event, target) {
+    if (!game.user.isGM) return;
+    const id = target.closest("[data-id]")?.dataset.id || "";
+    const record = getRecord(getEntry(this.entryId));
+    const cur = record?.settlements?.[id] ?? { name: "", distance: 20, size: "village" };
+    const { SETTLEMENT_SIZES } = await import("../data/location.js");
+    const content = `<div class="dxpb-plan">
+      <label>${t("Trade.SettlementNameLabel")}<input type="text" name="name" value="${escapeHTML(cur.name)}" required autofocus></label>
+      <label>${t("Trade.DistanceLabel")}<input type="number" name="distance" min="0" step="1" value="${Number(cur.distance) || 0}"></label>
+      <label>${t("Trade.SizeLabel")}<select name="size">${Object.entries(SETTLEMENT_SIZES)
+        .map(([k, v]) => `<option value="${k}" ${k === cur.size ? "selected" : ""}>${v.label}</option>`).join("")}</select></label>
+      <p class="dxpb-muted">${t("Trade.SettlementHint")}</p></div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t(id ? "Trade.EditSettlement" : "Trade.AddSettlement") }, content,
+      ok: { label: t("Save"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result) return;
+    await BastionSheet.#run("saveSettlement", { entryId: this.entryId, settlement: { ...result, id: id || undefined } });
+  }
+
+  /** The GM removes a listed settlement. */
+  static async #onSettlementRemove(event, target) {
+    if (!game.user.isGM) return;
+    const id = target.closest("[data-id]")?.dataset.id;
+    const place = getRecord(getEntry(this.entryId))?.settlements?.[id];
+    if (!place) return;
+    const ok = await DialogV2.confirm({ window: { title: t("Trade.RemoveSettlement") },
+      content: `<p>${t("Trade.RemoveConfirm", { name: escapeHTML(place.name) })}</p>` });
+    if (ok) await BastionSheet.#run("removeSettlement", { entryId: this.entryId, id });
+  }
+
+  /** The GM has a settlement ask for a route now. */
+  static async #onTradeRequest() {
+    if (!game.user.isGM) return;
+    const record = getRecord(getEntry(this.entryId));
+    const { tradeCandidates } = await import("../core/trade.js");
+    const { TRADE_GOODS } = await import("../data/tables.js");
+    if (!(statsFor(record).stats.trade?.capacity > 0)) return ui.notifications.warn(t("Trade.NeedPost"));
+    const list = tradeCandidates(record, tradeSettlements(record), { ...rules(), tradeMaxMiles: Infinity });
+    if (!list.length) return ui.notifications.warn(t("Trade.NoSettlement"));
+    const content = `<div class="dxpb-plan">
+      <label>${t("Trade.Settlement")}<select name="key">${list.map(s => `<option value="${escapeHTML(s.key)}">${escapeHTML(s.name)} (${s.distance} mi)</option>`).join("")}</select></label>
+      <label>${t("Trade.GoodsLabel")}<select name="goods"><option value="">${t("Trade.GoodsRandom")}</option>${Object.keys(TRADE_GOODS)
+        .map(k => `<option value="${k}">${t(`Trade.Goods.${k}`)}</option>`).join("")}</select></label>
+      <p class="dxpb-muted">${t("Trade.NewRequestHint")}</p></div>`;
+    const result = await DialogV2.prompt({
+      window: { title: t("Trade.NewRequest") }, content,
+      ok: { label: t("Trade.NewRequest"), callback: (ev, button) => new foundry.applications.ux.FormDataExtended(button.form).object }
+    }).catch(() => null);
+    if (!result?.key) return;
+    await BastionSheet.#run("requestTradeRoute", { entryId: this.entryId, key: result.key, goods: result.goods || undefined });
+  }
+
+  /** Gives one of the system's facilities an order (the system's own dialog). */
+  static async #onUseFacility(event, target) {
+    const item = await fromUuid(target.closest("[data-uuid]")?.dataset.uuid);
+    if (!item?.isOwner) return;
+    item.use({ legacy: false, chooseActivity: true, event });
+  }
+
+  /** Adds one of the system's special facilities defined in the world to an owner's sheet. */
+  static async #onAddFacility(event, target) {
+    const row = target.closest("[data-uuid]");
+    const actorId = row?.querySelector("select[name=facilityOwner]")?.value;
+    if (!row || !actorId) return;
+    const res = await BastionSheet.#run("addSystemFacility", { entryId: this.entryId, uuid: row.dataset.uuid, actorId });
+    if (res?.ok) ui.notifications.info(t("Fac.Added", { name: res.name, actor: res.actor }));
   }
 
   static async #onOpenFacility(event, target) {
@@ -743,15 +969,63 @@ function tangible(key, stats, record, R) {
   }
 }
 
+/** Effects that are bookkeeping, not perks to list. */
+const HIDDEN_PERKS = new Set(["tradePosts"]);
+
 /** A one-line list of an expansion's perks. */
 export function perksText(e) {
   const src = e.tiers ? e.tiers[0].effects : e.effects;
   const parts = [];
   for (const [k, v] of Object.entries(src ?? {})) {
+    if (HIDDEN_PERKS.has(k)) continue;
     const val = Array.isArray(v) ? v.join("/") : v;
     if (typeof val === "boolean") parts.push(game.i18n.has?.(`DXPB.Perk.${k}`) ? t(`Perk.${k}`) : k);
     else parts.push(game.i18n.has?.(`DXPB.Perk.${k}`) ? t(`Perk.${k}`, { v: val }) : `${k} ${val}`);
   }
   if (e.upkeep) parts.push(t("Perk.upkeep", { v: e.upkeep }));
   return parts.join(" · ");
+}
+
+/** A building's upgrade path for the catalog: every tier, or for long ladders the first ones, "…" and the last. */
+export function tierLine(tiers) {
+  const labels = (tiers ?? []).map(x => x.label);
+  if (labels.length <= 4) return labels.join(" → ");
+  return `${labels.slice(0, 3).join(" → ")} → … → ${labels.at(-1)} (${t("Levels", { n: labels.length })})`;
+}
+
+function hasFeatureId(record, id) {
+  return Object.values(record?.features ?? {}).some(f => f?.id === id);
+}
+
+/** The Facilities page sections this browser keeps folded. */
+const COLLAPSE_KEY = `${MODULE_ID}.collapsedSections`;
+function collapsedSections() {
+  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) ?? "[]")); } catch { return new Set(); }
+}
+
+/**
+ * The Hidden Approach and the road don't go together: a road step that ends it (built or planned), or a Hidden Approach
+ * while such a road is planned, gets a warning. Empty when there's nothing to say.
+ */
+export function hiddenApproachWarning(record, expansionId) {
+  const has = id => Object.values(record?.features ?? {}).some(f => f?.id === id);
+  const planned = ids => Object.values(record?.projects ?? {})
+    .some(p => ids.includes(p?.expansionId) && !["complete", "cancelled"].includes(p.state));
+  if (ROADS_END_HIDDEN.includes(expansionId) && (has("hidden-approach") || planned(["hidden-approach"]))) return t("Hidden.RoadEnds");
+  if (expansionId === "hidden-approach" && planned(ROADS_END_HIDDEN)) return t("Hidden.RoadPlanned");
+  return "";
+}
+
+/** Asks before planning a road that ends the Hidden Approach (or the other way round). True to go on. */
+async function confirmHiddenApproach(record, expansionId) {
+  const warn = hiddenApproachWarning(record, expansionId);
+  if (!warn) return true;
+  return foundry.applications.api.DialogV2.confirm({ window: { title: t("Hidden.Title") }, content: `<p>${warn}</p>` });
+}
+
+/** After accepting or seeking a route: where the quest is, or why there isn't one. */
+function announceRoute(res, name) {
+  if (res.questId) return ui.notifications.info(t("Trade.AcceptedQuest", { name }));
+  if (game.modules.get("dxcufgbs-quest-log")?.active) return ui.notifications.warn(t("Trade.QuestFailed", { name }));
+  ui.notifications.info(t("Trade.Accepted", { name }));
 }

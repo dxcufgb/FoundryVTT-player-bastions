@@ -1,0 +1,491 @@
+{
+  "_id": "eLInejDYDQRbbrU6",
+  "name": "Fortifications",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 200000,
+  "pages": [
+    {
+      "_id": "1Y25k4scuUh0ZQ8F",
+      "name": "Arrow Slits and Hoardings",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "arrow-slits",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/arrow-slits.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/arrow-slits.webp",
+        "description": "<p>Narrow slits in the stone and timber galleries hung out over the wall, so archers can shoot straight down at anyone at the foot of it.</p><p>Defenders fight from cover, adding to the defense of a walled Bastion.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.1Y25k4scuUh0ZQ8F"
+    },
+    {
+      "_id": "GVBACxd3flHAP1QW",
+      "name": "Ballista Emplacement",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "ballista",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/ballista.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/ballista.webp",
+        "description": "<p>A great crossbow on a stone platform, with a crew to wind it and bolts as long as a man.</p><p>Each emplacement cuts the damage siege engines do and adds its crew to the garrison. Several can be built.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.GVBACxd3flHAP1QW"
+    },
+    {
+      "_id": "udEH4CgQjhizdura",
+      "name": "Barbican",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "barbican",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/barbican.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/barbican.webp",
+        "description": "<p>An outer gate in front of the gatehouse, so attackers who break through the first gate find themselves in a killing ground before the second.</p><p>The barbican strengthens the defense of a walled Bastion with a gatehouse.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.udEH4CgQjhizdura"
+    },
+    {
+      "_id": "ROpd8TTwwx7pVeVw",
+      "name": "Drawbridge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "drawbridge",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/drawbridge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/drawbridge.webp",
+        "description": "<p>A bridge that lifts on chains, leaving a gap a ram can't cross.</p><p>Battering rams can't reach the gate, so light engines do less damage to the wall. It needs a ditch or moat to span.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.ROpd8TTwwx7pVeVw"
+    },
+    {
+      "_id": "w2umWlEJZFpwxoMG",
+      "name": "Dry Ditch",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "dry-ditch",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/dry-ditch.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/dry-ditch.webp",
+        "description": "<p>A deep, steep-sided ditch dug around the walls: attackers have to climb down and up again under fire.</p><p>The ditch adds to the defense and keeps siege engines and ladders back from the wall.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.w2umWlEJZFpwxoMG"
+    },
+    {
+      "_id": "LSPzQeUUC9O0XPO0",
+      "name": "Gatehouse",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "gatehouse",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/gatehouse.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/gatehouse.webp",
+        "description": "<p>The gate is the weakest part of any wall, so it gets towers of its own: a fortified gate passage with rooms above for the guards.</p><p>A gatehouse adds Integrity and makes the walls harder to take. It is the base for the Barbican, Portcullis and Drawbridge.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.LSPzQeUUC9O0XPO0"
+    },
+    {
+      "_id": "m6Qfe3XG31vwbLm4",
+      "name": "Greater Wards",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "greater-wards",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/greater-wards.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/greater-wards.webp",
+        "description": "<p>A shimmering dome of protection anchored by runes on every tower.</p><p>Greater wards cut magical damage further, and nobody scries into the Bastion or teleports in or out. They build on the lesser wards.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.m6Qfe3XG31vwbLm4"
+    },
+    {
+      "_id": "Uh0YCTL6Nzb1LBkv",
+      "name": "Lesser Wards",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "lesser-wards",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/lesser-wards.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/lesser-wards.webp",
+        "description": "<p>Glyphs cut into the gate and walls, alarms that ring when something crosses them, and charms against fire.</p><p>Lesser wards cut the damage magic does in a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.Uh0YCTL6Nzb1LBkv"
+    },
+    {
+      "_id": "THUKCYvM4bXhNEwO",
+      "name": "Portcullis and Murder Holes",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "portcullis",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/portcullis.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/portcullis.webp",
+        "description": "<p>Iron grilles that drop in the gate passage, and holes in the vault above for pouring down whatever is at hand.</p><p>A portcullis with murder holes makes the gate far costlier to force and adds to the defense.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.THUKCYvM4bXhNEwO"
+    },
+    {
+      "_id": "32tIgwO8AwZq9kys",
+      "name": "Postern Tunnel",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1000000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "postern",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/postern.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/postern.webp",
+        "description": "<p>A small hidden door at the foot of the wall and a tunnel beyond it, known to few.</p><p>During a siege, food and messengers slip in and out: the stores last longer and envoys get through the lines.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.32tIgwO8AwZq9kys"
+    },
+    {
+      "_id": "wramSVbWxwGqjzKt",
+      "name": "Spike Barricade",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "spike-barricade",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/spike-barricade.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/spike-barricade.webp",
+        "description": "<p>Rows of sharpened stakes at the foot of the wall, angled outward, between the wall and any ditch or moat.</p><p>The barricade adds a little to the defense and blunts light siege engines. It is built once and grows with the wall when the grounds are extended.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.wramSVbWxwGqjzKt"
+    },
+    {
+      "_id": "klmyKHSaBDRs5Aok",
+      "name": "Wall",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "wall",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/wall.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/wall.webp",
+        "description": "<p>A ring around the grounds, begun as a timber palisade and raised over the years: a stone wall, reinforced with buttresses, and finally a wall walk with crenellations where defenders fight under cover.</p><p>The wall multiplies the garrison's strength and gives the Bastion Integrity that an attacker has to wear down before breaking in. Each step up is priced along the whole length of the wall; extending the grounds lengthens it. A Bastion has one wall.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.klmyKHSaBDRs5Aok"
+    },
+    {
+      "_id": "496AqvAG19ptDNgk",
+      "name": "Watchtower",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "watchtower",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/watchtower.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/watchtower.webp",
+        "description": "<p>A tall tower with a lookout who sees trouble on the horizon long before it arrives.</p><p>Each watchtower adds to the defense, up to a limit. The first one stands at the heart of the grounds; more go on the corners of the wall. Several can be built.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.496AqvAG19ptDNgk"
+    },
+    {
+      "_id": "gGu6uL7kBYpYvzBP",
+      "name": "Wet Moat",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "wet-moat",
+        "category": "fortifications",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/wet-moat.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/wet-moat.webp",
+        "description": "<p>Water all round the walls, wide and still.</p><p>A moat multiplies the defense and halves the damage of light siege engines, and nobody digs under a wall through water.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!eLInejDYDQRbbrU6.gGu6uL7kBYpYvzBP"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "fortifications"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!eLInejDYDQRbbrU6"
+}

@@ -1,0 +1,22 @@
+{{!-- A Bastion Codex page (apps/codex-page.js), view mode. --}}
+<article class="dxpb dxpb-codex journal-page-content">
+  <header class="dxpb-codex-head">
+    {{#if codex.icon}}<img class="dxpb-codex-icon" src="{{codex.icon}}" alt="">{{/if}}
+    <div>
+      <h1 class="dxpb-codex-title">{{codex.name}}</h1>
+      <span class="dxpb-muted">{{codex.kindLabel}}{{#if codex.category}} · {{codex.category}}{{/if}}</span>
+    </div>
+  </header>
+  <div class="dxpb-codex-body">
+    {{#if codex.image}}<figure class="dxpb-codex-hero"><img src="{{codex.image}}" alt="{{codex.name}}"></figure>{{/if}}
+    <div class="dxpb-codex-text">
+      {{{codex.description}}}
+      {{#if codex.rows.length}}
+      <h3>{{localize "DXPB.Codex.Contributions"}}</h3>
+      <table class="dxpb-codex-table">
+        {{#each codex.rows}}<tr><th>{{label}}</th><td>{{value}}</td></tr>{{/each}}
+      </table>
+      {{/if}}
+    </div>
+  </div>
+</article>

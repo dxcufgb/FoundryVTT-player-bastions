@@ -1,0 +1,227 @@
+{
+  "_id": "etyfGJKRFyO19S73",
+  "name": "Living quarters",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 100000,
+  "pages": [
+    {
+      "_id": "S6cLqrqwXRlpZ0fO",
+      "name": "Bedroom",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "bedroom",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/bedroom.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/bedroom.webp",
+        "description": "<p>Somewhere to sleep that isn't the floor of the hall. A bedroom holds the household's beds, chests and a hearth, and every Bastion needs a few before anyone wants to stay the winter.</p><p>Bedrooms add beds, so more people can live at the Bastion without crowding, and they become one of the owners' basic facilities. A larger bedroom holds more beds and can be enlarged later.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.S6cLqrqwXRlpZ0fO"
+    },
+    {
+      "_id": "NuqJAAKpYrnodoji",
+      "name": "Courtyard",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "courtyard",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/courtyard.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/courtyard.webp",
+        "description": "<p>Open ground inside the walls: where carts unload, children play, the well stands and the garrison musters.</p><p>A courtyard is a basic facility and makes room for things that need space. A roomy courtyard or larger is where a Training Yard can be laid out. A Bastion has only one.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.NuqJAAKpYrnodoji"
+    },
+    {
+      "_id": "PtJL6ZGcA1WLJmnF",
+      "name": "Dining Room",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "dining-room",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/dining-room.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/dining-room.webp",
+        "description": "<p>A long table, a good fire and the whole household eating together. Shared meals are where the Bastion's people stop being strangers.</p><p>A dining room raises Comfort. It is a basic facility, and it can be enlarged as the household grows.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.PtJL6ZGcA1WLJmnF"
+    },
+    {
+      "_id": "Om2LsyQSdGgyFAf9",
+      "name": "Kitchen",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "kitchen",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/kitchen.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/kitchen.webp",
+        "description": "<p>The heart of any household: a great hearth, ovens, copper pots and a cook who rules it all.</p><p>A kitchen feeds the people who live at the Bastion and is needed before an Inn or a Great Hall can be built. It is a basic facility and can be enlarged.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.Om2LsyQSdGgyFAf9"
+    },
+    {
+      "_id": "SM6eqprnFT5ttUNn",
+      "name": "Parlor",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "parlor",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/parlor.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/parlor.webp",
+        "description": "<p>A quiet, well-furnished room for receiving guests of standing: envoys, merchants with a proposal, a lord passing through.</p><p>The parlor lifts Comfort and the Bastion's standing with visitors. A Bastion has only one; enlarge it instead of building another.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.SM6eqprnFT5ttUNn"
+    },
+    {
+      "_id": "3gemKRcn6JrKpM9E",
+      "name": "Storage",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "storage",
+        "category": "rooms",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/storage.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/storage.webp",
+        "description": "<p>Vaulted rooms of sacks, crates, barrels and casks, counted by lantern light.</p><p>Storage raises how much food and goods the Bastion can keep, which matters most when a siege closes the roads. It is a basic facility and can be enlarged.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!etyfGJKRFyO19S73.3gemKRcn6JrKpM9E"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "rooms"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!etyfGJKRFyO19S73"
+}
