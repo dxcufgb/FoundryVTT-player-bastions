@@ -1336,7 +1336,7 @@ export function registerQuench(quench) {
         const app = BastionSheet.open(entryId);
         app.tab = "trade";
         await app.render({ force: true });
-        const links = app.element.querySelectorAll("a.dxpb-ware[data-action=viewWare]");
+        const links = app.element.querySelectorAll("button.dxpb-ware[data-action=viewWare]");
         assert.equal(links.length, stock.length, "every ware is a link");
         links[0].click();
         // A compendium document can come back as a new object each time: look for any open page of it.
