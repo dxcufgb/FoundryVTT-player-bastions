@@ -234,16 +234,6 @@
   {{else}}<p class="dxpb-muted">{{localize "DXPB.NoProjects"}}</p>{{/if}}
   {{#unless isGM}}<p class="dxpb-muted"><i class="fa-solid fa-circle-info"></i> {{localize "DXPB.GMBuilds"}}</p>{{/unless}}
 
-  <h3>{{localize "DXPB.Built"}}</h3>
-  <table class="dxpb-table dxpb-built">
-    {{#each features}}<tr data-fid="{{fid}}"><td>{{name}}{{#if size}} ({{size}}){{/if}}{{#if count}} ×{{count}}{{/if}}{{#if tier}} · {{tier}}{{/if}}{{#if damaged}} <span class="dxpb-tag dxpb-bad">{{localize "DXPB.Damaged"}}</span>{{/if}}{{#if busy}} <span class="dxpb-tag dxpb-busy-tag">{{busy}}</span>{{/if}}</td><td class="dxpb-muted">{{group}}</td><td class="dxpb-muted">{{#if squares}}{{squares}} {{localize "DXPB.Sq"}}{{/if}}</td>
-      <td class="dxpb-actions">{{#if @root.mine}}
-        {{#if canUpgrade}}<button type="button" data-action="featureProject" data-kind="upgrade" data-fid="{{fid}}" data-tooltip="{{upgradeLabel}}"><i class="fa-solid fa-angles-up"></i></button>{{/if}}
-        {{#if canEnlarge}}<button type="button" data-action="featureProject" data-kind="enlarge" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Enlarge'}}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>{{/if}}
-        {{#if canRepair}}<button type="button" data-action="featureProject" data-kind="repair" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Repair'}}"><i class="fa-solid fa-screwdriver-wrench"></i></button>{{/if}}
-      {{/if}}</td></tr>{{/each}}
-  </table>
-
   <h3>{{localize "DXPB.Catalog"}}</h3>
   {{#if everything.n}}
   <details class="dxpb-everything">

@@ -12,8 +12,8 @@ The README stays short (intro, installation, links); the user guide, settings, A
 fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the wiki page when a feature changes.
 
 ## Layout
-- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (69 expansions plus legacy wall entries,
-  tiers, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
+- `scripts/data/` – pure data: `location.js` (wizard questions and effects), `structures.js`, `catalog.js` (71 expansions plus legacy wall entries,
+  tiers, `levels()` / `MAX_LEVELS` for industries, `ENLARGE`), `tables.js` (dispatch methods, forces, merchant tiers, visitors, fallback events, guests, treasure),
   `rules.js` (every number, `mergeRules`), `grounds.js` (grounds sizes, footprint per expansion, wall layers),
   `map-style.js` (textures by terrain, floors and furnishings by building, wall-band crops).
 - `scripts/core/` – the pure engine (no Foundry globals; Node-testable): `catalog.js` (overrides, prerequisites,
@@ -51,8 +51,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   subtype, `specialSlots`, `canTakeFacility`). Row partial `dxpbFacilityCard` (templates/facility-card.hbs): a building is a
   row like a defender's (`.dxpb-def`: picture, name and subtitle, action buttons, stat cells, chevron). Stat columns per
   section: `SECTION_COLUMNS` / `DEFENDER_COLUMNS` (head row, a `.dxpb-cell` per column, total row; the grid's `--cols`).
-  A row's name and chevron open its Codex page (`openCodex`); the upgrade arrow (`upgradeAt`) goes to Projects with
-  `highlight` set (the row gets `.dxpb-highlight`).
+  A row's name and chevron open its Codex page (`openCodex`; a warning when the pack isn't loaded); the upgrade arrow
+  (`upgradeAt`, owners only) plans the project at once (`kind` upgrade / enlarge, or `road` with the next step's id).
+  The Projects page has no list of built buildings: the Facilities page is that list.
 - The Codex: pack `packs/codex` (JournalEntry, compiled LevelDB, committed: `.gitignore` keeps `packs/**/*.log`).
   `core/codex.js` (pure: journals, INHABITANTS, stable FNV ids `journalId`/`pageId`/`folderId`, `codexUuid`, `codexArt`)
   is shared with the builder, so the module knows every page's uuid without loading the pack. Page types
@@ -130,6 +131,12 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - A Bastion's journal never draws its own sheet: main.js wraps `DocumentSheetV2#_canRender` (forced first render of a
   Bastion's JournalEntry → `BastionSheet.open`, return false); `renderJournalEntrySheet` closes one that draws anyway.
 - `turn-runner.js` KEYS lists every top-level record key a turn may change; a key missing there is silently lost.
+- Workers: an expansion's `workers` effect (industries, per level) counts in `stats.population` (beds, food).
+  `record.people.workersAway` (left for want of food) lowers `stats.people.workers` and scales the income and income
+  dice of every building with workers by the share still there (`workforce` in stats.js).
+- Food in a turn: `feedBastion` (core/turn.js) after upkeep and before the dividend: the shortfall is bought at
+  `stats.food.buyPrice` (`rules.foodBuyGp` × the access's material factor); unfed people leave in `LEAVE_ORDER`
+  (not in a siege); fed turns bring back `rules.workersReturn` of the workers away.
 - Map art lives in `assets/map/tex` (tileable, 512 px, one tile = 4 squares unless `TILE_OVERRIDE`) and
   `assets/map/props` (transparent, cropped, back of the object at the top of the picture).
 

@@ -105,6 +105,7 @@ export function roadTier(record, catalog) {
 export const CHECKS = {
   anyWall: (r, c) => features(r, c).some(([, , e]) => e.effects?.wall) || !!r?.structureWall,
   moatWater: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway) || r?.location?.waterOnSite === "spring",
+  fishing: r => ["stream", "river", "lake", "coast"].includes(r?.location?.waterway),
   wellSite: r => ["spring", "table"].includes(r?.location?.waterOnSite),
   rockSite: r => ["rock", "none"].includes(r?.location?.waterOnSite),
   notUnderground: r => r?.location?.terrain !== "underground",
@@ -133,7 +134,7 @@ export const CHECKS = {
 
 /** Human labels for the checks, for "needs ..." messages. */
 export const CHECK_LABELS = {
-  anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", wellSite: "water on site (spring or high water table)",
+  anyWall: "a wall", moatWater: "a spring, stream, river, lake or coast", fishing: "a stream, river, lake or coast", wellSite: "water on site (spring or high water table)",
   rockSite: "a rock site without water", notUnderground: "open sky (not underground)", farmland: "farmland (fertile or poor land)",
   millSite: "a stream, river, plains or hills", game: "game in the area", timber: "timber nearby", stone: "stone nearby",
   ore: "ore or gems nearby", roadBelowTrail: "no road yet", roadTrail: "a trail", roadRoad: "a road", roadUnpaved: "a road that isn't paved yet", riverRoute: "a river on the route",

@@ -104,10 +104,43 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.zgzH41r5AQlstkFe"
     },
     {
+      "_id": "8NZ2YyTQ3tWr9mGW",
+      "name": "Fishery",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "fishery",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/fishery.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/fishery.webp",
+        "description": "<p>Boats drawn up on the bank, nets drying on poles and a smoke shed full of the day's catch.</p><p>A fishery on a stream, river, lake or the sea feeds the Bastion every day and sells the surplus. Weirs and traps, and later a fishing fleet, bring in more. It needs open water: it stops during a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.8NZ2YyTQ3tWr9mGW"
+    },
+    {
       "_id": "S4EOmhyhFcxnhQdp",
       "name": "Granary",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 400000,
+      "sort": 500000,
       "title": {
         "show": false,
         "level": 1
@@ -137,10 +170,43 @@
       "_key": "!journal.pages!VvkfapaHwmae3hZ7.S4EOmhyhFcxnhQdp"
     },
     {
+      "_id": "JZp9kno2UAaghqjY",
+      "name": "Greenhouse",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "greenhouse",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/greenhouse.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/greenhouse.webp",
+        "description": "<p>Rows of small glass panes in an iron frame, warmed by braziers through the winter.</p><p>A greenhouse grows vegetables and herbs inside the walls all year, so its food keeps coming during a siege. Expanded into glass gardens and an orangery, it grows more and brightens the household's days.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.JZp9kno2UAaghqjY"
+    },
+    {
       "_id": "X4kvWbi2K9b6t0jc",
       "name": "Hunting Lodge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 500000,
+      "sort": 700000,
       "title": {
         "show": false,
         "level": 1
@@ -173,7 +239,7 @@
       "_id": "6JxAYSabFYrgdWNA",
       "name": "Kitchen Garden",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 600000,
+      "sort": 800000,
       "title": {
         "show": false,
         "level": 1
@@ -183,7 +249,7 @@
         "category": "supplies",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/kitchen-garden.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/kitchen-garden.webp",
-        "description": "<p>Neat beds of cabbages, beans and herbs inside the walls.</p><p>The garden grows food every day, and because it's inside the walls it keeps growing during a siege.</p>"
+        "description": "<p>Neat beds of cabbages, beans and herbs inside the walls.</p><p>The garden grows food every day, and because it's inside the walls it keeps growing during a siege. Walled and terraced, it grows more.</p>"
       },
       "ownership": {
         "default": -1
@@ -206,7 +272,7 @@
       "_id": "AdO2aXvet8CcBgwz",
       "name": "Livestock Pens",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 700000,
+      "sort": 900000,
       "title": {
         "show": false,
         "level": 1
@@ -216,7 +282,7 @@
         "category": "supplies",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/livestock.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/livestock.webp",
-        "description": "<p>Pens of sheep, pigs, goats and cattle beside the barn.</p><p>Livestock adds food every day and animals to sell.</p>"
+        "description": "<p>Pens of sheep, pigs, goats and cattle beside the barn.</p><p>Livestock adds food every day and animals to sell.</p><p>A dairy and piggery, and later a whole cattle ranch, raise bigger herds: more food and more to sell.</p>"
       },
       "ownership": {
         "default": -1
@@ -239,7 +305,7 @@
       "_id": "cyLHKrE6lE1a5Itw",
       "name": "Mill",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 800000,
+      "sort": 1000000,
       "title": {
         "show": false,
         "level": 1
@@ -272,7 +338,7 @@
       "_id": "ZsS76jOdw3H4BaVV",
       "name": "Orchard",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 900000,
+      "sort": 1100000,
       "title": {
         "show": false,
         "level": 1
@@ -282,7 +348,7 @@
         "category": "supplies",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/orchard.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/orchard.webp",
-        "description": "<p>Rows of apple and pear trees beside the Bastion.</p><p>The orchard grows food every day and sells its surplus for a little income each turn.</p>"
+        "description": "<p>Rows of apple and pear trees beside the Bastion.</p><p>The orchard grows food every day and sells its surplus for a little income each turn.</p><p>Planted out into groves and then a cider estate, it feeds more people and sells more fruit.</p>"
       },
       "ownership": {
         "default": -1
@@ -305,7 +371,7 @@
       "_id": "Pn7YyKPZoTpvxgvZ",
       "name": "Smokehouse and Salt Store",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1000000,
+      "sort": 1200000,
       "title": {
         "show": false,
         "level": 1
@@ -338,7 +404,7 @@
       "_id": "QByMgALP7EGp7nlq",
       "name": "Well",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1100000,
+      "sort": 1300000,
       "title": {
         "show": false,
         "level": 1
@@ -371,7 +437,7 @@
       "_id": "nwE12RcT4iSINWNw",
       "name": "Workers' Lodge",
       "type": "dxcufgbs-player-bastions.facility",
-      "sort": 1200000,
+      "sort": 1400000,
       "title": {
         "show": false,
         "level": 1

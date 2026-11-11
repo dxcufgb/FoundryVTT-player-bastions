@@ -117,7 +117,7 @@ export const BAILEY_GROUND = {
 /** Floor of each building or yard. Anything not listed: flagstone for buildings, the bailey ground for yards. */
 export const FLOORS = {
   bedroom: "planks", "dining-room": "planks", parlor: "planks", courtyard: "cobble", kitchen: "flagstone", storage: "flagstone",
-  granary: "planks", cistern: "flagstone", smokehouse: "flagstone", "kitchen-garden": "tilled", orchard: "grass",
+  granary: "planks", cistern: "flagstone", smokehouse: "flagstone", "kitchen-garden": "tilled", orchard: "grass", greenhouse: "tilled",
   "workers-lodge": "planks", "coach-house": "dirt", "market-square": "cobble", inn: "planks", brewery: "planks",
   "craftsmens-row": "flagstone", warehouse: "planks", "trading-company": "planks", strongroom: "flagstone",
   "servants-quarters": "planks", bathhouse: "flagstone", chapel: "flagstone", infirmary: "planks", "training-yard": "dirt",
@@ -159,7 +159,8 @@ export const FURNISH = {
   "sending-station": [["altar", 2, 0.6], ["desk", 2, 0.4]],
   "scrying-pool": [["fountain", 2, 0.5], ["bookshelf", 2, 0.4], ["brazier", 1, 0.3]],
   well: [["well", 1, 1]],
-  "deep-well": [["well", 1, 1]]
+  "deep-well": [["well", 1, 1]],
+  greenhouse: [["flowers", 1, 1.2], ["bush", 1, 0.8], ["brazier", 1, 0.2], ["barrels", 1, 0.2]]
 };
 
 /** Open ground has its own patterns (see map-render.js yardProps). */

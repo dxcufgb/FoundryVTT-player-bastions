@@ -272,7 +272,6 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-fac-slots .dxpb-fac-repair { color: var(--dxpb-bad); border-color: var(--dxpb-bad); }
 .dxpb-fac-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--dxpb-good); }
-.dxpb .dxpb-highlight, .dxpb .dxpb-highlight td { background: rgba(79, 174, 85, 0.18); transition: background 1s; }
 .dxpb-embedded .dxpb-def { grid-template-columns: 30px minmax(0, 1fr) repeat(var(--cols), 3.4rem) 14px; gap: 0.35rem; }
 .dxpb-embedded .dxpb-def-img { width: 30px; height: 30px; }
 

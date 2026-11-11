@@ -84,7 +84,7 @@
         "category": "staff",
         "image": "modules/dxcufgbs-player-bastions/assets/codex/garrison-hall.webp",
         "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/garrison-hall.webp",
-        "description": "<p>Barracks, an armoury rack and long tables for the guards.</p><p>The hall lets the Bastion hire guards, who are paid each turn.</p>"
+        "description": "<p>Barracks, an armoury rack and long tables for the guards.</p><p>The hall lets the Bastion hire guards, who are paid each turn.</p><p>Built up into barracks, a barracks ward and finally a citadel garrison, it houses up to a hundred hired guards for the largest keeps.</p>"
       },
       "ownership": {
         "default": -1

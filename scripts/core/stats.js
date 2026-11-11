@@ -37,10 +37,16 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const flags = {};     // boolean and string effects
   const incomeDice = [];
   let accessIncome = 0;
+  // Workers (industries): those who moved away leave their buildings short-handed, earning that much less.
+  const workersNeeded = features(record, catalog).reduce((n, [, f, exp]) => n + (Number(featureEffects(exp, f).workers) || 0), 0);
+  const workersAway = Math.min(workersNeeded, Math.max(0, Math.floor(Number(record?.people?.workersAway) || 0)));
+  const workforce = workersNeeded > 0 ? (workersNeeded - workersAway) / workersNeeded : 1;
   for (const [, f, exp] of features(record, catalog)) {
     const e = featureEffects(exp, f);
+    const share = e.workers ? workforce : 1;
+    if (share < 1 && typeof e.income === "number") e.income = Math.round(e.income * share);
     for (const [k, v] of Object.entries(e)) {
-      if (k === "incomeDice") { incomeDice.push({ formula: v, source: exp.name, id: exp.id }); continue; }
+      if (k === "incomeDice") { incomeDice.push({ formula: v, source: exp.name, id: exp.id, share }); continue; }
       if (k === "wall" || k === "roadTier") continue;
       if (typeof v === "number") {
         if (MULT_KEYS.has(k)) fx[k] = (fx[k] ?? 1) * v;
@@ -101,7 +107,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   const guests = Math.max(0, Number(record?.people?.guests) || 0);
   const refugees = Math.max(0, Number(record?.people?.refugees) || 0);
   const ownersPresent = Math.max(0, Number(ctx.ownersPresent) || 0);
-  const population = ownersPresent + hirelings + dmgDefenders + guards + mercenaries + servants + guests + refugees;
+  const workers = workersNeeded - workersAway;
+  const population = ownersPresent + hirelings + dmgDefenders + guards + mercenaries + servants + guests + refugees + workers;
 
   const housing = sum("housing");
   if (housing > 0 && population > housing) {
@@ -172,10 +179,12 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
   incomeFlat += (fx.tollPerAccess ?? 0) * accessibility;
   const gems = (loc.resources ?? []).includes("gems");
   const dice = incomeDice.map(d => {
-    let mult = 1;
+    let mult = d.share ?? 1;
     if (d.id === "inn") mult *= fx.innMult ?? 1;
     if (d.id === "mine" && gems) mult *= 2;
-    return { ...d, mult, average: Math.round(averageFormula(d.formula) * mult) };
+    const { share, ...rest } = d;
+    void share;
+    return { ...rest, mult, average: Math.round(averageFormula(d.formula) * mult) };
   });
   const incomeAverage = incomeFlat + dice.reduce((n, d) => n + d.average, 0);
   const tax = political.tax ? Math.round(incomeAverage * political.tax) : 0;
@@ -210,7 +219,7 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     wards: Math.min(100, fx.wards ?? 0),
     housing,
     population,
-    people: { ownersPresent, hirelings, dmgDefenders, guards, mercenaries, servants, guests, refugees },
+    people: { ownersPresent, hirelings, dmgDefenders, guards, mercenaries, servants, guests, refugees, workers, workersAway, workersNeeded },
     garrison: Math.round(garrison * 100) / 100,
     wall: { type: wallType, enclosed, partial, mult: wallMult, integrity },
     defense: { walled, breached, bonusMult, siteMult, towers: towerCount },
@@ -219,7 +228,8 @@ export function computeStats(record, { rules, catalog, ctx = {} }) {
     lightHalve: !!flags.lightHalve,
     noSapping: !!flags.noSapping,
     siegeFood: siegeFoodMult,
-    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays },
+    food: { stock: foodStock, cap: foodCap, inside: foodInside, outside: foodOutside, perDay, peaceNet, peaceDays, siegeDays: siegeFoodDays,
+      buyPrice: Math.round((rules.foodBuyGp ?? 0.2) * (accessRow.material ?? 1) * 100) / 100 },
     water: { unlimited: waterUnlimited, cistern, days: waterDays },
     economy: { incomeFlat, dice, incomeAverage, tax, upkeep, net, accessFactor,
       dividend: net > 0 ? Math.floor(net * (record?.dividendPct ?? rules.dividendPct) / 100) : 0 },

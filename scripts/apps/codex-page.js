@@ -4,7 +4,7 @@ import { priceGp } from "../core/price.js";
 import { paceDays } from "../core/projects.js";
 import { footprintOf } from "../core/grounds.js";
 import { CODEX_JOURNALS, INHABITANTS, PAGE_TYPES, codexUuid } from "../core/codex.js";
-import { perksText } from "./bastion-sheet.js";
+import { perksText, tierLine } from "./bastion-sheet.js";
 
 /**
  * The Bastion Codex: the module's own journal page types, "Facility" and "Inhabitant" (module.json documentTypes),
@@ -89,7 +89,7 @@ export function codexRows(type, ref) {
     }
     if (e.upkeep) add("upkeep", t("Codex.PerTurn", { v: gp(e.upkeep) }));
     add("effects", perksText(e));
-    if (e.tiers) add("tiers", e.tiers.map(x => x.label).join(" → "));
+    if (e.tiers) add("tiers", tierLine(e.tiers));
     const needs = [...(e.requires?.features ?? []).map(id => catalog().get(id)?.name ?? id),
       ...(e.requires?.anyFeature?.length ? [e.requires.anyFeature.map(id => catalog().get(id)?.name ?? id).join(t("Codex.Or"))] : [])];
     if (needs.length) add("needs", needs.join(", "));

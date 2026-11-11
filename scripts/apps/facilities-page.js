@@ -61,6 +61,7 @@ export const SECTION_COLUMNS = {
     { key: "income", kind: "gp", get: (fx, exp, f, c) => num((fx.income ?? 0) + (fx.tollPerAccess ? fx.tollPerAccess * c.stats.accessibility : 0)
       + (fx.incomeDice ? averageFormula(fx.incomeDice) : 0)) },
     { key: "merchants", kind: "pct", get: fx => num(fx.merchant) },
+    { key: "workers", kind: "num", get: fx => num(fx.workers) },
     { key: "renown", kind: "num", get: fx => num(fx.renown) }
   ],
   staff: [
@@ -217,24 +218,26 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     if (item && owners.length > 1) parts.push(item.actorName);
     if (f.damaged) parts.push(t("Damaged"));
     if (open) parts.push(t(`Busy.${open.kind}`, { state: t(`State.${open.state}`) }));
-    // The double arrow opens the Projects page at this building, where the upgrade is planned.
+    // The double arrow plans the upgrade (it lands in the constructions list on the Projects page).
     let upgrade = null;
     if (!open && !f.damaged) {
       const next = e.tiers?.[f.tier ?? 1];
       if (next) {
         const q = quote(record, e, { kind: "upgrade", featureId: fid }, stats, R);
-        upgrade = { tip: t("Fac.Up.Tier", { to: next.label, cost: gp(q.cost ?? next.cost) }) };
+        upgrade = { tip: t("Fac.Up.Tier", { to: next.label, cost: gp(q.cost ?? next.cost) }), kind: "upgrade" };
       } else if (e.unit === "sized" && ENLARGE[f.size]) {
-        upgrade = { tip: t("Fac.Up.Enlarge", { to: SIZE_LABELS[ENLARGE[f.size].to] }) };
+        const q = quote(record, e, { kind: "enlarge", featureId: fid }, stats, R);
+        upgrade = { tip: t("Fac.Up.Enlarge", { to: SIZE_LABELS[ENLARGE[f.size].to], cost: gp(q.cost ?? 0) }), kind: "enlarge" };
       } else if (e.effects?.roadTier) {
         // An unfinished road is finished first; a finished one goes up a step.
         const step = roadDone ? [...C.values()].find(x => !x.legacy && roadRank(x) === roadRank(e) + 1) : e;
         if (step && planProject(record, C, stats, R, { expansionId: step.id, count: miles(record) }, { id: "probe", now: 0 }).ok) {
-          upgrade = { tip: t("Fac.Up.Road", { name: step.name }), id: step.id };
+          const q = quote(record, step, { count: miles(record) }, stats, R);
+          upgrade = { tip: t("Fac.Up.Road", { name: step.name, cost: gp(q.cost ?? 0) }), id: step.id, kind: "road", count: miles(record) };
         }
       }
     }
-    if (upgrade) upgrade.action = "upgradeAt";
+    if (upgrade && mine) upgrade.action = "upgradeAt";
     const fxv = featureEffects(e, f);
     // The road reads as what it is now (a trail, a road, a highway), not as the last step built.
     const title = e.effects?.roadTier && roadDone ? ROADS[e.effects.roadTier]?.label ?? e.name : e.name;
@@ -307,7 +310,8 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       summary: [t("Fac.Sum.food", { stock: Math.round(food.stock), cap: food.cap, net: net >= 0 ? `+${net}` : `${net}` }),
         t("Fac.Sum.lasts", { peace: Number.isFinite(food.peaceDays) ? daysText(food.peaceDays) : t("Unlimited"),
           siege: Number.isFinite(food.siegeDays) ? daysText(food.siegeDays) : t("Unlimited") }),
-        t("Fac.Sum.water", { water: stats.water.unlimited ? t("Unlimited") : daysText(stats.water.days) })],
+        t("Fac.Sum.water", { water: stats.water.unlimited ? t("Unlimited") : daysText(stats.water.days) }),
+        net < 0 ? t("Fac.Sum.buy", { gp: gp(Math.ceil(-net * (R.turnDays ?? 7) * (food.buyPrice ?? 0))) }) : ""],
       limit: t("Fac.Lim.stores", { cap: food.cap })
     },
     access: {
@@ -317,7 +321,9 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     },
     trade: {
       summary: [t("Fac.Sum.money", { income: gp(stats.economy.incomeAverage), upkeep: gp(stats.economy.upkeep), net: gp(stats.economy.net) }),
-        t("Fac.Sum.merchants", { chance: stats.merchant.chance, tier: stats.merchant.tier.label })],
+        t("Fac.Sum.merchants", { chance: stats.merchant.chance, tier: stats.merchant.tier.label }),
+        stats.people.workersNeeded ? t(stats.people.workersAway ? "Fac.Sum.workersAway" : "Fac.Sum.workers",
+          { n: stats.people.workers, needed: stats.people.workersNeeded, away: stats.people.workersAway }) : ""],
       limit: t("Fac.Lim.merchants", { tier: MERCHANT_TIERS[maxTier]?.label ?? "" })
     },
     staff: {

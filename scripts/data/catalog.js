@@ -31,6 +31,25 @@ export const GROUPS = {
   arcane: "Communication and arcane"
 };
 
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+/** The most levels an industry (brewery, charter, mine, quarry) can reach. */
+export const MAX_LEVELS = 10;
+
+/**
+ * An industry's levels: the named tiers first, then the last name with a number up to MAX_LEVELS. Each further level
+ * costs x1.6 and takes x1.1 the one before, and adds `more` (a bit more yield, and more workers to house and feed).
+ */
+export function levels(named, more, max = MAX_LEVELS) {
+  const out = named.map(x => ({ ...x }));
+  const last = named.at(-1);
+  for (let i = out.length; i < max; i++) {
+    const prev = out[i - 1];
+    out.push({ label: `${last.label} ${ROMAN[i + 1]}`, cost: Math.round(prev.cost * 1.6 / 25) * 25,
+      days: Math.round(prev.days * 1.1), effects: { ...more } });
+  }
+  return out;
+}
+
 export const EXPANSIONS = [
   /* ---------------- Rooms (DMG basic facilities) ---------------- */
   { id: "bedroom", group: "rooms", name: "Bedroom", unit: "sized", dmg: true, cost: SIZED_COST, days: SIZED_DAYS, room: "bedroom",
@@ -108,9 +127,29 @@ export const EXPANSIONS = [
   { id: "smokehouse", group: "supplies", name: "Smokehouse and Salt Store", unit: "flat", cost: 375, days: 10,
     effects: { foodStockPct: 25 }, summary: "Food keeps longer: food stock capacity +25 %." },
   { id: "kitchen-garden", group: "supplies", name: "Kitchen Garden", unit: "flat", cost: 500, days: 30,
-    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 15 }, summary: "Vegetables inside the walls: +15 food a day." },
+    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 15 },
+    tiers: [
+      { label: "Kitchen garden", cost: 500, days: 30, effects: { foodPerDay: 15 } },
+      { label: "Walled garden", cost: 875, days: 30, effects: { foodPerDay: 10 } },
+      { label: "Terraced gardens", cost: 1500, days: 45, effects: { foodPerDay: 15 } }
+    ],
+    summary: "Vegetables inside the walls: +15 food a day, more with each upgrade." },
+  { id: "greenhouse", group: "supplies", name: "Greenhouse", unit: "flat", cost: 2500, days: 60,
+    requires: { check: ["notUnderground"] }, effects: { foodPerDay: 20 },
+    tiers: [
+      { label: "Greenhouse", cost: 2500, days: 60, effects: { foodPerDay: 20 } },
+      { label: "Glass gardens", cost: 4000, days: 60, effects: { foodPerDay: 20 } },
+      { label: "Orangery", cost: 6500, days: 90, effects: { foodPerDay: 25, comfort: 1 } }
+    ],
+    summary: "Glass and braziers: food grown inside the walls all year, and through a siege." },
   { id: "orchard", group: "supplies", name: "Orchard", unit: "flat", cost: 1250, days: 180,
-    requires: { check: ["farmland"] }, effects: { foodOutside: 25, comfort: 1, income: 5 }, summary: "Fruit trees: +25 food a day, +5 GP a turn." },
+    requires: { check: ["farmland"] }, effects: { foodOutside: 25, comfort: 1, income: 5 },
+    tiers: [
+      { label: "Orchard", cost: 1250, days: 180, effects: { foodOutside: 25, comfort: 1, income: 5 } },
+      { label: "Fruit groves", cost: 2000, days: 120, effects: { foodOutside: 25, income: 5 } },
+      { label: "Cider estate", cost: 3500, days: 180, effects: { foodOutside: 30, income: 10 } }
+    ],
+    summary: "Fruit trees: +25 food a day, +5 GP a turn; upgrades plant more." },
   { id: "fields", group: "supplies", name: "Fields and Tenant Farms", unit: "flat", cost: 2500, days: 90,
     requires: { check: ["farmland"] }, effects: { foodOutside: 100, income: 15 },
     tiers: [
@@ -120,7 +159,21 @@ export const EXPANSIONS = [
     ],
     summary: "Farmland worked by tenants. Upgrades grow food and rent." },
   { id: "livestock", group: "supplies", name: "Livestock Pens", unit: "flat", cost: 750, days: 20,
-    effects: { foodOutside: 20, income: 8 }, summary: "+20 food a day and animals to sell." },
+    effects: { foodOutside: 20, income: 8 },
+    tiers: [
+      { label: "Livestock pens", cost: 750, days: 20, effects: { foodOutside: 20, income: 8 } },
+      { label: "Dairy and piggery", cost: 1500, days: 30, effects: { foodOutside: 25, income: 8 } },
+      { label: "Cattle ranch", cost: 3000, days: 45, effects: { foodOutside: 40, income: 15 } }
+    ],
+    summary: "+20 food a day and animals to sell; upgrades raise bigger herds." },
+  { id: "fishery", group: "supplies", name: "Fishery", unit: "flat", cost: 1000, days: 30,
+    requires: { check: ["fishing"] }, effects: { foodOutside: 30, income: 5 },
+    tiers: [
+      { label: "Fishery", cost: 1000, days: 30, effects: { foodOutside: 30, income: 5 } },
+      { label: "Fish weirs", cost: 1750, days: 30, effects: { foodOutside: 25 } },
+      { label: "Fishing fleet", cost: 3500, days: 60, effects: { foodOutside: 40, income: 15 } }
+    ],
+    summary: "Boats, nets and weirs on the river, lake or sea: +30 food a day." },
   { id: "mill", group: "supplies", name: "Mill", unit: "flat", cost: 1900, days: 60,
     requires: { features: ["fields"], check: ["millSite"] }, effects: { farmMult: 1.5, income: 15 }, summary: "Field output x1.5, +15 GP a turn." },
   { id: "hunting-lodge", group: "supplies", name: "Hunting Lodge", unit: "flat", cost: 875, days: 25,
@@ -173,7 +226,10 @@ export const EXPANSIONS = [
     ],
     summary: "Travellers pay for beds and ale, and bring a rumor every turn." },
   { id: "brewery", group: "trade", name: "Brewery", unit: "flat", cost: 1500, days: 40,
-    effects: { income: 10, innMult: 1.5, comfort: 1 }, summary: "+10 GP a turn, Inn income x1.5." },
+    effects: { income: 10, innMult: 1.5, comfort: 1, workers: 4 },
+    tiers: levels([{ label: "Brewery", cost: 1500, days: 40, effects: { income: 10, innMult: 1.5, comfort: 1, workers: 4 } }],
+      { income: 6, workers: 3 }),
+    summary: "+10 GP a turn, Inn income x1.5. Expands to 10 levels: more ale, more brewers." },
   { id: "craftsmens-row", group: "trade", name: "Craftsmen's Row", unit: "flat", cost: 2500, days: 60,
     requires: { features: ["market-square"] }, effects: { income: 25, craftedSale: 10 },
     tiers: [
@@ -185,7 +241,10 @@ export const EXPANSIONS = [
   { id: "warehouse", group: "trade", name: "Warehouse", unit: "flat", cost: 1250, days: 45,
     effects: { merchantStock: 1.5 }, summary: "Merchant stock x1.5." },
   { id: "merchant-charter", group: "trade", name: "Merchant Charter", unit: "flat", cost: 1250, days: 14,
-    requires: { features: ["market-square"] }, effects: { merchantTier: 1 }, summary: "Better traders come: merchant tier +1." },
+    requires: { features: ["market-square"] }, effects: { merchantTier: 1, workers: 2 },
+    tiers: levels([{ label: "Merchant charter", cost: 1250, days: 14, effects: { merchantTier: 1, workers: 2 } }],
+      { merchant: 3, income: 8, workers: 2 }),
+    summary: "Better traders come: merchant tier +1. Expands to 10 levels: more traders and fees, more clerks." },
   { id: "tollgate", group: "trade", name: "Tollgate", unit: "flat", cost: 625, days: 10,
     requires: { check: ["roadRoad", "access4"] }, effects: { tollPerAccess: 5, renown: -1 }, summary: "+5 GP a turn per Accessibility point." },
   { id: "lumber-camp", group: "trade", name: "Lumber Camp", unit: "flat", cost: 1000, days: 30,
@@ -196,20 +255,20 @@ export const EXPANSIONS = [
     ],
     summary: "Timber projects cost x0.8; the sawmill sells planks." },
   { id: "quarry", group: "trade", name: "Quarry", unit: "flat", cost: 3750, days: 90,
-    requires: { check: ["stone"] }, effects: { income: 10, stoneDiscount: 0.8 },
-    tiers: [
-      { label: "Quarry", cost: 3750, days: 90, effects: { income: 10, stoneDiscount: 0.8 } },
-      { label: "Stoneworks", cost: 6250, days: 90, effects: { income: 30 } }
-    ],
-    summary: "Stone projects cost x0.8; cut stone sells." },
+    requires: { check: ["stone"] }, effects: { income: 10, stoneDiscount: 0.8, workers: 8 },
+    tiers: levels([
+      { label: "Quarry", cost: 3750, days: 90, effects: { income: 10, stoneDiscount: 0.8, workers: 8 } },
+      { label: "Stoneworks", cost: 6250, days: 90, effects: { income: 30, workers: 8 } }
+    ], { income: 12, workers: 6 }),
+    summary: "Stone projects cost x0.8; cut stone sells. Expands to 10 levels: more stone, more quarrymen." },
   { id: "mine", group: "trade", name: "Mine", unit: "flat", cost: 7500, days: 150, upkeep: 5,
-    requires: { check: ["ore"] }, effects: { incomeDice: "3d6*10", concealment: -1 },
-    tiers: [
-      { label: "Mine", cost: 7500, days: 150, effects: { incomeDice: "3d6*10", concealment: -1 } },
-      { label: "Deep mine", cost: 12500, days: 150, effects: { incomeDice: "3d6*10" } },
-      { label: "Mining company", cost: 20000, days: 200, effects: { incomeDice: "4d6*10", upkeep: 5 } }
-    ],
-    summary: "Ore or gems (gems pay double). Big income, some risk." },
+    requires: { check: ["ore"] }, effects: { incomeDice: "3d6*10", concealment: -1, workers: 12 },
+    tiers: levels([
+      { label: "Mine", cost: 7500, days: 150, effects: { incomeDice: "3d6*10", concealment: -1, workers: 12 } },
+      { label: "Deep mine", cost: 12500, days: 150, effects: { incomeDice: "3d6*10", workers: 8 } },
+      { label: "Mining company", cost: 20000, days: 200, effects: { incomeDice: "4d6*10", upkeep: 5, workers: 10 } }
+    ], { incomeDice: "1d6*10", workers: 8 }),
+    summary: "Ore or gems (gems pay double). Big income, some risk. Expands to 10 levels: deeper shafts, more miners." },
   { id: "trading-company", group: "trade", name: "Trading Company", unit: "flat", cost: 10000, days: 120,
     requires: { features: ["market-square"], check: ["marketTier2", "access5"] }, effects: { income: 60, incomeAccess: true, merchantTier: 1 },
     tiers: [
@@ -233,7 +292,14 @@ export const EXPANSIONS = [
   { id: "training-yard", group: "staff", name: "Training Yard", unit: "flat", cost: 1500, days: 30,
     requires: { check: ["courtyardRoomy"] }, effects: { defenderMult: 1.25 }, summary: "Defenders count x1.25." },
   { id: "garrison-hall", group: "staff", name: "Garrison Hall", unit: "flat", cost: 2500, days: 60,
-    effects: { guardsCap: 20, housing: 20 }, summary: "Hire up to 20 guards (7 GP a turn each)." },
+    effects: { guardsCap: 20, housing: 20 },
+    tiers: [
+      { label: "Garrison hall", cost: 2500, days: 60, effects: { guardsCap: 20, housing: 20 } },
+      { label: "Barracks", cost: 3750, days: 60, effects: { guardsCap: 20, housing: 20 } },
+      { label: "Barracks ward", cost: 5000, days: 75, effects: { guardsCap: 20, housing: 20 } },
+      { label: "Citadel garrison", cost: 8000, days: 90, effects: { guardsCap: 40, housing: 40 } }
+    ],
+    summary: "Hire up to 20 guards (7 GP a turn each); upgrades house up to 100." },
   { id: "great-hall", group: "staff", name: "Great Hall", unit: "flat", cost: 3750, days: 125,
     requires: { features: ["kitchen"] }, effects: { renown: 2, feasts: true }, summary: "Renown +2; hold feasts." },
   { id: "guest-wing", group: "staff", name: "Guest Wing", unit: "flat", cost: 1900, days: 45,

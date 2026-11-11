@@ -29,6 +29,10 @@ export const DEFAULT_RULES = {
   attackWallReduction: 2,
   /** People and supplies */
   foodPerPerson: 1,
+  /** Food bought when the stores run dry: gold per person-day (times the access's hauling factor) */
+  foodBuyGp: 0.2,
+  /** Share of the workers who moved away that come back each turn the Bastion is fed */
+  workersReturn: 0.5,
   crowdingPenaltyPer: 10,
   guardUpkeep: 7,
   servantUpkeep: 1,

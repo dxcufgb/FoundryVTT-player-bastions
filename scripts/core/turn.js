@@ -81,29 +81,28 @@ export function advanceTurn(recordIn, opts) {
   if (siege) income = 0;
   const tax = econ.tax ? Math.round(income * (econ.tax / Math.max(1, econ.incomeAverage))) : 0;
   const upkeep = econ.upkeep;
-  const net = income - tax - upkeep;
+  let net = income - tax - upkeep;
   record.treasury = (record.treasury ?? 0) + net;
   record.unpaidUpkeep = record.treasury < 0;
   if (record.treasury < 0) {
     report.lines.push(`The treasury could not cover upkeep (${-record.treasury} GP short).`);
     record.treasury = 0;
   }
+
+  /* 5. Food: what the stores can't cover is bought with the treasury; who can't be fed moves away. */
+  const food = feedBastion(record, stats, rules, { days, siege });
+  Object.assign(report, { foodDelta: food.delta, foodBought: food.bought, foodCost: food.cost, left: food.left, returned: food.returned });
+  report.lines.push(...food.lines);
+  net -= food.cost;
+
   let dividend = 0;
   const pct = record.dividendPct ?? rules.dividendPct;
-  if (net > 0 && pct > 0 && !record.unpaidUpkeep) {
-    dividend = Math.floor(net * pct / 100);
+  if (net > 0 && pct > 0 && !record.unpaidUpkeep && !record.hungry) {
+    dividend = Math.min(record.treasury, Math.floor(net * pct / 100));
     record.treasury -= dividend;
     record.dividends = (record.dividends ?? 0) + dividend;
   }
   Object.assign(report, { income, upkeep, tax, dividend, net });
-
-  /* 5. Food */
-  const daily = stats.food.inside + (siege ? 0 : stats.food.outside) - stats.food.perDay;
-  const before = record.food ?? 0;
-  record.food = Math.max(0, Math.min(stats.food.cap, before + daily * days));
-  report.foodDelta = record.food - before;
-  record.hungry = record.food <= 0 && daily < 0;
-  if (record.hungry) report.lines.push("The stores are empty: people go hungry.");
 
   /* 6. Merchant */
   if (record.merchant && (record.merchant.leavesAt ?? 0) <= now) {
@@ -229,5 +228,64 @@ export function workDays(record, days, opts = {}) {
     const lay = syncLayout(record, opts.catalog, opts.rules);
     if (lay.changed) { record.layout = lay.layout; out.layoutChanged = true; }
   }
+  return out;
+}
+
+/** Who moves away first when the Bastion can't feed them (record.people and record.garrison keys). */
+export const LEAVE_ORDER = [["people", "refugees"], ["people", "guests"], ["garrison", "servants"], ["workers", "workers"],
+  ["garrison", "guards"], ["garrison", "mercenaries"]];
+
+/**
+ * A turn's food (mutates the record): the stores take the day's balance; a shortfall is bought from the treasury at
+ * stats.food.buyPrice a person-day; what the treasury can't buy leaves people unfed, and that many move away
+ * (LEAVE_ORDER; workers who leave are counted in record.people.workersAway and come back on fed turns).
+ */
+export function feedBastion(record, stats, rules, { days, siege = false } = {}) {
+  const out = { delta: 0, bought: 0, cost: 0, left: [], returned: 0, lines: [] };
+  const daily = stats.food.inside + (siege ? 0 : stats.food.outside) - stats.food.perDay;
+  const before = Number(record.food) || 0;
+  let after = before + daily * days;
+  record.hungry = false;
+  if (after < 0) {
+    const short = Math.ceil(-after);
+    const price = siege ? Infinity : Math.max(0, Number(stats.food.buyPrice) || 0);
+    const affordable = price > 0 ? Math.floor((record.treasury ?? 0) / price) : (Number.isFinite(price) ? short : 0);
+    out.bought = Math.min(short, affordable);
+    out.cost = Number.isFinite(price) ? Math.ceil(out.bought * price) : 0;
+    record.treasury = Math.max(0, (record.treasury ?? 0) - out.cost);
+    if (out.bought) out.lines.push(`The stores ran dry: ${out.bought} days of food bought for ${out.cost} GP.`);
+    const unfed = short - out.bought;
+    after = 0;
+    if (unfed > 0) {
+      record.hungry = true;
+      out.lines.push("The stores are empty and the treasury can't buy more: people go hungry.");
+      // Those who couldn't be fed all turn leave (not in a siege: nobody gets out).
+      let leaving = siege ? 0 : Math.ceil(unfed / Math.max(1, days * (rules.foodPerPerson ?? 1)));
+      record.people ??= {};
+      record.garrison ??= {};
+      for (const [where, key] of LEAVE_ORDER) {
+        if (leaving <= 0) break;
+        if (where === "workers") {
+          const here = Math.max(0, (stats.people.workersNeeded ?? 0) - (Number(record.people.workersAway) || 0));
+          const n = Math.min(here, leaving);
+          if (n) { record.people.workersAway = (Number(record.people.workersAway) || 0) + n; out.left.push({ key, n }); leaving -= n; }
+          continue;
+        }
+        const have = Math.max(0, Number(record[where][key]) || 0);
+        const n = Math.min(have, leaving);
+        if (n) { record[where][key] = have - n; out.left.push({ key, n }); leaving -= n; }
+      }
+      if (out.left.length) out.lines.push(`Moved away for want of food: ${out.left.map(l => `${l.n} ${l.key}`).join(", ")}.`);
+    }
+  }
+  // Fed: workers who left come back, a share each turn.
+  const away = Math.max(0, Number(record.people?.workersAway) || 0);
+  if (!record.hungry && away > 0 && !siege) {
+    out.returned = Math.min(away, Math.max(1, Math.ceil(away * (rules.workersReturn ?? 0.5))));
+    record.people.workersAway = away - out.returned;
+    out.lines.push(`${out.returned} workers came back.`);
+  }
+  record.food = Math.max(0, Math.min(stats.food.cap, after));
+  out.delta = record.food - before;
   return out;
 }

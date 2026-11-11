@@ -1,6 +1,6 @@
 import { mergeRules } from "../data/rules.js";
 import { FORCES, EVENTS } from "../data/tables.js";
-import { EXPANSIONS, GROUPS } from "../data/catalog.js";
+import { EXPANSIONS, GROUPS, MAX_LEVELS, levels } from "../data/catalog.js";
 import { STRUCTURES, FIRST_BUILDINGS } from "../data/structures.js";
 import { TERRAINS, SITES, bastionImage } from "../data/location.js";
 import { payFromPurse } from "../core/coins.js";
@@ -10,7 +10,7 @@ import { holdout, attackStrength, engineDamage, siegeDay } from "../core/siege.j
 import { quote, planProject, fund, transition, cancelRefund, advanceProjects, applyCompletion, BUILD_PACES, paceDays, repaceProjects, foldLegacyWalls, LEGACY_WALL_TIER } from "../core/projects.js";
 import { quoteDispatch, methodAvailable, mergeOrders, arrivedBy } from "../core/dispatch.js";
 import { rollMerchant, rollVisitor, eventForRoll, eventKeyFromText, requestForAid } from "../core/visitors.js";
-import { advanceTurn, workDays, finishProject, finishAllProjects } from "../core/turn.js";
+import { advanceTurn, workDays, finishProject, finishAllProjects, feedBastion } from "../core/turn.js";
 import { countRest, restsLeft, restsToTurn, REST_BATCH_MS } from "../core/rests.js";
 import { BUILD_PRICES, priceGp } from "../core/price.js";
 import { projectTeams, crewsInUse, crewStatus, canAssign, canDismiss, assignCrews, queueOrder, nextQueuePos, moveInQueue } from "../core/crews.js";
@@ -69,8 +69,8 @@ export function registerCoreTests({ describe, it, assert }) {
   const stats = (rec, ctx = WORKED_CTX) => computeStats(rec, { rules, catalog, ctx });
 
   describe("Data", () => {
-    it("ships 73 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
-      assert.equal(EXPANSIONS.length, 73);
+    it("ships 75 expansions (4 of them old wall entries kept for old saves) in seven groups, all with names, groups and costs", () => {
+      assert.equal(EXPANSIONS.length, 75);
       assert.equal(EXPANSIONS.filter(e => e.legacy).length, 4);
       for (const e of EXPANSIONS) {
         assert.ok(e.name, `${e.id} has a name`);
@@ -1317,6 +1317,79 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(codexUuid("mod", "inhabitant", "guards"), `Compendium.mod.codex.JournalEntry.${journalId("defenders")}.JournalEntryPage.${pageId("guards")}`);
       assert.equal(codexUuid("mod", "facility", "bedroom", "nope"), null);
       assert.equal(codexUuid("mod", "inhabitant", "dragons"), null);
+    });
+  });
+  describe("Industries, workers and food", () => {
+    const exp = id => EXPANSIONS.find(e => e.id === id);
+    it("the brewery, charter, mine and quarry have 10 levels, each dearer than the last, and every level needs workers", () => {
+      for (const id of ["brewery", "merchant-charter", "mine", "quarry"]) {
+        const tiers = exp(id).tiers;
+        assert.equal(tiers.length, MAX_LEVELS, id);
+        for (let i = 1; i < tiers.length; i++) {
+          assert.ok(tiers[i].cost > tiers[i - 1].cost || i < 3, `${id} ${i}: dearer`);
+          assert.ok(tiers[i].effects.workers >= 1, `${id} ${i}: workers`);
+        }
+      }
+      const l = levels([{ label: "Shop", cost: 1000, days: 10, effects: { income: 5 } }], { income: 2 }, 4);
+      assert.deepEqual(l.map(x => x.label), ["Shop", "Shop II", "Shop III", "Shop IV"]);
+      assert.deepEqual(l.map(x => x.cost), [1000, 1600, 2550, 4075]);
+    });
+    it("the garrison hall houses up to 100 guards at its top tier", () => {
+      const rec = workedExampleRecord();
+      rec.features.gh = { id: "garrison-hall", tier: 4 };
+      assert.equal(stats(rec).fx.guardsCap, 100);
+    });
+    it("workers count as people: they need beds and food; workers away cut the industries' income", () => {
+      const rec = workedExampleRecord();
+      const before = stats(rec);
+      rec.location.resources = ["stone"];
+      rec.features.q = { id: "quarry", tier: 3 };
+      const s = stats(rec);
+      assert.equal(s.people.workers, 8 + 8 + 6);
+      assert.equal(s.population, before.population + 22);
+      assert.equal(s.food.perDay, before.food.perDay + 22);
+      const full = s.economy.incomeFlat;
+      rec.people = { ...(rec.people ?? {}), workersAway: 11 };
+      const half = stats(rec);
+      assert.equal(half.people.workers, 11);
+      assert.equal(full - half.economy.incomeFlat, Math.round(52 - 52 / 2), "the quarry earns half");
+    });
+    it("a shortfall is bought from the treasury; when the gold runs out, outsiders leave first, then servants, workers and guards", () => {
+      const rec = workedExampleRecord();
+      const s = stats(rec);
+      // Bought: 46 people a day, no stores.
+      let r = { ...rec, food: 0, treasury: 1000, people: {}, garrison: { ...rec.garrison } };
+      let out = feedBastion(r, s, rules, { days: 7 });
+      assert.equal(out.bought, -s.food.peaceNet * 7);
+      assert.equal(out.cost, Math.ceil(out.bought * s.food.buyPrice));
+      assert.isFalse(r.hungry);
+      // No gold: hungry, and people leave in order.
+      r = { ...rec, food: 0, treasury: 0, people: { refugees: 3, guests: 1 }, garrison: { ...rec.garrison } };
+      out = feedBastion(r, s, rules, { days: 7 });
+      assert.isTrue(r.hungry);
+      assert.deepEqual(out.left.slice(0, 3).map(l => l.key), ["refugees", "guests", "servants"]);
+      assert.equal(r.people.refugees, 0);
+      assert.ok(r.garrison.guards < rec.garrison.guards, "then guards (no workers here)");
+      // Fed again: workers who left come back, half a turn.
+      r = { ...rec, food: 5000, treasury: 0, people: { workersAway: 10 }, garrison: { ...rec.garrison } };
+      out = feedBastion(r, s, rules, { days: 7 });
+      assert.equal(out.returned, 5);
+      assert.equal(r.people.workersAway, 5);
+    });
+    it("a turn pays for the food it buys before any dividend", () => {
+      const rec = workedExampleRecord();
+      rec.food = 0;
+      rec.treasury = 500;
+      const { report, record } = advanceTurn(rec, { stats: stats(rec), rules, now: 604800, rng: seeded(5), newId });
+      assert.ok(report.foodCost > 0);
+      assert.equal(record.food, 0);
+      assert.equal(report.dividend, 0, "no dividend while food is bought at a loss");
+    });
+    it("new food buildings: fishery needs a waterway; greenhouse food counts in a siege", () => {
+      const rec = workedExampleRecord();
+      assert.isFalse(prerequisites(rec, exp("fishery"), catalog, stats(rec)).ok);
+      rec.features.gh = { id: "greenhouse", tier: 3 };
+      assert.equal(stats(rec).food.inside - stats(workedExampleRecord()).food.inside, 65);
     });
   });
 }

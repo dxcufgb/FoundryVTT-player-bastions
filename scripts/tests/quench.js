@@ -259,13 +259,19 @@ export function registerQuench(quench) {
           assert.ok(openSheet()?.element.querySelector(".dxpb-codex-hero img"), "the Codex page with its painting");
           assert.ok(openSheet().element.querySelector(".dxpb-codex-table tr"), "and its contributions");
           await openSheet().close();
-          // The upgrade arrow still goes to the Projects page, at the building.
+          // The upgrade arrow plans the upgrade: a project in the constructions list, and the arrow gives way to it.
+          const wallFid = wall.dataset.fid;
+          const openUpgrade = () => Object.values(getRecord(getEntry(entryId)).projects ?? {})
+            .find(p => p.featureId === wallFid && p.kind === "upgrade" && !["complete", "cancelled"].includes(p.state));
           wall.querySelector('.dxpb-fac-up[data-action="upgradeAt"]').click();
-          await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-highlight"));
-          assert.ok(el().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the arrow opens the Projects page");
-          assert.ok(el().querySelector(".dxpb-highlight"), "with the wall's row highlighted");
-          await reopen();
-          await wait(() => el()?.querySelector(".dxpb-facpage"));
+          await wait(() => openUpgrade() && !el()?.querySelector(`[data-fid="${wallFid}"] .dxpb-fac-up`));
+          const planned = openUpgrade();
+          assert.ok(planned, "the wall's upgrade is planned");
+          assert.equal(planned.state, "planned");
+          assert.notOk(el().querySelector(`[data-fid="${wallFid}"] .dxpb-fac-up`), "no arrow while the upgrade is planned");
+          assert.ok(el().querySelector(".dxpb-facpage"), "still on the Facilities page");
+          await ACTIONS.removeProject({ entryId, projectId: planned.id }, game.user);
+          await wait(() => !openUpgrade());
           // A section's Plan button: the catalog on the Projects page, only that section.
           el().querySelector('[data-section="rooms"] [data-action="planSection"]').click();
           await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-chip"));
@@ -987,24 +993,26 @@ export function registerQuench(quench) {
         }
       });
 
-      it("a room with an enlarge project planned shows that instead of its Enlarge button, until the project goes", async () => {
+      it("a room with an enlarge project planned shows that instead of its upgrade arrow, until the project goes", async () => {
         const { ENLARGE } = await import("../data/catalog.js");
         const rec = getRecord(getEntry(entryId));
         const [fid] = Object.entries(rec.features).find(([, f]) => catalog().get(f.id)?.unit === "sized" && ENLARGE[f.size]) ?? [];
         assert.ok(fid, "the test Bastion has a room that can be enlarged");
+        const app = BastionSheet.open(entryId, { tab: "facilities" });
+        await app.render({ force: true });
+        const row = () => app.element.querySelector(`.dxpb-facpage [data-fid="${fid}"]`);
+        assert.equal(row()?.querySelector(".dxpb-fac-up")?.dataset.kind, "enlarge", "an enlarge arrow");
         const res = await ACTIONS.planProject({ entryId, opts: { kind: "enlarge", featureId: fid } }, game.user);
         assert.isTrue(res.ok, res.reason);
-        const app = BastionSheet.open(entryId);
-        app.tab = "projects";
         await app.render({ force: true });
-        const button = () => app.element.querySelector(`.dxpb-built [data-action=featureProject][data-kind=enlarge][data-fid="${fid}"]`);
-        assert.notExists(button(), "no Enlarge button while the enlarge project is planned");
-        const row = app.element.querySelector(`.dxpb-built [data-fid="${fid}"]`)?.closest("tr")
-          ?? [...app.element.querySelectorAll(".dxpb-built tr")].find(tr => tr.textContent.includes(t("Busy.enlarge", { state: t("State.planned") })));
-        assert.include(row?.textContent ?? "", t("Busy.enlarge", { state: t("State.planned") }));
+        assert.notExists(row().querySelector(".dxpb-fac-up"), "no arrow while the enlarge project is planned");
+        assert.include(row().textContent, t("Busy.enlarge", { state: t("State.planned") }));
         await ACTIONS.removeProject({ entryId, projectId: res.projectId }, game.user);
         await app.render({ force: true });
-        assert.exists(button(), "the Enlarge button is back");
+        assert.exists(row().querySelector(".dxpb-fac-up"), "the arrow is back");
+        app.tab = "projects";
+        await app.render();
+        assert.notExists(app.element.querySelector(".dxpb-built"), "no Built list on the Projects page");
         await app.close();
       });
 

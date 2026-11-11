@@ -64,7 +64,7 @@
     },
     "Num": {
       "Population": "Population",
-      "PopulationNote": "{hirelings} hirelings, {dmgDefenders} defenders, {guards} guards, {mercenaries} mercenaries, {servants} servants, {guests} guests, {refugees} refugees, {ownersPresent} owners",
+      "PopulationNote": "{hirelings} hirelings, {dmgDefenders} defenders, {guards} guards, {mercenaries} mercenaries, {servants} servants, {workers} workers, {guests} guests, {refugees} refugees, {ownersPresent} owners",
       "Housing": "Housing",
       "Crowded": "Overcrowded: Comfort drops",
       "Beds": "{n} free beds",
@@ -347,7 +347,8 @@
       "beacon": "Beacon signals",
       "sendingStation": "Daily Sending",
       "scrying": "Live view",
-      "upkeep": "Upkeep {v} GP a turn"
+      "upkeep": "Upkeep {v} GP a turn",
+      "workers": "{v} workers (beds and food)"
     },
     "Advance": {
       "Title": "Bastion turn",
@@ -380,7 +381,8 @@
       },
       "RestTitle": "After long rest {n}",
       "Finished": "Finished: {label}.",
-      "Started": "Started: {label} (a crew came free)."
+      "Started": "Started: {label} (a crew came free).",
+      "FoodBought": "Food bought"
     },
     "Event": {
       "MonsterDefends": "The friendly monster drove the attackers off: no losses.",
@@ -752,7 +754,10 @@
         "merchants": "Merchants {chance}% a turn ({tier})",
         "staff": "Renown {renown} · Comfort {comfort} · Building crews {crews}",
         "arcane": "Wards {wards}%",
-        "ways": "Dispatches by: {ways}"
+        "ways": "Dispatches by: {ways}",
+        "buy": "Short of food: about {gp} a turn bought from the treasury once the stores are empty",
+        "workers": "Workers {n} (they need beds and food)",
+        "workersAway": "Workers {n} of {needed}: {away} moved away, so the industries earn less until they come back"
       },
       "Lim": {
         "beds": "Room for {n} more people",
@@ -769,9 +774,9 @@
         "ways": "{n} of {max} ways to send dispatches"
       },
       "Up": {
-        "Tier": "Can be upgraded: {to} ({cost})",
-        "Enlarge": "Can be enlarged to {to}",
-        "Road": "Can be upgraded: {name}",
+        "Tier": "Plan the upgrade to {to} ({cost})",
+        "Enlarge": "Plan enlarging it to {to} ({cost})",
+        "Road": "Plan the next step: {name} ({cost})",
         "Order": "Can be enlarged (the facility's Enlarge order)"
       },
       "Need": {
@@ -804,9 +809,11 @@
         "merchants": "Merchants",
         "renown": "Renown",
         "crews": "Crews",
-        "wards": "Wards"
+        "wards": "Wards",
+        "workers": "Workers"
       },
-      "RoadPartial": "unfinished: {n} of {of} miles"
+      "RoadPartial": "unfinished: {n} of {of} miles",
+      "Planned": "Planned: {name}. It is in the constructions list on the Projects page."
     },
     "SystemRules": {
       "Title": "The system's Bastion rules are off",
@@ -857,7 +864,10 @@
         "hire": "Hire",
         "chance": "Chance",
         "food": "Food"
-      }
-    }
+      },
+      "Missing": "The Bastion Codex isn't loaded. Restart the Foundry server after installing or updating the module (the compendium and its page types are read at start).",
+      "NoPage": "This has no Bastion Codex page yet."
+    },
+    "Levels": "{n} levels"
   }
 }

@@ -68,8 +68,6 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     this.catalogFilter = "";
     /** A section of the Facilities page whose "Plan" button opened the catalog: only that group shows. */
     this.catalogGroup = "";
-    /** A building (feature id) or catalog entry to highlight on the Projects page, once. */
-    this.highlight = "";
   }
 
   static DEFAULT_OPTIONS = {
@@ -322,24 +320,10 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
         return { id: e.id, name: e.name, summary: e.summary ?? "", ok: pre.ok, missing: pre.missing.join(", "), dmg: !!e.dmg, space,
           cost: sized ? sizedQ.map(x => (x.cost ?? 0).toLocaleString()).join(" / ") + " GP" : `${gp(q.cost)}${unit ? ` ${unit}` : ""}`,
           days: sized ? `${sizedDays.join(" / ")} ${workUnit()}` : `${workText(q.days)}${unit ? ` ${unit}` : ""}`,
-          upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: (e.tiers ?? []).map(x => x.label).join(" → "),
+          upkeep: e.upkeep ? gp(e.upkeep) : "", tiers: tierLine(e.tiers),
           perks: perksText(e) };
       }).concat(systemItems.filter(x => x.section === g))
     })).filter(g => g.items.length);
-    c.features = Object.entries(record.features ?? {}).map(([fid, f]) => {
-      const e = C.get(f.id);
-      if (!e) return null;
-      const nextTier = e.tiers?.[(f.tier ?? 1)];
-      // A building with a project planned or under way (enlarge, upgrade, repair) shows that instead of the buttons.
-      const open = Object.values(record.projects ?? {}).find(p => p.featureId === fid && !["complete", "cancelled"].includes(p.state));
-      return { fid, name: e.name, busy: open ? t(`Busy.${open.kind}`, { state: t(`State.${open.state}`) }) : "", size: f.size ? SIZE_LABELS[f.size] : "", count: f.count && e.unit !== "flat" ? f.count : "",
-        squares: footprintOf(e, f),
-        tier: e.tiers ? e.tiers[(f.tier ?? 1) - 1]?.label : "", damaged: !!f.damaged,
-        canUpgrade: !!nextTier && !open, canRepair: !!f.damaged && !open,
-        upgradeLabel: nextTier ? `${nextTier.label} (${gp(quote(record, e, { kind: "upgrade", featureId: fid }, stats, R).cost ?? nextTier.cost)})` : "",
-        canEnlarge: e.unit === "sized" && !!ENLARGE[f.size] && !open, group: GROUPS[e.group] };
-    }).filter(Boolean).sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
-
     /* Dispatches */
     const dist = this.draft.distance ?? partyDistance(record);
     const draftOrders = this.draftOrders(record, ctx);
@@ -458,16 +442,6 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       if (["orderDetail", "note", "gold"].includes(key)) return;
       this.#renderKeepFocus();
     }));
-    // Coming from an upgrade arrow: the building's row on the Projects page, highlighted.
-    if (this.highlight && this.tab === "projects") {
-      const key = CSS.escape(this.highlight);
-      const row = html.querySelector(`[data-fid="${key}"], [data-exp="${key}"]`);
-      this.highlight = "";
-      if (row) {
-        row.classList.add("dxpb-highlight");
-        row.scrollIntoView({ block: "center" });
-      }
-    }
     const filter = html.querySelector("[data-catalog-filter]");
     filter?.addEventListener("input", foundry.utils.debounce(() => {
       this.catalogFilter = filter.value;
@@ -724,19 +698,19 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onOpenCodex(event, target) {
     const uuid = target.closest("[data-codex]")?.dataset.codex;
     if (await openCodex(uuid)) return;
-    const fid = target.closest("[data-fid]")?.dataset.fid;
-    if (!fid) return;
-    this.highlight = fid;
-    this.tab = "projects";
-    return this.render();
+    // No page: the pack isn't loaded (a server restart after installing or updating) or the entry is new.
+    ui.notifications.warn(game.packs.get(`${MODULE_ID}.codex`) ? t("Codex.NoPage") : t("Codex.Missing"));
   }
 
-  /** The upgrade arrow: the Projects page, at the building (or the next road step in the catalog). */
-  static #onUpgradeAt(event, target) {
-    this.highlight = target.dataset.id || target.dataset.fid || "";
-    this.catalogGroup = "";
-    this.tab = "projects";
-    return this.render();
+  /** The upgrade arrow: plans the upgrade (a tier, a bigger room, the next road step) in the constructions list. */
+  static async #onUpgradeAt(event, target) {
+    const { kind, fid, id, count } = target.dataset;
+    const opts = kind === "road" ? { expansionId: id, count: Number(count) || 1 } : { kind, featureId: fid };
+    const res = await BastionSheet.#run("planProject", { entryId: this.entryId, opts });
+    if (res?.ok) {
+      const name = kind === "road" ? catalog().get(id)?.name : target.closest("[data-fid]")?.querySelector(".title")?.textContent.trim();
+      ui.notifications.info(t("Fac.Planned", { name: name ?? "" }));
+    }
   }
 
   /** Gives one of the system's facilities an order (the system's own dialog). */
@@ -836,4 +810,11 @@ export function perksText(e) {
   }
   if (e.upkeep) parts.push(t("Perk.upkeep", { v: e.upkeep }));
   return parts.join(" · ");
+}
+
+/** A building's upgrade path for the catalog: every tier, or for long ladders the first ones, "…" and the last. */
+export function tierLine(tiers) {
+  const labels = (tiers ?? []).map(x => x.label);
+  if (labels.length <= 4) return labels.join(" → ");
+  return `${labels.slice(0, 3).join(" → ")} → … → ${labels.at(-1)} (${t("Levels", { n: labels.length })})`;
 }

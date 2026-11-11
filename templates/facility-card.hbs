@@ -7,7 +7,7 @@
       <strong class="title">{{name}}</strong>{{#if subtitle}}<span class="subtitle dxpb-muted">{{subtitle}}</span>{{/if}}
     </button>
     <span class="dxpb-fac-slots">
-      {{#if upgrade}}{{#if upgrade.action}}<button type="button" class="dxpb-fac-up" data-action="{{upgrade.action}}" {{#if fid}}data-fid="{{fid}}"{{/if}} {{#if upgrade.id}}data-id="{{upgrade.id}}"{{/if}}
+      {{#if upgrade}}{{#if upgrade.action}}<button type="button" class="dxpb-fac-up" data-action="{{upgrade.action}}" {{#if fid}}data-fid="{{fid}}"{{/if}} {{#if upgrade.id}}data-id="{{upgrade.id}}"{{/if}} {{#if upgrade.kind}}data-kind="{{upgrade.kind}}"{{/if}} {{#if upgrade.count}}data-count="{{upgrade.count}}"{{/if}}
         data-tooltip="{{upgrade.tip}}" aria-label="{{upgrade.tip}}"><i class="fa-solid fa-angles-up" inert></i></button>
       {{else}}<span class="dxpb-fac-up" data-tooltip="{{upgrade.tip}}" aria-label="{{upgrade.tip}}"><i class="fa-solid fa-angles-up" inert></i></span>{{/if}}{{/if}}
       {{#if repair}}<button type="button" class="dxpb-fac-repair" data-action="featureProject" data-kind="repair" data-fid="{{fid}}" data-tooltip="{{localize 'DXPB.Repair'}}" aria-label="{{localize 'DXPB.Repair'}}"><i class="fa-solid fa-screwdriver-wrench" inert></i></button>{{/if}}

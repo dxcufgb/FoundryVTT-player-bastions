@@ -13,7 +13,7 @@ import { describeOrder } from "./actions.js";
 export const running = new Set();
 
 const KEYS = ["dispatches", "projects", "features", "treasury", "unpaidUpkeep", "dividends", "food", "hungry", "merchant",
-  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests"];
+  "standingOrders", "maintainOrder", "maintainChosen", "neglect", "turn", "history", "grounds", "layout", "rests", "people", "garrison"];
 
 /** When a Bastion's next turn is due, in game seconds. */
 export function turnDueTime(record) {
@@ -200,6 +200,7 @@ async function postSummary(entry, record, report, event) {
       <tr><td>${t("Chat.Income")}</td><td>${gp(report.income)}</td></tr>
       <tr><td>${t("Chat.Upkeep")}</td><td>−${gp(report.upkeep)}</td></tr>
       ${report.tax ? `<tr><td>${t("Chat.Tax")}</td><td>−${gp(report.tax)}</td></tr>` : ""}
+      ${report.foodCost ? `<tr><td>${t("Chat.FoodBought")}</td><td>−${gp(report.foodCost)}</td></tr>` : ""}
       ${report.dividend ? `<tr><td>${t("Chat.DividendShare")}</td><td>${gp(report.dividend)}</td></tr>` : ""}
       <tr><th>${t("Chat.Treasury")}</th><th>${gp(record.treasury)}</th></tr>
       <tr><td>${t("Chat.Food")}</td><td>${report.foodDelta >= 0 ? "+" : ""}${report.foodDelta}</td></tr>
