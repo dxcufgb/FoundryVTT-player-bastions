@@ -153,7 +153,7 @@
         {{#if @root.mine}}<button type="button" class="dxpb-fac-plan" data-action="planSection" data-group="{{key}}"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Fac.Plan"}}</button>{{/if}}</h3>
       <p class="dxpb-fac-summary">{{#each summary}}<span>{{this}}</span>{{/each}}</p>
       <p class="dxpb-fac-limit"><i class="fa-solid fa-gauge-high" inert></i> {{limit}}</p>
-      {{#if cards.length}}<ul class="dxpb-fac-cards">{{#each cards}}{{> dxpbFacilityCard}}{{/each}}</ul>
+      {{#if cards.length}}<ul class="dxpb-def-list dxpb-fac-list">{{#each cards}}{{> dxpbFacilityCard}}{{/each}}</ul>
       {{else}}<p class="dxpb-muted">{{localize "DXPB.Fac.None"}}</p>{{/if}}
     </section>
     {{/each}}

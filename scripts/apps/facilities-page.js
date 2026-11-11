@@ -19,8 +19,6 @@ export const SECTION_ICONS = { rooms: "fa-bed", fortifications: "fa-chess-rook",
 const GUARD_IMG = "systems/dnd5e/tokens/humanoid/Guard.webp";
 const roadRank = e => ROADS[e?.effects?.roadTier]?.rank ?? 0;
 const miles = record => Math.ceil(record.location?.settlement?.distance || 1);
-/** An image path for a CSS url() in a style attribute: from the server root, not the stylesheet's folder. */
-const cssUrl = img => (!img ? "" : /^([a-z]+:|\/)/i.test(img) ? img : (foundry.utils.getRoute?.(img) ?? `/${img}`));
 const shortLabel = label => String(label ?? "").replace(/\s*\(.*\)\s*$/, "");
 
 /** The system's advancement table for special facilities. */
@@ -112,7 +110,8 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     const parts = [];
     if (f.size) parts.push(SIZE_LABELS[f.size] ?? f.size);
     if (e.tiers) parts.push(e.tiers[(f.tier ?? 1) - 1]?.label ?? "");
-    else if (f.count > 1 && e.unit !== "flat") parts.push(e.unit === "mile" ? t("SheetTab.Miles", { n: f.count }) : `× ${f.count}`);
+    else if (f.count > 1 && e.unit === "mile") parts.push(t("SheetTab.Miles", { n: f.count }));
+    else if (f.count > 1 && e.unit === "square") parts.push(t("Fac.Squares", { n: f.count }));
     if (item && owners.length > 1) parts.push(item.actorName);
     if (f.damaged) parts.push(t("Damaged"));
     if (open) parts.push(t(`Busy.${open.kind}`, { state: t(`State.${open.state}`) }));
@@ -135,8 +134,9 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     // The road reads as what it is now (a trail, a road, a highway), not as the last step built.
     const title = e.effects?.roadTier ? ROADS[e.effects.roadTier]?.label ?? e.name : e.name;
     cards[sectionOfExpansion(e)].push({ name: title, subtitle: parts.filter(Boolean).join(" · "), icon: SECTION_ICONS[sectionOfExpansion(e)],
-      img: item?.img && !item.img.includes("/facilities/build.svg") ? cssUrl(item.img) : "", fid, damaged: !!f.damaged, upgrade,
-      repair: mine && f.damaged && !open, open: { action: "dxpbTab", tab: "projects" }, sort: title });
+      img: item?.img && !item.img.includes("/facilities/build.svg") ? item.img : "", fid, damaged: !!f.damaged, upgrade,
+      repair: mine && f.damaged && !open, count: e.unit === "each" && f.count > 1 ? `× ${f.count}` : "",
+      open: { action: "dxpbTab", tab: "projects", tip: t("Fac.OpenProjects") }, sort: title });
   }
   // New buildings under way: greyed, with their progress.
   for (const p of Object.values(record.projects ?? {})) {
@@ -146,7 +146,7 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     const pct = p.days ? Math.round(100 * Math.min(1, (p.progress ?? 0) / p.days)) : 0;
     cards[sectionOfExpansion(e)].push({ name: e.name, building: true, icon: "fa-person-digging",
       subtitle: `${t(`State.${p.state}`)} · ${Math.floor(p.progress ?? 0)} / ${p.days ?? 0}`, progress: { pct },
-      open: { action: "dxpbTab", tab: "projects" }, sort: `~${e.name}` });
+      open: { action: "dxpbTab", tab: "projects", tip: t("Fac.OpenProjects") }, sort: `~${e.name}` });
   }
   // The dnd5e facilities on the owners' sheets.
   const orders = CONFIG.DND5E?.facilities?.orders ?? {};
@@ -164,11 +164,12 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
     if (running) parts.push(`${game.i18n.localize(orders[order]?.label ?? order)} ${f.progress.value ?? 0} / ${f.progress.max}`);
     const upgrade = f.enlargeable && f.size !== "vast" && !running
       ? { action: canUse ? "useFacility" : "", tip: t("Fac.Up.Order") } : null;
-    cards[section].push({ name: f.name, subtitle: parts.join(" · "), img: cssUrl(f.img), uuid: f.uuid, damaged: !!f.disabled, system: true,
+    cards[section].push({ name: f.name, subtitle: parts.join(" · "), img: f.img, uuid: f.uuid, damaged: !!f.disabled, system: true,
       icon: f.type === "special" ? "fa-building-columns" : "fa-chess-rook", orderIcon: running ? orders[order]?.icon ?? "" : "",
+      orderLabel: running ? game.i18n.localize(orders[order]?.label ?? order) : "",
       progress: running ? { pct: Math.round(100 * Math.min(1, (f.progress.value ?? 0) / f.progress.max)) } : null,
       use: canUse && f.type === "special" && !f.disabled ? t("Fac.Use") : "", upgrade,
-      open: { action: "openFacility" }, sort: f.name });
+      open: { action: "openFacility", tip: t("Fac.OpenFacility") }, sort: f.name });
   }
 
   /* ----- Sections: summary and limit ----- */

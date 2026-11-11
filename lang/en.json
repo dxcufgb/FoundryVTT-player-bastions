@@ -780,7 +780,10 @@
         "Slots": "No free special facility ({used} of {max})",
         "Owner": "No character of yours owns this Bastion",
         "NotFacility": "That isn't a special facility."
-      }
+      },
+      "Squares": "{n} squares",
+      "OpenProjects": "Open on the Projects page",
+      "OpenFacility": "Open the facility"
     },
     "SystemRules": {
       "Title": "The system's Bastion rules are off",
