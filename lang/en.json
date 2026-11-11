@@ -44,6 +44,7 @@
       "projects": "Projects",
       "dispatches": "Dispatches",
       "trade": "Trade",
+      "routes": "Trade Routes",
       "history": "History"
     },
     "Stat": {
@@ -945,6 +946,7 @@
       "SettlementNameLabel": "Name",
       "DistanceLabel": "Distance from the Bastion (miles)",
       "SizeLabel": "Size",
+      "SizeUnknown": "Size unknown",
       "SettlementHint": "Bigger settlements trade more; farther ones pay more for goods. The settlement can ask for a route at a turn, and the party can seek one there.",
       "NoSettlements": "No settlements yet. The GM adds them here; map notes near the Bastion's marker count too.",
       "Miles": "{n} miles",

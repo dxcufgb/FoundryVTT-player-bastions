@@ -33,7 +33,7 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
 - `scripts/map-render.js` – paints a map plan on any 2D canvas (browser or Node); `scripts/map.js` – Foundry side:
   paint, upload to `worlds/<world>/bastions/`, create/update the scene, replace our flagged walls, redraw hooks.
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
-- `scripts/apps/` – `BastionSheet` (8 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
+- `scripts/apps/` – `BastionSheet` (9 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
   `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab
   (under the system's name field; the system's `.contents` (defenders, facility lists) is always hidden, the Facilities
   page replaces it; `.description` shows on sub-tab "facilities" only, through the tab's `dxpb-has-bastion` /
@@ -155,8 +155,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   (any distance), then map notes near the marker; a name once). GM actions `saveSettlement` / `removeSettlement`; owners'
   `proposeTradeRoute` makes a route that starts accepted (`proposed: true`). Actions `tradeRoute` (owners: accept,
   decline, withdraw, cancel), `signTradeRoute` / `requestTradeRoute` (GM). Quest Log (`dxcufgbs-quest-log`, optional):
-  `createRouteQuest` on accept, `closeRouteQuest` completed on sign, failed on lapse / withdraw. Facilities page block
-  `page.routes` (`tradeRoutesPage`), rendered after the trade section (`data-section="routes"`).
+  `createRouteQuest` on accept, `closeRouteQuest` completed on sign, failed on lapse / withdraw. Tab "routes" (Trade
+  Routes, after Trade): `c.routes` = `tradeRoutesPage` (facilities-page.js; `data-section="routes"`), icons by size from
+  `settlementIcon` (`assets/settlements/<size>.svg`, placeholders; `unknown.svg` for a map note without a size).
 - Map art lives in `assets/map/tex` (tileable, 512 px, one tile = 4 squares unless `TILE_OVERRIDE`) and
   `assets/map/props` (transparent, cropped, back of the object at the top of the picture).
 

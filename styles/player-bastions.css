@@ -25,7 +25,7 @@
 .dxpb-inline label { flex-direction: row; align-items: center; }
 
 /* Tabs */
-.dxpb-tabs { display: flex; gap: 0.15rem; border-bottom: 2px solid var(--dxpb-gold); flex: 0 0 auto; }
+.dxpb-tabs { display: flex; flex-wrap: wrap; gap: 0.15rem; border-bottom: 2px solid var(--dxpb-gold); flex: 0 0 auto; }
 .dxpb-tab { padding: 0.3rem 0.7rem; cursor: pointer; border-radius: 4px 4px 0 0; }
 .dxpb-tab.active { background: var(--dxpb-gold); color: #fff; font-weight: 600; }
 .dxpb-tab-body { flex: 1 1 auto; overflow-y: auto; padding-right: 0.25rem; }
@@ -289,6 +289,7 @@ span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-places-head .dxpb-fac-plan { margin-left: auto; }
 .dxpb-places { list-style: none; margin: 0; padding: 0; }
 .dxpb-place { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.15); }
+.dxpb-place-icon { width: 28px; height: 28px; flex: none; border: none; }
 .dxpb-place-name { flex: 1; min-width: 0; }
 .dxpb-place-status { font-size: 11px; color: var(--dxpb-gold); white-space: nowrap; }
 .dxpb-place-actions { display: flex; gap: 4px; }

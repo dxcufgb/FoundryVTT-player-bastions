@@ -19,12 +19,13 @@ import { syncLayout } from "../core/layout.js";
 import { buildMap, viewMap, mapScene } from "../map.js";
 import { quoteDispatch, orderCount } from "../core/dispatch.js";
 import { partyDistance } from "../marker.js";
-import { facilitiesPage, systemFacilityCatalog } from "./facilities-page.js";
+import { facilitiesPage, systemFacilityCatalog, tradeRoutesPage } from "./facilities-page.js";
+import { tradeSettlements } from "../trade.js";
 import { openCodex } from "./codex-page.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
-const TABS = ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "history"];
+const TABS = ["overview", "stats", "defense", "facilities", "projects", "dispatches", "trade", "routes", "history"];
 const STAT_KEYS = ["accessibility", "concealment", "security", "prosperity", "renown", "comfort"];
 
 /**
@@ -229,6 +230,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       c.page = facilitiesPage({ record, stats, ctx, C, R, mine, actorId: this.embedded ? this.actorId : null });
       c.collapsed = Object.fromEntries([...collapsedSections()].map(k => [k, true]));
     }
+    if (this.tab === "routes") c.routes = tradeRoutesPage({ record, stats, R, mine, settlements: tradeSettlements(record) });
 
     /* Projects */
     const crew = crewStatus(record, stats);
@@ -797,7 +799,7 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onTradeSeek(event, target) {
     const key = target.closest("[data-key]")?.dataset.key;
     const record = getRecord(getEntry(this.entryId));
-    const { tradeSettlements, routeWorth } = await import("../trade.js");
+    const { routeWorth } = await import("../trade.js");
     const { quoteRoute } = await import("../core/trade.js");
     const { TRADE_GOODS } = await import("../data/tables.js");
     const place = tradeSettlements(record).find(s => s.key === key);
@@ -857,7 +859,6 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onTradeRequest() {
     if (!game.user.isGM) return;
     const record = getRecord(getEntry(this.entryId));
-    const { tradeSettlements } = await import("../trade.js");
     const { tradeCandidates } = await import("../core/trade.js");
     const { TRADE_GOODS } = await import("../data/tables.js");
     const list = tradeCandidates(record, tradeSettlements(record), { tradeMaxMiles: Infinity });

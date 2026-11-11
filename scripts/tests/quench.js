@@ -221,7 +221,7 @@ export function registerQuench(quench) {
           assert.equal(el().querySelector('[data-defenders="system"] [data-count]').dataset.count, "2", "the Barrack's defenders");
           assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portrait').length, 2, "with their portraits");
           const sections = [...el().querySelectorAll(".dxpb-fac-section[data-section]")].map(x => x.dataset.section);
-          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "routes", "staff", "arcane"]);
+          assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "staff", "arcane"]);
           for (const sec of el().querySelectorAll('.dxpb-fac-section:not([data-section="defenders"])')) {
             assert.ok(sec.querySelector(".dxpb-fac-summary span")?.textContent.trim(), `${sec.dataset.section}: a summary`);
             assert.ok(sec.querySelector(".dxpb-fac-limit")?.textContent.trim(), `${sec.dataset.section}: a limit`);
@@ -345,10 +345,11 @@ export function registerQuench(quench) {
         try {
           assert.equal(route().state, "requested");
           assert.equal(route().kind, "coin");
-          const app = BastionSheet.open(entryId, { tab: "facilities" });
+          const app = BastionSheet.open(entryId, { tab: "routes" });
           await app.render({ force: true });
           const row = () => app.element.querySelector(`[data-section="routes"] [data-route="${id}"]`);
-          assert.ok(row(), "the request on the Facilities page");
+          assert.ok(row(), "the request on the Trade Routes tab");
+          assert.include(row().querySelector(".dxpb-settle-icon")?.getAttribute("src") ?? "", "assets/settlements/", "a settlement icon");
           assert.ok(row().querySelector('[data-action="tradeRoute"][data-op="accept"]'), "an Accept button");
           await app.close();
           res = await ACTIONS.tradeRoute({ entryId, routeId: id, op: "accept" }, game.user);
@@ -393,10 +394,11 @@ export function registerQuench(quench) {
         let routeId = null, questId = null;
         try {
           assert.deepEqual(getRecord(entry()).settlements[sid], { id: sid, name: `${PREFIX} Port`, distance: 240, size: "city" });
-          const app = BastionSheet.open(entryId, { tab: "facilities" });
+          const app = BastionSheet.open(entryId, { tab: "routes" });
           await app.render({ force: true });
           const place = app.element.querySelector(`[data-section="routes"] .dxpb-place[data-key="gm:${sid}"]`);
           assert.ok(place, "the settlement in the list");
+          assert.include(place.querySelector(".dxpb-place-icon")?.getAttribute("src") ?? "", "assets/settlements/city.svg", "the city icon");
           assert.include(place.textContent, "240");
           assert.ok(place.querySelector('[data-action="tradeSeek"]'), "owners can seek a route there");
           assert.ok(place.querySelector('[data-action="settlementEdit"]'), "the GM can edit it");
@@ -981,7 +983,7 @@ export function registerQuench(quench) {
           await patchRecord(getEntry(entryId), { merchant: { id: "m", label: "Peddler", arrivedAt: turnTime, leavesAt: turnTime + 3 * 86400, stock: [] } });
           const app = BastionSheet.open(entryId);
           const dates = new Set([formatGameTime(turnTime), formatGameTime(turnTime + 3 * 86400), ...(rec.history ?? []).map(h => formatGameTime(h.time ?? 0))]);
-          for (const tab of ["overview", "projects", "trade", "history", "dispatches"]) {
+          for (const tab of ["overview", "projects", "trade", "routes", "history", "dispatches"]) {
             app.tab = tab;
             await app.render({ force: true });
             for (const d of dates) assert.notInclude(app.element.textContent, d, `${tab}: no date`);

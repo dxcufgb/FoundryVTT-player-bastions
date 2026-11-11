@@ -10,12 +10,16 @@ import { codexUuid, codexArt } from "../core/codex.js";
 import { routesOf } from "../core/trade.js";
 import { mergeSameKind } from "../core/sections.js";
 import { hiddenApproachWarning } from "./bastion-sheet.js";
-import { tradeSettlements } from "../trade.js";
 import { averageFormula } from "../core/stats.js";
 import { methodAvailable } from "../core/dispatch.js";
 import { ownerActors } from "../store.js";
 
 const SIZE_NAMES = Object.fromEntries(Object.entries(SETTLEMENT_SIZES).map(([k, v]) => [k, v.label]));
+
+/** A settlement's icon by its size (placeholder art in assets/settlements); a map note without a size gets a signpost. */
+export function settlementIcon(size) {
+  return `modules/${MODULE_ID}/assets/settlements/${SIZE_NAMES[size] ? size : "unknown"}.svg`;
+}
 
 /**
  * The Facilities page (Bastion window and character sheet alike): the defenders by kind, then one section per kind of
@@ -363,11 +367,10 @@ export function facilitiesPage({ record, stats, ctx, C, R, mine, actorId = null 
       totals: columns.map((c, i) => ({ value: totalOf(c.kind, built.map(card => card.raw?.[i])) }))
     };
   });
-  page.routes = tradeRoutesPage({ record, stats, R, mine, settlements: tradeSettlements(record) });
   return page;
 }
 
-/** The Trade routes block (after Trade and crafting): requests, routes waiting to be signed, active routes. */
+/** The Trade routes tab: requests, routes waiting to be signed, active routes, and the settlements to trade with. */
 export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
   const trade = stats.trade ?? { capacity: 0, active: 0, income: 0, food: 0 };
   const isGM = !!game.user?.isGM;
@@ -396,6 +399,7 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
     if (r.state === "active" && mine) b("tradeRoute", "cancel", "fa-ban", "Trade.Cancel");
     const raw = [r.kind === "coin" ? r.income : -(Number(r.cost) || 0), r.kind === "food" ? r.food : null, r.distance, r.setup];
     return { id: r.id, state: r.state, name: r.name, subtitle: parts.filter(Boolean).join(" · "), buttons, raw,
+      icon: settlementIcon(r.size), sizeLabel: SIZE_NAMES[r.size] ?? "",
       cells: raw.map((v, i) => ({ value: fmtValue(columns[i].kind, v) })) };
   });
   const active = rows.filter(r => r.state === "active");
@@ -404,6 +408,7 @@ export function tradeRoutesPage({ record, stats, R, mine, settlements = [] }) {
   const places = settlements.map(s => {
     const r = openBy.get(s.key);
     return { key: s.key, id: s.id ?? "", name: s.name, distance: s.distance, gm: s.source === "gm" && isGM,
+      icon: settlementIcon(s.size), sizeLabel: SIZE_NAMES[s.size] ?? t("Trade.SizeUnknown"),
       detail: [SIZE_NAMES[s.size] ?? "", t("Trade.Miles", { n: s.distance }), t(`Trade.Source.${s.source}`)].filter(Boolean).join(" · "),
       status: r ? t(`Trade.Status.${r.state}`) : "", seek: mine && !r && free > 0 };
   });
