@@ -411,7 +411,6 @@
       "ArrestedNoFacility": "The hireling was arrested."
     },
     "Notify": {
-      "SystemBastionsOff": "Player Bastions: the D&D 5e system's Bastion rules are turned off in this world (System Settings → Bastions). Bastions still work: their owners' character sheets still get the Bastion tab, but the system's own Bastion turn button stays hidden.",
       "NoGM": "No GM is online to carry this out.",
       "OnlyOwnUnfunded": "You can only remove your own unfunded plans.",
       "NothingToPay": "Nothing left to pay.",
@@ -782,6 +781,15 @@
         "Owner": "No character of yours owns this Bastion",
         "NotFacility": "That isn't a special facility."
       }
+    },
+    "SystemRules": {
+      "Title": "The system's Bastion rules are off",
+      "Body": "The D&D 5e system's own Bastion rules are turned off in this world. Player Bastions works without them: every Bastion owner gets the Bastion tab on their character sheet, and the module runs the Bastion turns.",
+      "TurnOn": "Turning them on also gives every character of level 5 or higher the system's Bastion tab, and adds \"Advance Bastion turn\" to group rests. The system's own Bastion turn button stays off: the module runs the turns.",
+      "Enable": "Turn on",
+      "Keep": "Keep off",
+      "Enabled": "The system's Bastion rules are on. Its own Bastion turn button stays off: the module runs the turns. Change it any time in System Settings → Bastions.",
+      "Dismissed": "The system's Bastion rules stay off; Player Bastions works without them. Turn them on any time in System Settings → Bastions."
     }
   }
 }

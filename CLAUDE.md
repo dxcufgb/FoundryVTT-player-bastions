@@ -50,6 +50,9 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   has a facility; added by the `addSystemFacility` action). Pure parts in `core/sections.js` (`SYSTEM_SECTION` by dnd5e
   subtype, `specialSlots`, `canTakeFacility`). Card partial `dxpbFacilityCard` (templates/facility-card.hbs). Card art goes
   through `cssUrl` (a relative path in a CSS var resolves against the stylesheet).
+- `scripts/system-rules.js` – the system's Bastion rules (`dnd5e.bastionConfiguration`): never switched on silently;
+  `postSystemRulesNotice` (responsible GM, ready) whispers the GMs one card when they are off, hidden setting
+  `systemRulesNotice` ("", posted, enabled, dismissed); its Turn on sets `enabled: true, button: false`.
 - `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a
   dependency): `registerDebugRecorder` (init and ready; also listens for `dxcufgbs-debug-recorder.ready` from import
   time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action

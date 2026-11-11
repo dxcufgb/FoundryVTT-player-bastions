@@ -286,6 +286,45 @@ export function registerQuench(quench) {
         }
       });
 
+      it("with the system's Bastion rules off, the GMs get one chat card that can turn them on (turn button off)", async () => {
+        const { postSystemRulesNotice, resolveSystemRulesNotice } = await import("../system-rules.js");
+        const savedCfg = game.settings.get("dnd5e", "bastionConfiguration");
+        const plainCfg = typeof savedCfg?.toObject === "function" ? savedCfg.toObject() : { ...savedCfg };
+        const savedState = game.settings.get(MODULE_ID, "systemRulesNotice");
+        const messages = [];
+        try {
+          await game.settings.set("dnd5e", "bastionConfiguration", { ...plainCfg, enabled: false, button: true });
+          await game.settings.set(MODULE_ID, "systemRulesNotice", "");
+          const msg = await postSystemRulesNotice();
+          assert.ok(msg, "a card");
+          messages.push(msg);
+          assert.isTrue(msg.getFlag(MODULE_ID, "systemRules"));
+          assert.sameMembers(msg.whisper, game.users.filter(u => u.isGM).map(u => u.id), "whispered to the GMs only");
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "posted");
+          assert.isNull(await postSystemRulesNotice(), "once per world");
+          assert.isTrue(await resolveSystemRulesNotice("enable", msg));
+          const cfg = game.settings.get("dnd5e", "bastionConfiguration");
+          assert.isTrue(cfg.enabled, "the system's rules are on");
+          assert.isFalse(cfg.button, "the system's turn button stays off");
+          assert.equal(cfg.duration, plainCfg.duration ?? 7, "the turn length is kept");
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "enabled");
+          assert.notInclude(game.messages.get(msg.id).content, "data-dxpb-system-rules", "the card's buttons are gone");
+          // Kept off: remembered, and nothing changes in the system.
+          await game.settings.set("dnd5e", "bastionConfiguration", { ...plainCfg, enabled: false });
+          await game.settings.set(MODULE_ID, "systemRulesNotice", "");
+          const again = await postSystemRulesNotice();
+          messages.push(again);
+          await resolveSystemRulesNotice("dismiss", again);
+          assert.isFalse(game.settings.get("dnd5e", "bastionConfiguration").enabled);
+          assert.equal(game.settings.get(MODULE_ID, "systemRulesNotice"), "dismissed");
+          assert.isNull(await postSystemRulesNotice(), "not asked again");
+        } finally {
+          await game.settings.set("dnd5e", "bastionConfiguration", plainCfg);
+          await game.settings.set(MODULE_ID, "systemRulesNotice", savedState);
+          for (const m of messages) await m?.delete();
+        }
+      });
+
       it("the party's group sheet keeps a rook button in its header", async () => {
         await group.sheet.render({ force: true });
         for (let i = 0; i < 20 && !group.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));

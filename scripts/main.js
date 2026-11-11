@@ -38,6 +38,7 @@ import { holdout } from "./core/siege.js";
 import { FORCES, EVENTS } from "./data/tables.js";
 import * as engine from "./core/index.js";
 import { registerQuench, runSelfTests } from "./tests/quench.js";
+import { registerSystemRulesSetting, postSystemRulesNotice, bindSystemRulesCard } from "./system-rules.js";
 
 function registerSettings() {
   game.settings.register(MODULE_ID, "rules", { scope: "world", config: false, type: Object, default: {}, onChange: () => { clearCaches(); repaceAll(); refreshAll(); } });
@@ -82,6 +83,7 @@ function registerSettings() {
   game.settings.register(MODULE_ID, "processSystemTurns", {
     name: "DXPB.Settings.SystemTurns.Name", hint: "DXPB.Settings.SystemTurns.Hint", scope: "world", config: true, type: Boolean, default: true
   });
+  registerSystemRulesSetting();
 }
 
 function refreshAll() {
@@ -179,6 +181,7 @@ function registerUI() {
 
   // Chat card buttons: event decisions, dividends, executing orders that arrived by dispatch.
   Hooks.on("renderChatMessageHTML", (message, html) => {
+    bindSystemRulesCard(message, html);
     html.querySelectorAll("[data-dxpb-event]").forEach(btn => btn.addEventListener("click", async () => {
       let count;
       if (btn.dataset.count) {
@@ -339,12 +342,8 @@ function onReady() {
   registerDebugRecorder({ snapshot: debugSnapshot });
   registerSocket(ACTIONS);
   registerMapHooks();
-  // The system's own Bastion rules can be off in a world: the module still works, but say what that hides.
-  if (game.user.isGM && allBastions().length) {
-    let cfg = null;
-    try { cfg = game.settings.get("dnd5e", "bastionConfiguration"); } catch { cfg = null; }
-    if (cfg && cfg.enabled === false) ui.notifications.info(t("Notify.SystemBastionsOff"));
-  }
+  // The system's own Bastion rules can be off in a world: the GMs get one chat card offering to turn them on.
+  postSystemRulesNotice().catch(err => console.warn(`${MODULE_ID} | system Bastion rules notice`, err));
   repaceAll();
   if (isResponsibleGM()) for (const entry of allBastions()) syncBastionNames(entry);
 }
