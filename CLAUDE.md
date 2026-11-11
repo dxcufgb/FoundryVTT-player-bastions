@@ -31,7 +31,8 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `dnd5e.bastion.advanceAllFacilities`, neglect, DMG event, restore idled facilities, summary card, `postTurn` hook.
 - `scripts/events.js` – the 11 DMG events (DMG roll table if found, else module table) with decision buttons.
 - `scripts/map-render.js` – paints a map plan on any 2D canvas (browser or Node); `scripts/map.js` – Foundry side:
-  paint, upload to `worlds/<world>/bastions/`, create/update the scene, replace our flagged walls, redraw hooks.
+  paint, upload to `worlds/<world>/bastions/`, create/update the scene (in the Scene folder "Bastions", `mapFolder`, flag `mapFolder`;
+  `fileMaps` on ready files loose ones), replace our flagged walls, redraw hooks.
 - `scripts/marker.js` – Note marker, scene distances, nearby map notes, party position, map click picker.
 - `scripts/apps/` – `BastionSheet` (9 tabs), `FoundingWizard` (6 steps, also edit), `BastionDashboard`, settings apps.
   `bastion-tab.js`: `BastionTabPanel`, a frameless BastionSheet inside the dnd5e character sheet's own Bastion tab

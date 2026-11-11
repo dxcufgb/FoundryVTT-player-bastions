@@ -403,10 +403,17 @@ function registerDebugCrumbs() {
 
 /**
  * Unfinished projects follow the build pace: re-time any planned at another pace. Old saves also get their separate
- * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers. Responsible GM.
+ * "Reinforce Stone Wall" and "Wall Walk" folded into the Stone Wall's tiers, and battle maps outside any folder go into
+ * the Bastions scene folder. Responsible GM.
  */
 async function repaceAll() {
   if (!isResponsibleGM()) return;
+  try {
+    const { fileMaps } = await import("./map.js");
+    await fileMaps();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Could not file the Bastion maps`, err);
+  }
   const { patchRecord, writeRecordKeys } = await import("./store.js");
   for (const entry of allBastions()) {
     const record = getRecord(entry);

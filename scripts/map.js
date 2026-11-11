@@ -96,6 +96,26 @@ export function lightData(plan) {
   }));
 }
 
+/**
+ * The Scene folder every Bastion battle map goes in ("Bastions"; ours by flag, so a renamed folder is still found).
+ * GM only; created on first use.
+ */
+export async function mapFolder() {
+  let f = game.folders.find(x => x.type === "Scene" && x.getFlag(MODULE_ID, "mapFolder"))
+    ?? game.folders.find(x => x.type === "Scene" && !x.folder && x.name === t("FolderName"));
+  if (!f) f = await Folder.create({ name: t("FolderName"), type: "Scene", color: "#6b4f2a", flags: { [MODULE_ID]: { mapFolder: true } } });
+  return f;
+}
+
+/** Files the Bastions' existing battle maps that sit outside any folder into the Bastions folder. Responsible GM, ready. */
+export async function fileMaps() {
+  const loose = (game.scenes ?? []).filter(s => s.getFlag(MODULE_ID, "entryId") && !s.folder);
+  if (!loose.length) return 0;
+  const folder = await mapFolder();
+  await Scene.updateDocuments(loose.map(s => ({ _id: s.id, folder: folder.id })));
+  return loose.length;
+}
+
 /** The Bastion's battle-map scene, if it has one. */
 export function mapScene(record) {
   const uuid = record?.map?.sceneUuid;
@@ -124,8 +144,9 @@ export async function buildMap(entry, { notify = true } = {}) {
   let scene = mapScene(record);
   if (scene) await scene.update(data);
   else {
+    const folder = await mapFolder();
     scene = await Scene.create({
-      name: t("Map.SceneName", { name: record.name }), navigation: false, tokenVision: true,
+      name: t("Map.SceneName", { name: record.name }), folder: folder.id, navigation: false, tokenVision: true,
       fog: { exploration: false }, environment: { darknessLevel: 0 },
       flags: { [MODULE_ID]: { entryId: entry.id } }, ...data
     });

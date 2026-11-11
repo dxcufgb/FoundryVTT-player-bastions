@@ -12,7 +12,7 @@ import { FoundingWizard, defaultMapScene } from "../apps/wizard.js";
 import { BastionDashboard } from "../apps/dashboard.js";
 import { sceneDistance, settlementsNear } from "../marker.js";
 import { computeStats } from "../core/stats.js";
-import { buildMap, planFor, wallData, lightData, mapScene } from "../map.js";
+import { buildMap, planFor, wallData, lightData, mapScene, fileMaps } from "../map.js";
 import { EXPANSIONS } from "../data/catalog.js";
 import { INHABITANTS, codexUuid, CODEX_PACK } from "../core/codex.js";
 
@@ -691,6 +691,11 @@ export function registerQuench(quench) {
         assert.equal(scene.width, plan.total * 100);
         assert.equal(scene.grid.size, 100);
         assert.include(scene.background.src, "/bastions/");
+        assert.equal(scene.folder?.name, t("FolderName"), "the map is in the Bastions scene folder");
+        assert.equal(scene.folder?.type, "Scene");
+        await scene.update({ folder: null });
+        assert.ok(await fileMaps() >= 1, "a map outside any folder is filed");
+        assert.equal(scene.folder?.name, t("FolderName"));
         const ours = scene.walls.filter(w => w.getFlag(MODULE_ID, "generated"));
         assert.equal(ours.length, wallData(plan).length);
         assert.ok(ours.some(w => w.door === CONST.WALL_DOOR_TYPES.DOOR), "doors, the gate among them");
