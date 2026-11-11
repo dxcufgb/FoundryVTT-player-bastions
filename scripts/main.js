@@ -19,7 +19,7 @@
  *   .bastionDeleted ({entryId, name}) just before a Bastion is deleted,
  *   .projectFinished ({entryId, projectId (null for Finish all), completed, layoutChanged}) when the GM finishes projects at once.
  */
-import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode } from "./util.js";
+import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode, catalog } from "./util.js";
 import { registerSocket, request } from "./socket.js";
 import { registerDebugRecorder, crumb } from "./debug-recorder.js";
 import { debugSnapshot } from "./debug-snapshot.js";

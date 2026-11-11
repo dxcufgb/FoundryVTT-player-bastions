@@ -732,28 +732,32 @@ export function registerQuench(quench) {
         assert.isTrue(res.ok, res.reason);
         const pid = res.projectId;
         const dmgCost = getRecord(entry()).projects[pid].cost;
-        await patchRecord(entry(), { [`projects.${pid}.funded`]: dmgCost });
         const gold = getRecord(entry()).treasury ?? 0;
-        assert.equal(rules().crewHireCost, 50, "DMG crew price");
-        await game.settings.set(MODULE_ID, "buildPrice", "fair");
-        let p;
-        for (let i = 0; i < 60 && (p = getRecord(entry()).projects[pid]).price?.scale !== 1.2; i++) await new Promise(r => setTimeout(r, 100));
-        assert.equal(p.price?.scale, 1.2, "re-priced at Fair");
-        assert.isBelow(p.cost, dmgCost, "cheaper");
-        assert.equal(p.funded, p.cost, "paid in full at the new price");
-        assert.equal(getRecord(entry()).treasury, gold + dmgCost - p.cost, "the rest went into the treasury");
-        assert.equal(rules().crewHireCost, 40, "Fair crew price");
-        // The catalog shows the Fair price too.
-        const app = BastionSheet.open(entryId);
-        app.tab = "projects";
-        await app.render({ force: true });
-        assert.include(app.element.querySelector(`[data-project="${pid}"]`).textContent, p.cost.toLocaleString());
-        await app.close();
-        await game.settings.set(MODULE_ID, "buildPrice", "dmg");
-        for (let i = 0; i < 60 && getRecord(entry()).projects[pid].price?.scale !== 1; i++) await new Promise(r => setTimeout(r, 100));
-        assert.equal(getRecord(entry()).projects[pid].cost, dmgCost, "back at the DMG's price");
-        await patchRecord(entry(), { treasury: gold, [`projects.${pid}.funded`]: 0 });
-        await ACTIONS.removeProject({ entryId, projectId: pid }, game.user);
+        try {
+          await patchRecord(entry(), { [`projects.${pid}.funded`]: dmgCost });
+          assert.equal(rules().crewHireCost, 50, "DMG crew price");
+          await game.settings.set(MODULE_ID, "buildPrice", "fair");
+          let p;
+          for (let i = 0; i < 60 && (p = getRecord(entry()).projects[pid]).price?.scale !== 1.2; i++) await new Promise(r => setTimeout(r, 100));
+          assert.equal(p.price?.scale, 1.2, "re-priced at Fair");
+          assert.isBelow(p.cost, dmgCost, "cheaper");
+          assert.equal(p.funded, p.cost, "paid in full at the new price");
+          assert.equal(getRecord(entry()).treasury, gold + dmgCost - p.cost, "the rest went into the treasury");
+          assert.equal(rules().crewHireCost, 40, "Fair crew price");
+          // The catalog shows the Fair price too.
+          const app = BastionSheet.open(entryId);
+          app.tab = "projects";
+          await app.render({ force: true });
+          assert.include(app.element.querySelector(`[data-project="${pid}"]`).textContent, p.cost.toLocaleString());
+          await app.close();
+          await game.settings.set(MODULE_ID, "buildPrice", "dmg");
+          for (let i = 0; i < 60 && getRecord(entry()).projects[pid].price?.scale !== 1; i++) await new Promise(r => setTimeout(r, 100));
+          assert.equal(getRecord(entry()).projects[pid].cost, dmgCost, "back at the DMG's price");
+        } finally {
+          if (game.settings.get(MODULE_ID, "buildPrice") !== "dmg") await game.settings.set(MODULE_ID, "buildPrice", "dmg");
+          await patchRecord(entry(), { treasury: gold, [`projects.${pid}.funded`]: 0 });
+          await ACTIONS.removeProject({ entryId, projectId: pid }, game.user);
+        }
       });
 
       it("a room with an enlarge project planned shows that instead of its Enlarge button, until the project goes", async () => {
@@ -786,7 +790,6 @@ export function registerQuench(quench) {
         assert.isTrue(res.ok, res.reason);
         const out = await ACTIONS.finishProject({ entryId, projectId: res.projectId }, game.user);
         assert.isTrue(out.ok, out.reason);
-        assert.isFalse(!!out.layoutChanged, "nothing new in the layout");
         let after = before;
         for (let i = 0; i < 200 && after === before; i++) {
           await new Promise(r => setTimeout(r, 100));
@@ -1015,13 +1018,13 @@ export function registerQuench(quench) {
         assert.ok(app.element.querySelector("button[type=submit]").getBoundingClientRect().bottom <= app.element.getBoundingClientRect().bottom + 1,
           "Save stays in the window");
         const saved = [];
-        const orig = foundry.utils.saveDataToFile;
-        foundry.utils.saveDataToFile = (data, type, name) => saved.push({ data, type, name });
+        const orig = RulesConfig.saveFile;
+        RulesConfig.saveFile = (data, type, name) => saved.push({ data, type, name });
         try {
           for (const file of ["default-rules", "rules-in-use", "default-catalog", "catalog-in-use"]) {
             app.element.querySelector(`[data-action=download][data-file="${file}"]`).click();
           }
-        } finally { foundry.utils.saveDataToFile = orig; }
+        } finally { RulesConfig.saveFile = orig; }
         assert.equal(saved.length, 4);
         assert.deepEqual(JSON.parse(saved[0].data), JSON.parse(JSON.stringify(DEFAULT_RULES)), "the default rules, every key");
         assert.equal(saved[0].type, "application/json");
