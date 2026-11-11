@@ -6,6 +6,7 @@
 - Projects: the dnd5e special facilities defined in the world (world items and compendiums) are in the catalog, in their sections. An owner adds one to a character who has the level and a free special facility slot (and not the same one already).
 - One of a kind: the Parlor, the Courtyard and the Beacon Tower can be built only once, and no road step can be planned once the road is a paved highway.
 - The system's Bastion rules: when they are off in a world, the GMs get one whispered chat card (once per world, instead of a notice at every load) saying the module works without them, with **Turn on** (the system's rules on, its own Bastion turn button kept off: the module runs the turns) and **Keep off** (remembered).
+- Opening a Bastion's journal entry (sidebar, links) opens the Bastion page straight away, without the journal window flashing up first.
 - Fix: the House rules and catalog window opens again (its template had two root elements).
 - Fix: planned projects are re-priced when the Prices or Build pace setting changes and when the world loads (it failed on a missing import).
 - Deleting a Bastion clears the Bastion name it had put on the owners' sheets.

@@ -136,7 +136,23 @@ function registerUI() {
     return false;
   });
 
-  // The journal of a Bastion opens the Bastion page too.
+  // The journal of a Bastion opens the Bastion page instead, before its own sheet draws anything (no flash of a
+  // second window): a forced first render of any journal sheet on a Bastion's entry is cancelled in _canRender.
+  const DocSheet = foundry.applications.api.DocumentSheetV2;
+  const canRender = DocSheet?.prototype?._canRender;
+  if (canRender && !canRender.dxpbWrapped) {
+    const wrapped = function (options) {
+      const doc = this.document;
+      if (options?.force && !this.rendered && doc?.documentName === "JournalEntry" && isBastionEntry(doc)) {
+        BastionSheet.open(doc.id);
+        return false;
+      }
+      return canRender.call(this, options);
+    };
+    wrapped.dxpbWrapped = true;
+    DocSheet.prototype._canRender = wrapped;
+  }
+  // A journal sheet that draws anyway (its class skips the check above): close it and open the Bastion page.
   Hooks.on("renderJournalEntrySheet", (app) => {
     if (!isBastionEntry(app.document)) return;
     const id = app.document.id;

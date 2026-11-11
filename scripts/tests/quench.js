@@ -331,6 +331,23 @@ export function registerQuench(quench) {
         }
       });
 
+      it("opening the Bastion's journal opens the Bastion page without drawing the journal sheet first", async () => {
+        const entry = getEntry(entryId);
+        await BastionSheet.instances.get(entryId)?.close();
+        let drawn = false;
+        const hook = Hooks.on("renderJournalEntrySheet", app => { if (app.document?.id === entryId) drawn = true; });
+        try {
+          await entry.sheet.render(true);
+          for (let i = 0; i < 40 && !BastionSheet.instances.get(entryId)?.rendered; i++) await new Promise(r => setTimeout(r, 50));
+          assert.ok(BastionSheet.instances.get(entryId)?.rendered, "the Bastion page");
+          assert.isFalse(drawn, "the journal sheet never drew");
+          assert.isFalse(entry.sheet.rendered);
+        } finally {
+          Hooks.off("renderJournalEntrySheet", hook);
+          await BastionSheet.instances.get(entryId)?.close();
+        }
+      });
+
       it("the party's group sheet keeps a rook button in its header", async () => {
         await group.sheet.render({ force: true });
         for (let i = 0; i < 20 && !group.sheet.element?.querySelector(".dxpb-open-bastion"); i++) await new Promise(r => setTimeout(r, 50));
