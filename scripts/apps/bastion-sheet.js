@@ -19,6 +19,7 @@ import { buildMap, viewMap, mapScene } from "../map.js";
 import { quoteDispatch, orderCount } from "../core/dispatch.js";
 import { partyDistance } from "../marker.js";
 import { facilitiesPage, systemFacilityCatalog } from "./facilities-page.js";
+import { openCodex } from "./codex-page.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -67,6 +68,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
     this.catalogFilter = "";
     /** A section of the Facilities page whose "Plan" button opened the catalog: only that group shows. */
     this.catalogGroup = "";
+    /** A building (feature id) or catalog entry to highlight on the Projects page, once. */
+    this.highlight = "";
   }
 
   static DEFAULT_OPTIONS = {
@@ -113,6 +116,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       planSection: BastionSheet.#onPlanSection,
       clearCatalogGroup: BastionSheet.#onClearCatalogGroup,
       useFacility: BastionSheet.#onUseFacility,
+      openCodex: BastionSheet.#onOpenCodex,
+      upgradeAt: BastionSheet.#onUpgradeAt,
       addFacility: BastionSheet.#onAddFacility
     }
   };
@@ -453,6 +458,16 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       if (["orderDetail", "note", "gold"].includes(key)) return;
       this.#renderKeepFocus();
     }));
+    // Coming from an upgrade arrow: the building's row on the Projects page, highlighted.
+    if (this.highlight && this.tab === "projects") {
+      const key = CSS.escape(this.highlight);
+      const row = html.querySelector(`[data-fid="${key}"], [data-exp="${key}"]`);
+      this.highlight = "";
+      if (row) {
+        row.classList.add("dxpb-highlight");
+        row.scrollIntoView({ block: "center" });
+      }
+    }
     const filter = html.querySelector("[data-catalog-filter]");
     filter?.addEventListener("input", foundry.utils.debounce(() => {
       this.catalogFilter = filter.value;
@@ -702,6 +717,25 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onClearCatalogGroup() {
     this.catalogGroup = "";
+    return this.render();
+  }
+
+  /** A building or an inhabitant: its page in the Bastion Codex (a building without one opens the Projects page). */
+  static async #onOpenCodex(event, target) {
+    const uuid = target.closest("[data-codex]")?.dataset.codex;
+    if (await openCodex(uuid)) return;
+    const fid = target.closest("[data-fid]")?.dataset.fid;
+    if (!fid) return;
+    this.highlight = fid;
+    this.tab = "projects";
+    return this.render();
+  }
+
+  /** The upgrade arrow: the Projects page, at the building (or the next road step in the catalog). */
+  static #onUpgradeAt(event, target) {
+    this.highlight = target.dataset.id || target.dataset.fid || "";
+    this.catalogGroup = "";
+    this.tab = "projects";
     return this.render();
   }
 

@@ -783,7 +783,29 @@
       },
       "Squares": "{n} squares",
       "OpenProjects": "Open on the Projects page",
-      "OpenFacility": "Open the facility"
+      "OpenFacility": "Open the facility",
+      "Col": {
+        "count": "Count",
+        "garrison": "Garrison",
+        "upkeep": "Upkeep",
+        "food": "Food",
+        "beds": "Beds",
+        "comfort": "Comfort",
+        "feeds": "Feeds",
+        "squares": "Room",
+        "defense": "Defense",
+        "integrity": "Integrity",
+        "security": "Security",
+        "stores": "Stores",
+        "water": "Water",
+        "income": "Income",
+        "access": "Access",
+        "concealment": "Conceal.",
+        "merchants": "Merchants",
+        "renown": "Renown",
+        "crews": "Crews",
+        "wards": "Wards"
+      }
     },
     "SystemRules": {
       "Title": "The system's Bastion rules are off",
@@ -793,6 +815,47 @@
       "Keep": "Keep off",
       "Enabled": "The system's Bastion rules are on. Its own Bastion turn button stays off: the module runs the turns. Change it any time in System Settings → Bastions.",
       "Dismissed": "The system's Bastion rules stay off; Player Bastions works without them. Turn them on any time in System Settings → Bastions."
+    },
+    "Codex": {
+      "Sheet": "Bastion Codex page",
+      "Facility": "Facility",
+      "Inhabitant": "Inhabitant",
+      "Contributions": "Contributions",
+      "PerTurn": "{v} a turn",
+      "PerTurnEach": "{v} a turn each",
+      "Or": " or ",
+      "OnlyOne": "One per Bastion",
+      "GarrisonEach": "+{n} garrison each",
+      "GuardsLimit": "As many as the Garrison Hall allows",
+      "MercsLimit": "Join through events; no upkeep",
+      "ArmoryBonus": "Count ×{x} with a stocked Armory",
+      "LieutenantsLimit": "As many as the War Room holds",
+      "EngineCrews": "+{n} garrison per Ballista Emplacement",
+      "ServantsLimit": "As many as the Servants' Quarters allow",
+      "HirelingsLimit": "Come with the owners' facilities",
+      "CrewsLimit": "One crew to start, up to {n} hired, more from a Workers' Lodge",
+      "RefugeesLimit": "Arrive through events",
+      "MerchantChance": "{a}% a turn per Accessibility, +{r}% per Renown, at most {cap}%",
+      "GuestsLimit": "Arrive through events",
+      "VisitorsLimit": "Up to one a turn",
+      "FoodEach": "{n} food a day each",
+      "Open": "Open in the Bastion Codex",
+      "Row": {
+        "group": "Group",
+        "cost": "Cost",
+        "time": "Build time",
+        "room": "Room",
+        "upkeep": "Upkeep",
+        "effects": "Gives",
+        "tiers": "Upgrades",
+        "needs": "Needs",
+        "limit": "Limit",
+        "garrison": "Garrison",
+        "bonus": "Bonus",
+        "hire": "Hire",
+        "chance": "Chance",
+        "food": "Food"
+      }
     }
   }
 }

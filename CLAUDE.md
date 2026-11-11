@@ -49,7 +49,20 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   `system.enlargeable`) and `systemFacilityCatalog` (special facilities in world items and compendiums whose loaded index
   has a facility; added by the `addSystemFacility` action). Pure parts in `core/sections.js` (`SYSTEM_SECTION` by dnd5e
   subtype, `specialSlots`, `canTakeFacility`). Row partial `dxpbFacilityCard` (templates/facility-card.hbs): a building is a
-  row like a defender's (`.dxpb-def`: picture, name and subtitle, action buttons, count, chevron).
+  row like a defender's (`.dxpb-def`: picture, name and subtitle, action buttons, stat cells, chevron). Stat columns per
+  section: `SECTION_COLUMNS` / `DEFENDER_COLUMNS` (head row, a `.dxpb-cell` per column, total row; the grid's `--cols`).
+  A row's name and chevron open its Codex page (`openCodex`); the upgrade arrow (`upgradeAt`) goes to Projects with
+  `highlight` set (the row gets `.dxpb-highlight`).
+- The Codex: pack `packs/codex` (JournalEntry, compiled LevelDB, committed: `.gitignore` keeps `packs/**/*.log`).
+  `core/codex.js` (pure: journals, INHABITANTS, stable FNV ids `journalId`/`pageId`/`folderId`, `codexUuid`, `codexArt`)
+  is shared with the builder, so the module knows every page's uuid without loading the pack. Page types
+  `facility` / `inhabitant` (module.json `documentTypes`; changing them needs a server restart): `apps/codex-page.js`
+  (`CodexPageData`, `CodexPageSheet` with live rows from catalog + rules via `codexRows`, `openCodex`). Source in
+  `codex/` (not shipped): `entries-facilities.json`, `entries-inhabitants.json` (HTML text, our own words),
+  `art-prompts.json`, `art-nodes.json` (ElevenLabs flow `1HPLljyyT4e06qNUmflb`). Rebuild with
+  `node codex/build-pack.mjs <path to @foundryvtt/foundryvtt-cli/index.mjs>` (writes `codex/_source`, compiles the pack).
+  Art: `assets/codex/<ref>.webp` (540×960) and `assets/codex/icons/<ref>.webp` (256 px crop of the same picture). A new
+  expansion needs an entry, a prompt, its art and a rebuild (the Quench Codex test checks every page and file).
 - `scripts/system-rules.js` – the system's Bastion rules (`dnd5e.bastionConfiguration`): never switched on silently;
   `postSystemRulesNotice` (responsible GM, ready) whispers the GMs one card when they are off, hidden setting
   `systemRulesNotice` ("", posted, enabled, dismissed); its Turn on sets `enabled: true, button: false`.

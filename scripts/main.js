@@ -39,6 +39,7 @@ import { FORCES, EVENTS } from "./data/tables.js";
 import * as engine from "./core/index.js";
 import { registerQuench, runSelfTests } from "./tests/quench.js";
 import { registerSystemRulesSetting, postSystemRulesNotice, bindSystemRulesCard } from "./system-rules.js";
+import { registerCodex } from "./apps/codex-page.js";
 
 function registerSettings() {
   game.settings.register(MODULE_ID, "rules", { scope: "world", config: false, type: Object, default: {}, onChange: () => { clearCaches(); repaceAll(); refreshAll(); } });
@@ -313,6 +314,8 @@ function onInit() {
     dxpbFacilityCard: `modules/${MODULE_ID}/templates/facility-card.hbs` });
   registerUI();
   if (game.system?.id === "dnd5e") registerBastionTab();
+  // The Bastion Codex: the module's own journal page types for its compendium.
+  try { registerCodex(); } catch (err) { console.error(`${MODULE_ID} | Bastion Codex`, err); }
   registerTime();
   const mod = game.modules.get(MODULE_ID);
   const api = {

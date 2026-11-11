@@ -1,0 +1,8 @@
+{{!-- A Bastion Codex page (apps/codex-page.js), edit mode. --}}
+<div class="dxpb-codex-edit">
+  {{formGroup fields.ref value=source.ref name="system.ref" localize=true}}
+  {{formGroup fields.category value=source.category name="system.category" localize=true}}
+  {{formGroup fields.image value=source.image name="system.image" localize=true}}
+  {{formGroup fields.icon value=source.icon name="system.icon" localize=true}}
+  <prose-mirror name="system.description" value="{{source.description}}" document-uuid="{{document.uuid}}" toggled></prose-mirror>
+</div>

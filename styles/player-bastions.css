@@ -235,35 +235,52 @@ button.dxpb-danger:disabled { opacity: 0.45; cursor: not-allowed; }
 .dxpb-fac-limit { margin: 0 0 0.45rem; font-size: 0.9em; opacity: 0.8; }
 .dxpb-fac-limit i { color: var(--dxpb-gold); }
 
-.dxpb-def-list { list-style: none; margin: 0; padding: 0; }
-.dxpb-def { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto minmax(3.5em, auto) 18px; gap: 0.6rem; align-items: center; padding: 4px 2px; border-bottom: 1px dotted var(--dxpb-line); }
-.dxpb-def-img { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); }
+.dxpb-def-list { list-style: none; margin: 0 0 0.3rem; padding: 0; --cols: 4; }
+.dxpb-def {
+  position: relative; display: grid; align-items: center; gap: 0.5rem; padding: 4px 2px; border-bottom: 1px dotted var(--dxpb-line);
+  grid-template-columns: 34px minmax(0, 1fr) repeat(var(--cols), 4.2rem) 18px;
+}
+.dxpb-def-head { padding: 0 2px 2px; border-bottom: 1px solid var(--dxpb-line); font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
+.dxpb-def-total { font-weight: 700; border-bottom: none; border-top: 1px solid var(--dxpb-line); }
+.dxpb-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dxpb-def-img { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; object-position: center 40%; border: 1px solid var(--dxpb-gold); }
 .dxpb-def-icon { display: grid; place-content: center; color: var(--dxpb-gold); font-size: 16px; }
-.dxpb-def-name { display: flex; flex-direction: column; min-width: 0; }
-.dxpb-def-portraits { display: flex; padding-left: 6px; }
-.dxpb-def-portraits img { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
-.dxpb-def-count { font-weight: 700; font-size: 1.15em; text-align: right; }
-.dxpb-def-go { color: var(--dxpb-gold); cursor: pointer; }
+.dxpb-def-main { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.dxpb-def-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; color: inherit; cursor: pointer; }
+.dxpb-def-name .title, .dxpb-def-name .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dxpb-def-portrait { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--dxpb-gold); cursor: pointer; background: #000; }
+.dxpb-def-go { color: var(--dxpb-gold); cursor: pointer; text-align: center; }
 
 /* Building rows: the same rows as the defenders. */
-.dxpb-fac-list { margin-bottom: 0.3rem; }
-.dxpb-fac { position: relative; }
 .dxpb-fac.building { opacity: 0.6; }
 .dxpb-fac.building .dxpb-def-img { filter: grayscale(1); border-style: dashed; }
 .dxpb-fac.damaged .subtitle { color: var(--dxpb-bad); opacity: 1; }
 .dxpb-fac.damaged .dxpb-def-img { border-color: var(--dxpb-bad); }
-.dxpb-fac-name { color: inherit; cursor: pointer; }
-.dxpb-fac-name .title, .dxpb-fac-name .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dxpb-fac-slots { display: flex; align-items: center; gap: 4px; }
+.dxpb-fac-slots { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
 .dxpb-fac-slots button, .dxpb-fac-slots .dxpb-fac-up, .dxpb-fac-order {
-  display: grid; place-content: center; width: 26px; height: 26px; min-height: 0; padding: 0; margin: 0; line-height: 1; font-size: 12px;
+  display: grid; place-content: center; width: 24px; height: 24px; min-height: 0; padding: 0; margin: 0; line-height: 1; font-size: 11px;
   border-radius: 5px; border: 1px solid var(--dxpb-gold); background: transparent; color: var(--dxpb-gold);
 }
-.dxpb-fac-order dnd5e-icon { width: 16px; height: 16px; --icon-fill: var(--dxpb-gold); }
-.dxpb-fac-slots .dxpb-fac-up { color: #4fae55; border-color: #4fae55; font-size: 13px; }
+.dxpb-fac-order dnd5e-icon { width: 15px; height: 15px; --icon-fill: var(--dxpb-gold); }
+.dxpb-fac-slots .dxpb-fac-up { color: #4fae55; border-color: #4fae55; font-size: 12px; }
 span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-fac-slots .dxpb-fac-repair { color: var(--dxpb-bad); border-color: var(--dxpb-bad); }
 .dxpb-fac-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--dxpb-good); }
+.dxpb .dxpb-highlight, .dxpb .dxpb-highlight td { background: rgba(79, 174, 85, 0.18); transition: background 1s; }
+.dxpb-embedded .dxpb-def { grid-template-columns: 30px minmax(0, 1fr) repeat(var(--cols), 3.4rem) 14px; gap: 0.35rem; }
+.dxpb-embedded .dxpb-def-img { width: 30px; height: 30px; }
+
+/* The Bastion Codex page. */
+.dxpb-codex { padding: 0.5rem 0.75rem; }
+.dxpb-codex-head { display: flex; align-items: center; gap: 0.75rem; border-bottom: 2px solid var(--dxpb-gold); padding-bottom: 0.4rem; margin-bottom: 0.6rem; }
+.dxpb-codex-icon { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 2px solid var(--dxpb-gold); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.dxpb-codex-title { margin: 0; border: none; font-family: var(--dnd5e-font-roboto-slab, serif); }
+.dxpb-codex-body { display: flow-root; }
+.dxpb-codex-hero { float: left; margin: 0 1rem 0.5rem 0; width: 38%; max-width: 260px; }
+.dxpb-codex-hero img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border: 2px solid var(--dxpb-gold); border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+.dxpb-codex-table { width: auto; border-collapse: collapse; margin-top: 0.3rem; }
+.dxpb-codex-table th { text-align: left; padding: 0.2rem 0.8rem 0.2rem 0; white-space: nowrap; vertical-align: top; opacity: 0.8; }
+.dxpb-codex-table td { padding: 0.2rem 0; }
 .dxpb-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0 0.5rem; border: 1px solid var(--dxpb-gold); border-radius: 999px; }
 .dxpb-chip a { cursor: pointer; }
 .dxpb-catalog-img { width: 22px; height: 22px; vertical-align: middle; border: none; }

@@ -1,0 +1,359 @@
+{
+  "_id": "w936ckpJr0XdNWED",
+  "name": "Staff and prestige",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 600000,
+  "pages": [
+    {
+      "_id": "L1SSQ4hGWe2UD1R9",
+      "name": "Bathhouse",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "bathhouse",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/bathhouse.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/bathhouse.webp",
+        "description": "<p>A steamy room with a warm pool and tiled walls.</p><p>Comfort rises, and a long rest here takes away an extra level of exhaustion.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.L1SSQ4hGWe2UD1R9"
+    },
+    {
+      "_id": "FUtKk1lJARF8t8KN",
+      "name": "Chapel",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "chapel",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/chapel.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/chapel.webp",
+        "description": "<p>A small chapel within the walls, light falling through coloured glass.</p><p>Comfort and Renown rise, and the defenders take heart.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.FUtKk1lJARF8t8KN"
+    },
+    {
+      "_id": "HRwg6FM16i54P7Yq",
+      "name": "Garrison Hall",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "garrison-hall",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/garrison-hall.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/garrison-hall.webp",
+        "description": "<p>Barracks, an armoury rack and long tables for the guards.</p><p>The hall lets the Bastion hire guards, who are paid each turn.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.HRwg6FM16i54P7Yq"
+    },
+    {
+      "_id": "dy3tEZuBwr7VFUOE",
+      "name": "Great Hall",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "great-hall",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/great-hall.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/great-hall.webp",
+        "description": "<p>Banners, a high table and room for a feast.</p><p>Renown rises, and the owners can hold feasts. It needs a kitchen.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.dy3tEZuBwr7VFUOE"
+    },
+    {
+      "_id": "S28igkfwZ1zRJI4y",
+      "name": "Guest Wing",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "guest-wing",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/guest-wing.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/guest-wing.webp",
+        "description": "<p>Fine rooms set apart for visitors.</p><p>Guests and refugees have somewhere to stay, and paying visitors pay more.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.S28igkfwZ1zRJI4y"
+    },
+    {
+      "_id": "56czu5EQAD6uLB8F",
+      "name": "Infirmary",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "infirmary",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/infirmary.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/infirmary.webp",
+        "description": "<p>Cots, bandages, herbs and a healer.</p><p>After an attack, half the defenders who would have died survive wounded.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.56czu5EQAD6uLB8F"
+    },
+    {
+      "_id": "olyf4Qs3VlXUNgtj",
+      "name": "Pleasure Gardens and Statuary",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "pleasure-gardens",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/pleasure-gardens.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/pleasure-gardens.webp",
+        "description": "<p>Hedges, fountains and marble statues for strolling and being seen.</p><p>Comfort and Renown rise.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.olyf4Qs3VlXUNgtj"
+    },
+    {
+      "_id": "Qp3ZWLDUrvCTTHk9",
+      "name": "Servants' Quarters",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "servants-quarters",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/servants-quarters.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/servants-quarters.webp",
+        "description": "<p>Simple, tidy rooms for the people who keep the Bastion running.</p><p>The quarters add beds and let the Bastion hire servants. They count as a basic bedroom on the owners' sheets.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.Qp3ZWLDUrvCTTHk9"
+    },
+    {
+      "_id": "uKKfA2sVvVmXzd7d",
+      "name": "Steward's Office",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "stewards-office",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/stewards-office.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/stewards-office.webp",
+        "description": "<p>Ledgers, maps and a steward who writes everything down.</p><p>Standing orders run while the owners are away, and the steward sends a report every turn.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.uKKfA2sVvVmXzd7d"
+    },
+    {
+      "_id": "FrOaKBYVMWbG9OIM",
+      "name": "Training Yard",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1000000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "training-yard",
+        "category": "staff",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/training-yard.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/training-yard.webp",
+        "description": "<p>Targets, dummies and sparring rings where the garrison drills every day.</p><p>Defenders count for more. It needs a roomy courtyard.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!w936ckpJr0XdNWED.FrOaKBYVMWbG9OIM"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "staff"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!w936ckpJr0XdNWED"
+}

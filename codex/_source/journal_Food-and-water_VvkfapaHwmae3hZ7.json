@@ -1,0 +1,425 @@
+{
+  "_id": "VvkfapaHwmae3hZ7",
+  "name": "Food and water",
+  "folder": "oPp3kO1bT8dV12UX",
+  "sort": 300000,
+  "pages": [
+    {
+      "_id": "OTTr6ngNncgSZC9q",
+      "name": "Cistern",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "cistern",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/cistern.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/cistern.webp",
+        "description": "<p>A vaulted underground tank that catches the rain and holds it.</p><p>The cistern stores water for a siege when there is no well: a set number of days' water for everyone inside.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.OTTr6ngNncgSZC9q"
+    },
+    {
+      "_id": "dvwpcI9AKTUnd8pc",
+      "name": "Deep Well",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "deep-well",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/deep-well.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/deep-well.webp",
+        "description": "<p>A shaft bored down through bedrock where an ordinary well finds nothing, with a treadwheel to haul the water up.</p><p>Like a well, it gives the Bastion unlimited water, on ground where a well can't be dug.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.dvwpcI9AKTUnd8pc"
+    },
+    {
+      "_id": "zgzH41r5AQlstkFe",
+      "name": "Fields and Tenant Farms",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "fields",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/fields.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/fields.webp",
+        "description": "<p>Patchwork fields worked by tenant farmers who pay rent in grain and coin.</p><p>Fields grow food and pay rent; how much depends on the land and the climate. They can be upgraded to estate farms and a great estate.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.zgzH41r5AQlstkFe"
+    },
+    {
+      "_id": "S4EOmhyhFcxnhQdp",
+      "name": "Granary",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "granary",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/granary.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/granary.webp",
+        "description": "<p>A tall timber store raised on stones to keep the grain dry and the rats out.</p><p>The granary raises how much food the Bastion can store for lean years and sieges. It counts as a basic storage facility on the owners' sheets.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.S4EOmhyhFcxnhQdp"
+    },
+    {
+      "_id": "X4kvWbi2K9b6t0jc",
+      "name": "Hunting Lodge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "hunting-lodge",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/hunting-lodge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/hunting-lodge.webp",
+        "description": "<p>A rustic lodge at the forest's edge, antlers on the gable, hounds in the yard.</p><p>Hunting brings in food every day, and the lodge's hunts add to the Bastion's Renown.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.X4kvWbi2K9b6t0jc"
+    },
+    {
+      "_id": "6JxAYSabFYrgdWNA",
+      "name": "Kitchen Garden",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 600000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "kitchen-garden",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/kitchen-garden.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/kitchen-garden.webp",
+        "description": "<p>Neat beds of cabbages, beans and herbs inside the walls.</p><p>The garden grows food every day, and because it's inside the walls it keeps growing during a siege.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.6JxAYSabFYrgdWNA"
+    },
+    {
+      "_id": "AdO2aXvet8CcBgwz",
+      "name": "Livestock Pens",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 700000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "livestock",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/livestock.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/livestock.webp",
+        "description": "<p>Pens of sheep, pigs, goats and cattle beside the barn.</p><p>Livestock adds food every day and animals to sell.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.AdO2aXvet8CcBgwz"
+    },
+    {
+      "_id": "cyLHKrE6lE1a5Itw",
+      "name": "Mill",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 800000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "mill",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/mill.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mill.webp",
+        "description": "<p>A watermill on the stream, grinding the Bastion's grain and its neighbours'.</p><p>The mill raises what the fields produce and earns a little each turn.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.cyLHKrE6lE1a5Itw"
+    },
+    {
+      "_id": "ZsS76jOdw3H4BaVV",
+      "name": "Orchard",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 900000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "orchard",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/orchard.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/orchard.webp",
+        "description": "<p>Rows of apple and pear trees beside the Bastion.</p><p>The orchard grows food every day and sells its surplus for a little income each turn.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.ZsS76jOdw3H4BaVV"
+    },
+    {
+      "_id": "Pn7YyKPZoTpvxgvZ",
+      "name": "Smokehouse and Salt Store",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1000000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "smokehouse",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/smokehouse.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/smokehouse.webp",
+        "description": "<p>Hams and fish hanging in the smoke, barrels of salt, meat packed for the winter.</p><p>Food keeps longer, so the Bastion's stores hold more.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.Pn7YyKPZoTpvxgvZ"
+    },
+    {
+      "_id": "QByMgALP7EGp7nlq",
+      "name": "Well",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "well",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/well.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/well.webp",
+        "description": "<p>A stone well inside the walls: water whenever it's wanted.</p><p>With a well, the Bastion never runs out of water, siege or not.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.QByMgALP7EGp7nlq"
+    },
+    {
+      "_id": "nwE12RcT4iSINWNw",
+      "name": "Workers' Lodge",
+      "type": "dxcufgbs-player-bastions.facility",
+      "sort": 1200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "workers-lodge",
+        "category": "supplies",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/workers-lodge.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/workers-lodge.webp",
+        "description": "<p>A sturdy hall for the builders who stay on year-round.</p><p>The lodge houses a permanent building crew: one more crew working on projects, with no upkeep to pay.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!VvkfapaHwmae3hZ7.nwE12RcT4iSINWNw"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "supplies"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!VvkfapaHwmae3hZ7"
+}

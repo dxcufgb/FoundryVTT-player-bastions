@@ -1,4 +1,15 @@
 {
   "lint": "node tests/run-node.mjs",
-  "include": ["module.json", "scripts", "lang", "styles", "templates", "assets", "README.md", "CHANGELOG.md", "LICENSE"]
+  "include": [
+    "module.json",
+    "scripts",
+    "lang",
+    "styles",
+    "templates",
+    "assets",
+    "packs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ]
 }

@@ -13,3 +13,8 @@ node_modules/
 # Local working files (push staging, backups)
 .push/
 *.log
+# LevelDB compendium packs: the .log file holds data, keep it; LOCK and LOG are runtime files
+!packs/**/*.log
+packs/**/LOCK
+packs/**/LOG
+packs/**/LOG.old

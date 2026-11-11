@@ -1,0 +1,194 @@
+{
+  "_id": "EIy7q1DtDDBU1q99",
+  "name": "Defenders",
+  "folder": "g8h9QAv3ju4rdsfu",
+  "sort": 800000,
+  "pages": [
+    {
+      "_id": "R3fZklRiWBvin72A",
+      "name": "Engine crews",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 100000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "engine-crews",
+        "category": "defenders",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/engine-crews.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/engine-crews.webp",
+        "description": "<p>The soldiers who wind, aim and load the ballistae on the walls.</p><p>Each Ballista Emplacement brings its own crew, and they add to the garrison's strength in a fight.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!EIy7q1DtDDBU1q99.R3fZklRiWBvin72A"
+    },
+    {
+      "_id": "iMAMOtfrBvcB3z00",
+      "name": "Facility defenders",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 200000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "facility-defenders",
+        "category": "defenders",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/facility-defenders.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/facility-defenders.webp",
+        "description": "<p>The defenders the owners keep at their special facilities: a Barrack's soldiers, the guards posted at a workshop or a library.</p><p>They come from the dnd5e facilities on the owners' sheets and count toward the garrison, more so when the Armory is stocked. Assign them on the facilities themselves.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!EIy7q1DtDDBU1q99.iMAMOtfrBvcB3z00"
+    },
+    {
+      "_id": "uT24KvMinldh7BVp",
+      "name": "Guards",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 300000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "guards",
+        "category": "defenders",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/guards.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/guards.webp",
+        "description": "<p>Hired soldiers in the Bastion's colours who walk the walls, keep the gate and turn out when trouble comes.</p><p>Each guard adds to the garrison's strength. Guards are paid every turn and eat from the stores; how many can be hired depends on the Garrison Hall. Hire and dismiss them on the Defense page.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!EIy7q1DtDDBU1q99.uT24KvMinldh7BVp"
+    },
+    {
+      "_id": "cVRo2Dw3NmNntod9",
+      "name": "Mercenaries",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 400000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "mercenaries",
+        "category": "defenders",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/mercenaries.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/mercenaries.webp",
+        "description": "<p>Hard-bitten fighters who turn up looking for work, usually after word of the Bastion gets around.</p><p>Mercenaries join through the Bastion's events and stay as extra defenders until they are dismissed or killed. They add to the garrison like guards.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!EIy7q1DtDDBU1q99.cVRo2Dw3NmNntod9"
+    },
+    {
+      "_id": "ypCDarGGHg5LrHsC",
+      "name": "War Room lieutenants",
+      "type": "dxcufgbs-player-bastions.inhabitant",
+      "sort": 500000,
+      "title": {
+        "show": false,
+        "level": 1
+      },
+      "system": {
+        "ref": "lieutenants",
+        "category": "defenders",
+        "image": "modules/dxcufgbs-player-bastions/assets/codex/lieutenants.webp",
+        "icon": "modules/dxcufgbs-player-bastions/assets/codex/icons/lieutenants.webp",
+        "description": "<p>Trusted officers who plan around the War Room's table.</p><p>Lieutenants are the hirelings of a War Room on an owner's sheet. They lead the Bastion's forces and come with the facility.</p>"
+      },
+      "ownership": {
+        "default": -1
+      },
+      "flags": {},
+      "_stats": {
+        "coreVersion": "13.351",
+        "systemId": "dnd5e",
+        "systemVersion": "5.2.5",
+        "createdTime": 0,
+        "modifiedTime": 0,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!journal.pages!EIy7q1DtDDBU1q99.ypCDarGGHg5LrHsC"
+    }
+  ],
+  "categories": [],
+  "ownership": {
+    "default": 0
+  },
+  "flags": {
+    "dxcufgbs-player-bastions": {
+      "codex": "defenders"
+    }
+  },
+  "_stats": {
+    "coreVersion": "13.351",
+    "systemId": "dnd5e",
+    "systemVersion": "5.2.5",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!journal!EIy7q1DtDDBU1q99"
+}

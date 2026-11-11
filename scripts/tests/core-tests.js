@@ -20,6 +20,7 @@ import { GROUNDS, FOOTPRINTS } from "../data/grounds.js";
 import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD } from "../core/layout.js";
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility } from "../core/sections.js";
+import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
  * Tests of the pure engine. Written against a small interface so the same tests run in Quench (Foundry) and in the
@@ -1293,6 +1294,27 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.equal(canTakeFacility(full, smithy, adv).reason, "slots");
       full.facilities[1].free = true;
       assert.isTrue(canTakeFacility(full, smithy, adv).ok, "a free facility takes no slot");
+    });
+  });
+  describe("Codex", () => {
+    it("ids are stable, 16 characters and unique", () => {
+      assert.equal(codexId("page:bedroom"), codexId("page:bedroom"));
+      assert.equal(codexId("x").length, 16);
+      const refs = [...EXPANSIONS.filter(e => !e.legacy).map(e => e.id), ...Object.keys(INHABITANTS)];
+      const ids = new Set([...refs.map(pageId), ...CODEX_JOURNALS.map(j => journalId(j.key)), folderId("facilities"), folderId("inhabitants")]);
+      assert.equal(ids.size, refs.length + CODEX_JOURNALS.length + 2);
+      for (const id of ids) assert.ok(/^[A-Za-z0-9]{16}$/.test(id), id);
+    });
+    it("every building and inhabitant has a journal and a page uuid", () => {
+      for (const g of Object.keys(GROUPS)) assert.ok(CODEX_JOURNALS.some(j => j.key === g && j.kind === "facility"), g);
+      for (const e of EXPANSIONS.filter(x => !x.legacy)) {
+        assert.equal(codexJournalOf("facility", e.id, e.group), e.group, e.id);
+        assert.ok(codexUuid("mod", "facility", e.id, e.group).endsWith(`JournalEntryPage.${pageId(e.id)}`), e.id);
+      }
+      for (const [k, v] of Object.entries(INHABITANTS)) assert.ok(CODEX_JOURNALS.some(j => j.key === v.journal && j.kind === "inhabitant"), k);
+      assert.equal(codexUuid("mod", "inhabitant", "guards"), `Compendium.mod.codex.JournalEntry.${journalId("defenders")}.JournalEntryPage.${pageId("guards")}`);
+      assert.equal(codexUuid("mod", "facility", "bedroom", "nope"), null);
+      assert.equal(codexUuid("mod", "inhabitant", "dragons"), null);
     });
   });
 }

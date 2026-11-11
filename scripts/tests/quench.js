@@ -13,6 +13,8 @@ import { BastionDashboard } from "../apps/dashboard.js";
 import { sceneDistance, settlementsNear } from "../marker.js";
 import { computeStats } from "../core/stats.js";
 import { buildMap, planFor, wallData, lightData, mapScene } from "../map.js";
+import { EXPANSIONS } from "../data/catalog.js";
+import { INHABITANTS, codexUuid, CODEX_PACK } from "../core/codex.js";
 
 /**
  * Self-verification. Two Quench batches:
@@ -207,13 +209,13 @@ export function registerQuench(quench) {
         const wait = async test => { for (let i = 0; i < 60 && !test(); i++) await new Promise(r => setTimeout(r, 50)); };
         const guardsBefore = getRecord(getEntry(entryId)).garrison?.guards ?? 0;
         await patchRecord(getEntry(entryId), { "garrison.guards": 3 });
-        await wait(() => el()?.querySelector('[data-defenders="guards"] .dxpb-def-count')?.dataset.count === "3");
+        await wait(() => el()?.querySelector('[data-defenders="guards"] [data-count]')?.dataset.count === "3");
         try {
           assert.ok(el().querySelector(".dxpb-facpage"), "the Facilities page");
-          assert.equal(el().querySelector('[data-defenders="guards"] .dxpb-def-count').dataset.count, "3", "hired guards in the defenders list");
+          assert.equal(el().querySelector('[data-defenders="guards"] [data-count]').dataset.count, "3", "hired guards in the defenders list");
           assert.ok(el().querySelector('[data-defenders="mercenaries"]'), "mercenaries listed");
-          assert.equal(el().querySelector('[data-defenders="system"] .dxpb-def-count').dataset.count, "2", "the Barrack's defenders");
-          assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portraits img').length, 2, "with their portraits");
+          assert.equal(el().querySelector('[data-defenders="system"] [data-count]').dataset.count, "2", "the Barrack's defenders");
+          assert.equal(el().querySelectorAll('[data-defenders="system"] .dxpb-def-portrait').length, 2, "with their portraits");
           const sections = [...el().querySelectorAll(".dxpb-fac-section[data-section]")].map(x => x.dataset.section);
           assert.deepEqual(sections, ["defenders", "rooms", "fortifications", "supplies", "access", "trade", "staff", "arcane"]);
           for (const sec of el().querySelectorAll('.dxpb-fac-section:not([data-section="defenders"])')) {
@@ -229,6 +231,37 @@ export function registerQuench(quench) {
           assert.ok(kitchen.querySelector(".dxpb-fac-up"), "a roomy kitchen can be enlarged: double arrow up");
           const wall = [...el().querySelectorAll('[data-section="fortifications"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Wall");
           assert.ok(wall?.querySelector(".dxpb-fac-up"), "a stone wall can be raised");
+          // Stat columns: a head row with the labels, every row as many cells, a total row.
+          for (const list of el().querySelectorAll(".dxpb-facpage .dxpb-def-list")) {
+            const cols = list.querySelectorAll(".dxpb-def-head .dxpb-cell").length;
+            assert.isAtLeast(cols, 1, "column labels");
+            for (const row of list.querySelectorAll(".dxpb-def:not(.dxpb-def-head)")) {
+              assert.equal(row.querySelectorAll(":scope > .dxpb-cell").length, cols, "a cell per column");
+            }
+            assert.ok(list.querySelector(".dxpb-def-total"), "a total row");
+          }
+          // Every row of this module's own has its Codex page and icon.
+          for (const row of el().querySelectorAll(".dxpb-facpage [data-defenders], .dxpb-facpage .dxpb-fac:not(.dxpb-fac-system)")) {
+            assert.ok(row.dataset.codex?.startsWith(`Compendium.${MODULE_ID}.codex.`), "a Codex page");
+            assert.ok(row.querySelector("img.dxpb-def-img")?.getAttribute("src").includes("/assets/codex/icons/"), "the Codex icon");
+          }
+          // A building's name opens its Codex page.
+          const gate = [...el().querySelectorAll('[data-section="fortifications"] .dxpb-fac')].find(x => x.querySelector(".title").textContent.trim() === "Gatehouse");
+          const page = await fromUuid(gate.dataset.codex);
+          assert.equal(page?.type, `${MODULE_ID}.facility`, "the gatehouse's Codex page");
+          const openSheet = () => foundry.applications.instances.get(page.parent.sheet.id);
+          gate.querySelector('.dxpb-fac-name[data-action="openCodex"]').click();
+          await wait(() => openSheet()?.rendered && openSheet().element.querySelector(".dxpb-codex"));
+          assert.ok(openSheet()?.element.querySelector(".dxpb-codex-hero img"), "the Codex page with its painting");
+          assert.ok(openSheet().element.querySelector(".dxpb-codex-table tr"), "and its contributions");
+          await openSheet().close();
+          // The upgrade arrow still goes to the Projects page, at the building.
+          wall.querySelector('.dxpb-fac-up[data-action="upgradeAt"]').click();
+          await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-highlight"));
+          assert.ok(el().querySelector('.dxpb-tab.active[data-tab="projects"]'), "the arrow opens the Projects page");
+          assert.ok(el().querySelector(".dxpb-highlight"), "with the wall's row highlighted");
+          await reopen();
+          await wait(() => el()?.querySelector(".dxpb-facpage"));
           // A section's Plan button: the catalog on the Projects page, only that section.
           el().querySelector('[data-section="rooms"] [data-action="planSection"]').click();
           await wait(() => el()?.querySelector('.dxpb-tab.active[data-tab="projects"]') && el()?.querySelector(".dxpb-chip"));
@@ -243,6 +276,29 @@ export function registerQuench(quench) {
           await patchRecord(getEntry(entryId), { "garrison.guards": guardsBefore });
         }
       }
+
+      it("the Codex has a page with a painting and an icon for every building and inhabitant", async () => {
+        const pack = game.packs.get(`${MODULE_ID}.${CODEX_PACK}`);
+        assert.ok(pack, "the Codex pack");
+        const journals = await pack.getDocuments();
+        const pages = new Map(journals.flatMap(j => j.pages.contents.map(p => [p.uuid, p])));
+        const wanted = [...EXPANSIONS.filter(e => !e.legacy).map(e => ["facility", e.id, e.group]),
+          ...Object.keys(INHABITANTS).map(k => ["inhabitant", k, null])];
+        const files = new Set();
+        for (const [kind, ref, group] of wanted) {
+          const page = pages.get(codexUuid(MODULE_ID, kind, ref, group));
+          assert.ok(page, `${kind} ${ref}: a page`);
+          assert.equal(page.type, `${MODULE_ID}.${kind}`);
+          assert.equal(page.system.ref, ref);
+          assert.ok(page.system.description?.length > 40, `${ref}: a description`);
+          files.add(page.system.image);
+          files.add(page.system.icon);
+        }
+        assert.equal(pages.size, wanted.length, "no stray pages");
+        const missing = [];
+        for (const f of files) if (!(await fetch(foundry.utils.getRoute(f), { method: "HEAD" })).ok) missing.push(f);
+        assert.deepEqual(missing, [], "every painting and icon is in the module");
+      });
 
       it("the Bastion window has the same Facilities page", async () => {
         const app = BastionSheet.open(entryId, { tab: "facilities" });
