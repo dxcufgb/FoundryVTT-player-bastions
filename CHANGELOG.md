@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 - Bastion effects (GM): a "Bastion effects" button on a Bastion's Overview opens a GM-only window where the GM gives the Bastion effects on its owners: Armor Class, speed (any movement type), damage resistance or immunity, condition immunity, hit point maximum, initiative, saving throw, ability check, skill and spell save DC bonuses, or any custom data path with an Active Effect mode. Each effect has a name, an icon and a description, and can be switched off without deleting it. Every owner character marked as inside the Bastion carries each effect as an Active Effect (shown on the character sheet like any other); it is removed when the character leaves, when the effect is switched off or deleted, and updated when it is edited.
 - Inside or outside: each owner on the Overview has a button marking that character as inside or outside the Bastion (players for their own characters, the GM for all). "Party leaves" and "Party returns" set everyone at once. The Overview lists the Bastion's effects for everyone.
 
