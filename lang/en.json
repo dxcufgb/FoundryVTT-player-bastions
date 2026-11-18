@@ -993,6 +993,67 @@
       "Title": "Road and Hidden Approach",
       "RoadEnds": "Building a road to the Bastion ends the Hidden Approach: once the road is finished it is gone (Concealment −3, Accessibility +1 back). A trail keeps it.",
       "RoadPlanned": "A road to the Bastion is planned: when it is finished, the Hidden Approach is gone again."
+    },
+    "Inside": {
+      "In": "Inside the Bastion",
+      "Out": "Outside the Bastion",
+      "MarkIn": "Mark as inside the Bastion",
+      "MarkOut": "Mark as outside the Bastion"
+    },
+    "Effects": {
+      "Title": "Bastion effects",
+      "Button": "Bastion effects",
+      "Label": "Bastion effects",
+      "InsideOnly": "On the owners marked as inside the Bastion.",
+      "Intro": "Benefits the Bastion gives its owners while they are inside it. Each one becomes an Active Effect on every owner character marked as inside, and is removed when they leave.",
+      "None": "This Bastion has no effects yet.",
+      "Add": "Add effect",
+      "Edit": "Edit",
+      "Remove": "Remove effect",
+      "RemoveConfirm": "Remove this effect from the Bastion and from every character carrying it?",
+      "TurnOn": "Switch on",
+      "TurnOff": "Switch off",
+      "Off": "off",
+      "Name": "Name",
+      "NamePlaceholder": "e.g. Blessing of the Hearth",
+      "Icon": "Pick an icon",
+      "Description": "Description",
+      "Changes": "Changes",
+      "AddChange": "Add a change",
+      "RemoveChange": "Remove this change",
+      "Value": "Value",
+      "Hint": "Bonuses take a number or a formula (2, 1d4). Custom changes write any data path of the character with an Active Effect mode.",
+      "Save": "Save",
+      "Cancel": "Cancel",
+      "NoChanges": "An effect needs at least one complete change.",
+      "Type": {
+        "ac": "Armor Class bonus",
+        "speed": "Speed bonus",
+        "resistance": "Damage resistance",
+        "immunity": "Damage immunity",
+        "conditionImmunity": "Condition immunity",
+        "hp": "Hit point maximum bonus",
+        "initiative": "Initiative bonus",
+        "save": "Saving throw bonus",
+        "check": "Ability check bonus",
+        "skill": "Skill check bonus",
+        "spellDC": "Spell save DC bonus",
+        "custom": "Custom (data path)"
+      },
+      "Says": {
+        "ac": "AC {value}",
+        "speed": "{choice} speed +{value} ft.",
+        "resistance": "Resistance: {choice}",
+        "immunity": "Immunity: {choice}",
+        "conditionImmunity": "Immune to {choice}",
+        "hp": "Max HP {value}",
+        "initiative": "Initiative {value}",
+        "save": "Saves {value}",
+        "check": "Ability checks {value}",
+        "skill": "Skill checks {value}",
+        "spellDC": "Spell save DC {value}",
+        "custom": "{value}"
+      }
     }
   }
 }

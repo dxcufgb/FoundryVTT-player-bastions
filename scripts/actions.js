@@ -16,6 +16,7 @@ import { resolveEventChoice } from "./events.js";
 import { canTakeFacility } from "./core/sections.js";
 import { transitionRoute, canAcceptRoute, makeRequest, tradeCandidates, cleanSettlement, rememberSize } from "./core/trade.js";
 import { tradeSettlements, createRouteQuest, closeRouteQuest } from "./trade.js";
+import { cleanEffect } from "./core/effects.js";
 
 /**
  * GM-side actions. Every handler gets (data, user) and re-checks the user's rights, because players reach them over
@@ -563,12 +564,51 @@ export const ACTIONS = {
     const { entry, record } = load(entryId);
     ownerOnly(record, user);
     if (!["present", "away"].includes(presence)) return { ok: false };
-    const changes = { presence };
+    // Everyone leaves or comes home together: the characters' own marks (inside / outside) are cleared.
+    const changes = { presence, inside: undefined };
     // Dispatches still on the road when the owners come home are superseded.
     if (presence === "present") {
       for (const d of Object.values(record.dispatches ?? {})) if (d.status === "transit") changes[`dispatches.${d.id}.status`] = "superseded";
     }
     await patchRecord(entry, changes);
+    return { ok: true };
+  },
+
+  /** Marks one owner character as inside the Bastion or outside it (its Bastion effects follow). */
+  async setInside({ entryId, actorId, inside }, user) {
+    const { entry, record } = load(entryId);
+    ownerOnly(record, user);
+    const actor = actorFor(record, actorId, user);
+    if (actor.type !== "character") return { ok: false };
+    await patchRecord(entry, { [`inside.${actor.id}`]: !!inside });
+    return { ok: true };
+  },
+
+  /* ---------------- Bastion effects (GM) ---------------- */
+  /** Adds or replaces one Bastion effect. data.effect: { id?, name, img, description, disabled, changes }. */
+  async saveBastionEffect({ entryId, effect }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    const id = typeof effect?.id === "string" && record.effects?.[effect.id] ? effect.id : randomId();
+    const clean = cleanEffect(effect, id);
+    if (!clean.changes.length) return { ok: false, reason: t("Effects.NoChanges") };
+    await patchRecord(entry, { [`effects.${id}`]: clean });
+    return { ok: true, id };
+  },
+
+  async toggleBastionEffect({ entryId, effectId, disabled }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    if (!record.effects?.[effectId]) return { ok: false };
+    await patchRecord(entry, { [`effects.${effectId}.disabled`]: !!disabled });
+    return { ok: true };
+  },
+
+  async removeBastionEffect({ entryId, effectId }, user) {
+    gmOnly(user);
+    const { entry, record } = load(entryId);
+    if (!record.effects?.[effectId]) return { ok: false };
+    await patchRecord(entry, { [`effects.${effectId}`]: undefined });
     return { ok: true };
   },
 

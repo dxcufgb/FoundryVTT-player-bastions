@@ -8,6 +8,8 @@ import { applyEvent } from "../events.js";
 import { fillStock } from "../merchant.js";
 import { EVENTS, FORCES } from "../data/tables.js";
 import { BastionSheet } from "../apps/bastion-sheet.js";
+import { BastionEffectsApp } from "../apps/effects-app.js";
+import { syncBastionEffects } from "../bastion-effects.js";
 import { FoundingWizard, defaultMapScene } from "../apps/wizard.js";
 import { BastionDashboard } from "../apps/dashboard.js";
 import { sceneDistance, settlementsNear } from "../marker.js";
@@ -1332,6 +1334,31 @@ export function registerQuench(quench) {
         assert.equal(value, 180, "2 GP minus 2 SP leaves 1 GP 8 SP");
         assert.isTrue(getRecord(getEntry(entryId)).merchant.stock[0].sold);
         await ally.update({ "system.currency.gp": 5000 });
+      });
+
+      it("Bastion effects apply to owners inside and leave with them", async () => {
+        const flagged = () => game.actors.get(ally.id).effects.filter(e => e.getFlag(MODULE_ID, "bastionEffect")?.entryId === entryId);
+        await ACTIONS.setPresence({ entryId, presence: "present" }, game.user);
+        const res = await ACTIONS.saveBastionEffect({ entryId, effect: { name: "Test hearth", changes: [{ type: "ac", value: "1" },
+          { type: "resistance", choice: "fire" }] } }, game.user);
+        assert.isTrue(res.ok, res.reason);
+        await syncBastionEffects();
+        assert.equal(flagged().length, 1, "inside: the effect is on the character");
+        assert.equal(flagged()[0].changes.length, 2);
+        const app = BastionEffectsApp.open(entryId);
+        await app.render({ force: true });
+        assert.ok(app.element.querySelector(`[data-effect="${res.id}"]`), "the GM's list shows it");
+        await app.close();
+        await ACTIONS.setInside({ entryId, actorId: ally.id, inside: false }, game.user);
+        await syncBastionEffects();
+        assert.equal(flagged().length, 0, "outside: removed");
+        await ACTIONS.setInside({ entryId, actorId: ally.id, inside: true }, game.user);
+        await ACTIONS.toggleBastionEffect({ entryId, effectId: res.id, disabled: true }, game.user);
+        await syncBastionEffects();
+        assert.equal(flagged().length, 0, "switched off: removed");
+        await ACTIONS.removeBastionEffect({ entryId, effectId: res.id }, game.user);
+        await ACTIONS.setPresence({ entryId, presence: "present" }, game.user);
+        assert.equal(getRecord(getEntry(entryId)).inside, undefined, "Leave / Return clears the marks");
       });
 
       it("every ware in the Trade tab opens its item page from the compendium", async () => {

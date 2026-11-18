@@ -23,6 +23,7 @@ import { syncLayout, wallFixtures, buildingWalls, mergeSegments, boundsOf, ROAD 
 import { mapPlan } from "../core/mapplan.js";
 import { SECTIONS, SYSTEM_SECTION, sectionOfExpansion, sectionOfFacility, specialSlots, canTakeFacility, mergeSameKind } from "../core/sections.js";
 import { settlementList, cleanSettlement, quoteRoute, makeRequest, rollTradeRequest, transitionRoute, advanceTrade, canAcceptRoute, routeTotals, tradeCandidates, requestChance, settlementRoom, routeCapacity, routeCharge, rememberSize } from "../core/trade.js";
+import { EFFECT_PRESETS, MODES, isInside, resolveChange, cleanEffect, activeEffects, effectData, effectStamp, planActorEffects } from "../core/effects.js";
 import { CODEX_JOURNALS, INHABITANTS, codexId, codexUuid, codexJournalOf, journalId, pageId, folderId } from "../core/codex.js";
 
 /**
@@ -1760,6 +1761,66 @@ export function registerCoreTests({ describe, it, assert }) {
         rng: seeded(5), newId, settlements: towns });
       assert.ok(report.tradeRequest, "a request");
       assert.equal(record.tradeRoutes[report.tradeRequest.id].state, "requested");
+    });
+  });
+
+  describe("Bastion effects", () => {
+    it("a character is inside by its own mark, else by the Bastion's presence", () => {
+      assert.isTrue(isInside({ presence: "present" }, "a"));
+      assert.isFalse(isInside({ presence: "away" }, "a"));
+      assert.isFalse(isInside({ presence: "present", inside: { a: false } }, "a"));
+      assert.isTrue(isInside({ presence: "away", inside: { a: true } }, "a"));
+      assert.isTrue(isInside({ presence: "present", inside: { a: false } }, "b"));
+    });
+
+    it("presets become dnd5e changes", () => {
+      assert.deepEqual(resolveChange({ type: "ac", value: "1" }), { key: "system.attributes.ac.bonus", mode: MODES.ADD, value: "+1" });
+      assert.deepEqual(resolveChange({ type: "ac", value: "-1" }).value, "-1");
+      assert.deepEqual(resolveChange({ type: "speed", choice: "fly", value: "10" }), { key: "system.attributes.movement.fly", mode: MODES.ADD, value: "10" });
+      assert.equal(resolveChange({ type: "speed", value: "10" }).key, "system.attributes.movement.walk");
+      assert.deepEqual(resolveChange({ type: "resistance", choice: "fire" }), { key: "system.traits.dr.value", mode: MODES.ADD, value: "fire" });
+      assert.equal(resolveChange({ type: "resistance", choice: "" }), null, "no damage type picked");
+      assert.deepEqual(resolveChange({ type: "custom", key: "system.attributes.senses.darkvision", mode: MODES.UPGRADE, value: "60" }),
+        { key: "system.attributes.senses.darkvision", mode: MODES.UPGRADE, value: "60" });
+      assert.equal(resolveChange({ type: "custom", key: "", value: "1" }), null);
+      assert.equal(resolveChange({ type: "nope" }), null);
+      for (const k of Object.keys(EFFECT_PRESETS)) assert.ok(k === "custom" || EFFECT_PRESETS[k].key, k);
+    });
+
+    it("cleanEffect keeps only complete changes and fills defaults", () => {
+      const e = cleanEffect({ name: "  ", changes: [{ type: "ac", value: "2" }, { type: "resistance" }, { type: "bad" }] }, "x");
+      assert.equal(e.id, "x");
+      assert.ok(e.name);
+      assert.ok(e.img);
+      assert.equal(e.changes.length, 1);
+      assert.isFalse(e.disabled);
+    });
+
+    it("plans creating, updating and removing the actors' effects", () => {
+      const fx = { id: "e1", name: "Hearth", img: "a.svg", description: "", changes: [{ type: "ac", value: "1" }] };
+      const data = effectData(fx, { entryId: "j1", bastionName: "Keep", scope: "mod" });
+      assert.deepEqual(data.changes, [{ key: "system.attributes.ac.bonus", mode: MODES.ADD, value: "+1" }]);
+      assert.equal(data.flags.mod.bastionEffect.effectId, "e1");
+      const want = [{ entryId: "j1", effectId: "e1", stamp: effectStamp(fx, "Keep"), data }];
+      // Nothing there yet: create it.
+      let plan = planActorEffects(want, []);
+      assert.equal(plan.create.length, 1);
+      // There and the same: nothing to do; a duplicate goes.
+      plan = planActorEffects(want, [{ id: "a", entryId: "j1", effectId: "e1", stamp: want[0].stamp },
+        { id: "b", entryId: "j1", effectId: "e1", stamp: want[0].stamp }]);
+      assert.deepEqual(plan, { create: [], update: [], remove: ["b"] });
+      // Changed: update it.
+      plan = planActorEffects(want, [{ id: "a", entryId: "j1", effectId: "e1", stamp: "old" }]);
+      assert.equal(plan.update.length, 1);
+      assert.equal(plan.update[0]._id, "a");
+      // Left the Bastion (nothing wanted): remove it.
+      plan = planActorEffects([], [{ id: "a", entryId: "j1", effectId: "e1", stamp: "old" }]);
+      assert.deepEqual(plan.remove, ["a"]);
+    });
+
+    it("switched-off effects don't apply", () => {
+      const record = { effects: { a: { id: "a", name: "B", changes: [] }, b: { id: "b", name: "A", disabled: true, changes: [] } } };
+      assert.deepEqual(activeEffects(record).map(e => e.id), ["a"]);
     });
   });
 }

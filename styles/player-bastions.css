@@ -317,3 +317,23 @@ span.dxpb-fac-up { opacity: 0.85; }
 .dxpb-chip a { cursor: pointer; }
 .dxpb-catalog-img { width: 22px; height: 22px; vertical-align: middle; border: none; }
 .dxpb-embedded .dxpb-fac-section h3 { font-size: var(--font-size-13, 13px); text-transform: none; letter-spacing: normal; }
+
+/* Bastion effects: owners inside / outside, the effects on the Overview, the GM's effects window */
+.dxpb-owner.dxpb-outside img { opacity: 0.5; filter: grayscale(1); }
+.dxpb-owner .dxpb-linkbtn { padding: 0 0.15rem; }
+.dxpb-bastion-effect { display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 0.5rem; }
+.dxpb-bastion-effect img { width: 20px; height: 20px; border: none; }
+.dxpb-effects-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.dxpb-effect-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.dxpb-effect-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem; border-bottom: 1px solid rgba(0, 0, 0, 0.15); }
+.dxpb-effect-list li img { width: 32px; height: 32px; border: none; }
+.dxpb-effect-list li.dxpb-off { opacity: 0.6; }
+.dxpb-effects .dxpb-grow { flex: 1; }
+.dxpb-effect-head { display: flex; align-items: flex-end; gap: 0.5rem; }
+.dxpb-effect-img { width: 48px; height: 48px; padding: 0; flex: none; }
+.dxpb-effect-img img { width: 100%; height: 100%; border: none; }
+.dxpb-effect-edit label { display: flex; flex-direction: column; gap: 0.15rem; }
+.dxpb-effect-changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.dxpb-effect-changes li { display: flex; align-items: center; gap: 0.25rem; }
+.dxpb-effect-changes li select, .dxpb-effect-changes li input { flex: 1; min-width: 0; }
+.dxpb-effect-changes li .dxpb-linkbtn { flex: none; }
