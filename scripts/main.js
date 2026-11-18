@@ -19,6 +19,8 @@
  *   .bastionDeleted ({entryId, name}) just before a Bastion is deleted,
  *   .projectFinished ({entryId, projectId (null for Finish all), completed, layoutChanged}) when the GM finishes projects at once.
  */
+import { queueEffectsSync } from "./bastion-effects.js";
+import { BastionEffectsApp } from "./apps/effects-app.js";
 import { MODULE_ID, t, isResponsibleGM, clearCaches, rules, setting, SECONDS_PER_DAY, escapeHTML, clockMode, catalog } from "./util.js";
 import { registerSocket, request } from "./socket.js";
 import { registerDebugRecorder, crumb } from "./debug-recorder.js";
@@ -370,6 +372,8 @@ function onReady() {
   postSystemRulesNotice().catch(err => console.warn(`${MODULE_ID} | system Bastion rules notice`, err));
   repaceAll();
   if (isResponsibleGM()) for (const entry of allBastions()) syncBastionNames(entry);
+  // Bastion effects on the characters inside (bastion-effects.js).
+  queueEffectsSync();
 }
 
 /**
@@ -482,11 +486,13 @@ function refreshCharacterSheets() {
 Hooks.on("updateJournalEntry", (entry, changes) => {
   if (!isBastionEntry(entry)) return;
   BastionSheet.refresh(entry.id);
+  BastionEffectsApp.refresh(entry.id);
   refreshDashboards();
   const flat = foundry.utils.flattenObject(changes?.flags?.[MODULE_ID] ?? {});
   if (Object.keys(flat).some(k => /(^|\.)(ownerUuids|groupUuid)(\.|$)/.test(k) || k === "record")) refreshCharacterSheets();
   // The system's Bastion name on the owners' sheets follows the Bastion's name.
   if (isResponsibleGM()) syncBastionNames(entry);
+  queueEffectsSync();
 });
 
 // A Bastion founded or deleted (by anyone) shows up in or leaves the Bastion list at once; a deleted one's sheet closes.
@@ -495,9 +501,11 @@ Hooks.on("createJournalEntry", (entry) => {
   refreshDashboards();
   refreshCharacterSheets();
   if (isResponsibleGM()) syncBastionNames(entry);
+  queueEffectsSync();
 });
 Hooks.on("deleteJournalEntry", (entry) => {
   if (!isBastionEntry(entry)) return;
+  queueEffectsSync();
   const sheet = BastionSheet.instances.get(entry.id);
   BastionSheet.instances.delete(entry.id);
   if (sheet?.rendered) sheet.close();
@@ -513,6 +521,7 @@ Hooks.on("updateActor", (actor, changes) => {
   if (!owned.length) return;
   refreshCharacterSheets();
   if (isResponsibleGM()) for (const entry of owned) syncBastionNames(entry);
+  queueEffectsSync();
 });
 
 // Facility and actor changes (defenders, hirelings, gold) change the stats too.

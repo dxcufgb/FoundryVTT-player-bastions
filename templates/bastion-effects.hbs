@@ -1,0 +1,55 @@
+<div class="dxpb-root dxpb-effects-body">
+{{#if missing}}
+  <p class="dxpb-empty">{{localize "DXPB.Missing"}}</p>
+{{else if draft}}
+  <div class="dxpb-effect-edit">
+    <div class="dxpb-effect-head">
+      <button type="button" class="dxpb-effect-img" data-action="pickImg" data-tooltip="{{localize 'DXPB.Effects.Icon'}}"><img src="{{draft.img}}" alt=""></button>
+      <input type="hidden" data-field="img" value="{{draft.img}}">
+      <label class="dxpb-grow">{{localize "DXPB.Effects.Name"}}<input type="text" data-field="name" value="{{draft.name}}" placeholder="{{localize 'DXPB.Effects.NamePlaceholder'}}"></label>
+    </div>
+    <label>{{localize "DXPB.Effects.Description"}}<textarea data-field="description" rows="2">{{draft.description}}</textarea></label>
+    <h4>{{localize "DXPB.Effects.Changes"}}</h4>
+    <ul class="dxpb-effect-changes">
+      {{#each draft.changes}}
+      <li data-change="{{index}}">
+        <select data-cfield="type">{{#each types}}<option value="{{value}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        {{#if custom}}
+          <input type="text" data-cfield="key" value="{{key}}" placeholder="system.attributes.ac.bonus">
+          <select data-cfield="mode">{{#each modes}}<option value="{{value}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        {{/if}}
+        {{#if choices}}
+          <select data-cfield="choice"><option value="">—</option>{{#each choices}}<option value="{{value}}" {{#if sel}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        {{/if}}
+        {{#if hasValue}}<input type="text" data-cfield="value" value="{{value}}" placeholder="{{localize 'DXPB.Effects.Value'}}">{{/if}}
+        <button type="button" class="dxpb-linkbtn" data-action="changeRemove" data-tooltip="{{localize 'DXPB.Effects.RemoveChange'}}"><i class="fa-solid fa-xmark" inert></i></button>
+      </li>
+      {{/each}}
+    </ul>
+    <p><button type="button" data-action="changeAdd"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Effects.AddChange"}}</button></p>
+    <p class="dxpb-muted">{{localize "DXPB.Effects.Hint"}}</p>
+    <div class="dxpb-row">
+      <button type="button" data-action="effectSave"><i class="fa-solid fa-floppy-disk" inert></i> {{localize "DXPB.Effects.Save"}}</button>
+      <button type="button" data-action="effectCancel"><i class="fa-solid fa-xmark" inert></i> {{localize "DXPB.Effects.Cancel"}}</button>
+    </div>
+  </div>
+{{else}}
+  <p class="dxpb-muted">{{localize "DXPB.Effects.Intro"}}</p>
+  {{#if effects.length}}
+  <ul class="dxpb-effect-list">
+    {{#each effects}}
+    <li data-effect="{{id}}" class="{{#if disabled}}dxpb-off{{/if}}">
+      <img src="{{img}}" alt="">
+      <div class="dxpb-grow"><strong>{{name}}</strong>{{#if disabled}} <span class="dxpb-muted">({{localize "DXPB.Effects.Off"}})</span>{{/if}}<br><span class="dxpb-muted">{{summary}}</span></div>
+      <button type="button" class="dxpb-linkbtn" data-action="effectToggle" data-tooltip="{{#if disabled}}{{localize 'DXPB.Effects.TurnOn'}}{{else}}{{localize 'DXPB.Effects.TurnOff'}}{{/if}}"><i class="fa-solid {{#if disabled}}fa-toggle-off{{else}}fa-toggle-on{{/if}}" inert></i></button>
+      <button type="button" class="dxpb-linkbtn" data-action="effectEdit" data-tooltip="{{localize 'DXPB.Effects.Edit'}}"><i class="fa-solid fa-pen" inert></i></button>
+      <button type="button" class="dxpb-linkbtn" data-action="effectRemove" data-tooltip="{{localize 'DXPB.Effects.Remove'}}"><i class="fa-solid fa-trash" inert></i></button>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="dxpb-empty">{{localize "DXPB.Effects.None"}}</p>
+  {{/if}}
+  <p><button type="button" data-action="effectAdd"><i class="fa-solid fa-plus" inert></i> {{localize "DXPB.Effects.Add"}}</button></p>
+{{/if}}
+</div>

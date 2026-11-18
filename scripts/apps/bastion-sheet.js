@@ -23,6 +23,8 @@ import { facilitiesPage, systemFacilityCatalog, tradeRoutesPage } from "./facili
 import { tradeSettlements } from "../trade.js";
 import { routesOf } from "../core/trade.js";
 import { openCodex } from "./codex-page.js";
+import { activeEffects, isInside } from "../core/effects.js";
+import { BastionEffectsApp, describeChange } from "./effects-app.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -83,6 +85,8 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       // Not "tab": ApplicationV2 reserves that action for its own tab groups.
       dxpbTab: BastionSheet.#onTab,
       presence: BastionSheet.#onPresence,
+      inside: BastionSheet.#onInside,
+      openEffects: BastionSheet.#onOpenEffects,
       maintain: BastionSheet.#onMaintain,
       deposit: BastionSheet.#onDeposit,
       dividend: BastionSheet.#onDividend,
@@ -171,7 +175,10 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
       nextTurn: formatGameTime((record.turn?.lastTime ?? 0) + R.turnDays * SECONDS_PER_DAY),
       restClock: clockMode() === "rests", restsToTurn: restsToTurn(record.rests, R.turnDays), restCount: record.rests?.count ?? 0,
       lastTurn: record.turn?.number ?? 0,
-      owners: ownerActors(record).map(a => ({ name: a.name, img: a.img })),
+      owners: ownerActors(record).map(a => ({ id: a.id, name: a.name, img: a.img, inside: isInside(record, a.id),
+        canMark: a.type === "character" && (isGM || a.isOwner) })),
+      bastionEffects: activeEffects(record).map(e => ({ name: e.name, img: e.img,
+        summary: (e.changes ?? []).map(describeChange).filter(Boolean).join(" · ") })),
       myActors: myActors.map(a => ({ id: a.id, name: a.name, gp: a.system?.currency?.gp ?? 0 })),
       siege: record.siege, maintainOrder: record.maintainOrder,
       neglect: record.neglect ?? 0, neglectWarn: (record.neglect ?? 0) >= Math.max(1, ctx.partyLevel - 1),
@@ -519,6 +526,14 @@ export class BastionSheet extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onPresence(event, target) {
     return BastionSheet.#run("setPresence", { entryId: this.entryId, presence: target.dataset.value });
+  }
+
+  static #onInside(event, target) {
+    return BastionSheet.#run("setInside", { entryId: this.entryId, actorId: target.dataset.actor, inside: target.dataset.value === "in" });
+  }
+
+  static #onOpenEffects() {
+    BastionEffectsApp.open(this.entryId);
   }
 
   static #onMaintain(event, target) {

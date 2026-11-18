@@ -17,7 +17,9 @@
       <p class="dxpb-muted">{{structure}} · {{terrain}} · {{site}}</p>
       {{#if description}}<p>{{description}}</p>{{/if}}
       <dl class="dxpb-facts">
-        <dt>{{localize "DXPB.Owners"}}</dt><dd>{{#each owners}}<span class="dxpb-owner"><img src="{{img}}"> {{name}}</span>{{/each}}</dd>
+        <dt>{{localize "DXPB.Owners"}}</dt><dd>{{#each owners}}<span class="dxpb-owner {{#if inside}}dxpb-inside{{else}}dxpb-outside{{/if}}"><img src="{{img}}"> {{name}}
+          {{#if canMark}}<button type="button" class="dxpb-linkbtn" data-action="inside" data-actor="{{id}}" data-value="{{#if inside}}out{{else}}in{{/if}}" data-tooltip="{{#if inside}}{{localize 'DXPB.Inside.MarkOut'}}{{else}}{{localize 'DXPB.Inside.MarkIn'}}{{/if}}" aria-label="{{#if inside}}{{localize 'DXPB.Inside.MarkOut'}}{{else}}{{localize 'DXPB.Inside.MarkIn'}}{{/if}}"><i class="fa-solid {{#if inside}}fa-house-user{{else}}fa-person-hiking{{/if}}" inert></i></button>
+          {{else}}<span class="dxpb-inside-state" data-tooltip="{{#if inside}}{{localize 'DXPB.Inside.In'}}{{else}}{{localize 'DXPB.Inside.Out'}}{{/if}}"><i class="fa-solid {{#if inside}}fa-house-user{{else}}fa-person-hiking{{/if}}" inert></i> <span class="dxpb-sr-only">{{#if inside}}{{localize 'DXPB.Inside.In'}}{{else}}{{localize 'DXPB.Inside.Out'}}{{/if}}</span></span>{{/if}}</span>{{/each}}</dd>
         <dt>{{localize "DXPB.Presence"}}</dt>
         <dd>
           {{#if present}}<strong>{{localize "DXPB.PresenceHome"}}</strong>{{else}}<strong>{{localize "DXPB.PresenceAway"}}</strong>{{/if}}
@@ -26,6 +28,7 @@
             {{else}}<button type="button" data-action="presence" data-value="present"><i class="fa-solid fa-house"></i> {{localize "DXPB.Return"}}</button>{{/if}}
           {{/if}}
         </dd>
+        {{#if bastionEffects.length}}<dt>{{localize "DXPB.Effects.Label"}}</dt><dd>{{#each bastionEffects}}<span class="dxpb-bastion-effect" data-tooltip="{{summary}}"><img src="{{img}}" alt=""> {{name}}</span>{{/each}}<br><span class="dxpb-muted">{{localize "DXPB.Effects.InsideOnly"}}</span></dd>{{/if}}
         <dt>{{localize "DXPB.TreasuryLabel"}}</dt><dd>{{treasury}}</dd>
         <dt>{{localize "DXPB.TurnLabel"}}</dt><dd>{{#if restClock}}{{localize "DXPB.TurnInfoRests" n=lastTurn rests=restsToTurn}}<br><span class="dxpb-muted">{{localize "DXPB.RestCount" n=restCount}}</span>{{else}}{{localize "DXPB.TurnInfo" n=lastTurn next=nextTurn}}{{/if}}</dd>
       </dl>
@@ -44,6 +47,7 @@
         {{#if isGM}}
           {{#if restClock}}<button type="button" data-action="countRest" data-tooltip="{{localize 'DXPB.CountRestHint'}}"><i class="fa-solid fa-bed"></i> {{localize "DXPB.CountRest"}}</button>{{/if}}
           <button type="button" data-action="advance" data-turns="1"><i class="fa-solid fa-forward-step"></i> {{localize "DXPB.AdvanceOne"}}</button>
+          <button type="button" data-action="openEffects"><i class="fa-solid fa-wand-magic-sparkles"></i> {{localize "DXPB.Effects.Button"}}</button>
           <button type="button" data-action="editBastion"><i class="fa-solid fa-pen"></i> {{localize "DXPB.Edit"}}</button>
           <button type="button" class="dxpb-danger" data-action="deleteBastion" data-tooltip="{{localize 'DXPB.Delete.Tooltip'}}"><i class="fa-solid fa-trash"></i> {{localize "DXPB.Delete.Button"}}</button>
         {{/if}}

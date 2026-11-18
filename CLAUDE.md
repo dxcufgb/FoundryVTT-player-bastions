@@ -73,6 +73,12 @@ fields live in the GitHub wiki (`FoundryVTT-player-bastions.wiki`): update the w
   time), `crumb`, `noteError`, `ownId`. `scripts/debug-snapshot.js` – the snapshot. Breadcrumbs: every action
   (`socket.js` `runAction`: own action name, ok, ms, relayed), the module hooks (`registerDebugCrumbs` in main.js), socket
   relay and timeouts, map errors.
+- Bastion effects: `core/effects.js` (pure: `EFFECT_PRESETS`, `isInside`, `resolveChange`, `cleanEffect`, `planActorEffects`),
+  `scripts/bastion-effects.js` (`syncBastionEffects` / `queueEffectsSync`, responsible GM: one Active Effect per switched-on
+  `record.effects.<id>` on every owner character inside, flag `bastionEffect` { entryId, effectId, stamp }; run on ready and
+  on Bastion / group-member changes), `apps/effects-app.js` (`BastionEffectsApp`, GM-only list + editor). Inside:
+  `record.inside.<actorId>` (`setInside` action), else `record.presence`; `setPresence` clears the marks. GM actions
+  `saveBastionEffect`, `toggleBastionEffect`, `removeBastionEffect`.
 - `scripts/tests/` – `core-tests.js` (shared engine tests), `quench.js` (Quench batches + built-in runner); `tests/run-node.mjs`.
 
 ## Invariants
