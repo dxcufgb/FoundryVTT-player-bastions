@@ -70,7 +70,12 @@ export function cleanEffect(data, id) {
     .map(r => {
       const out = { type: r.type, value: str(r.value, 200) };
       if (EFFECT_PRESETS[r.type].choices) out.choice = str(r.choice, 64);
-      if (r.type === "custom") { out.key = str(r.key, 200).trim(); out.mode = Number(r.mode) || MODES.ADD; }
+      if (r.type === "custom") {
+        out.key = str(r.key, 200).trim();
+        // Mode 0 (CUSTOM) is a real mode: only a value that isn't a mode falls back to ADD.
+        const mode = Number(r.mode);
+        out.mode = Object.values(MODES).includes(mode) ? mode : MODES.ADD;
+      }
       return out;
     })
     .filter(r => resolveChange(r));

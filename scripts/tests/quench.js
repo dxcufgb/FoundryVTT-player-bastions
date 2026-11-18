@@ -1338,11 +1338,16 @@ export function registerQuench(quench) {
 
       it("Bastion effects apply to owners inside and leave with them", async () => {
         const flagged = () => game.actors.get(ally.id).effects.filter(e => e.getFlag(MODULE_ID, "bastionEffect")?.entryId === entryId);
+        // The responsible GM applies them (this client, or another GM after its update arrives): sync, then wait for it.
+        const settled = async (n) => {
+          await syncBastionEffects();
+          for (let waited = 0; flagged().length !== n && waited < 5000; waited += 100) await new Promise(r => setTimeout(r, 100));
+        };
         await ACTIONS.setPresence({ entryId, presence: "present" }, game.user);
         const res = await ACTIONS.saveBastionEffect({ entryId, effect: { name: "Test hearth", changes: [{ type: "ac", value: "1" },
           { type: "resistance", choice: "fire" }] } }, game.user);
         assert.isTrue(res.ok, res.reason);
-        await syncBastionEffects();
+        await settled(1);
         assert.equal(flagged().length, 1, "inside: the effect is on the character");
         assert.equal(flagged()[0].changes.length, 2);
         const app = BastionEffectsApp.open(entryId);
@@ -1350,11 +1355,11 @@ export function registerQuench(quench) {
         assert.ok(app.element.querySelector(`[data-effect="${res.id}"]`), "the GM's list shows it");
         await app.close();
         await ACTIONS.setInside({ entryId, actorId: ally.id, inside: false }, game.user);
-        await syncBastionEffects();
+        await settled(0);
         assert.equal(flagged().length, 0, "outside: removed");
         await ACTIONS.setInside({ entryId, actorId: ally.id, inside: true }, game.user);
         await ACTIONS.toggleBastionEffect({ entryId, effectId: res.id, disabled: true }, game.user);
-        await syncBastionEffects();
+        await settled(0);
         assert.equal(flagged().length, 0, "switched off: removed");
         await ACTIONS.removeBastionEffect({ entryId, effectId: res.id }, game.user);
         await ACTIONS.setPresence({ entryId, presence: "present" }, game.user);

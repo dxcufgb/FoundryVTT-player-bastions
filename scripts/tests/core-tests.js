@@ -1796,6 +1796,13 @@ export function registerCoreTests({ describe, it, assert }) {
       assert.isFalse(e.disabled);
     });
 
+    it("cleanEffect keeps the CUSTOM mode (0) of a custom change", () => {
+      const e = cleanEffect({ changes: [{ type: "custom", key: "flags.x.y", mode: MODES.CUSTOM, value: "1" },
+        { type: "custom", key: "flags.x.z", mode: "nope", value: "1" }] }, "x");
+      assert.equal(e.changes[0].mode, MODES.CUSTOM);
+      assert.equal(e.changes[1].mode, MODES.ADD);
+    });
+
     it("plans creating, updating and removing the actors' effects", () => {
       const fx = { id: "e1", name: "Hearth", img: "a.svg", description: "", changes: [{ type: "ac", value: "1" }] };
       const data = effectData(fx, { entryId: "j1", bastionName: "Keep", scope: "mod" });
